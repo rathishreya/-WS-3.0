@@ -1,0 +1,47 @@
+flowchart TD
+  classDef form fill:#E8ECFB,stroke:#3B5BDB,color:#12162a,stroke-width:1px;
+  classDef sys fill:#EFF1F5,stroke:#9aa1ad,color:#191C22,stroke-width:1px;
+  classDef dec fill:#F7ECD6,stroke:#B7791F,color:#3a2c0a,stroke-width:1px;
+  classDef state fill:#E4F3EC,stroke:#2F9E6B,color:#123a25,stroke-width:1.5px;
+
+  START(["① Platform operator starts: New Organization"]):::state --> A1
+  A1[/"FORM — org name, code, brand,<br/>deployment tier, which modules,<br/>admin's email"/]:::form --> A2["System creates the workspace<br/>and emails the admin an invite"]:::sys
+  A2 --> A3["Admin logs in →<br/>lands on the Setup checklist"]:::sys
+
+  A3 --> B1[/"FORM — add operating entity<br/>currency, tax, invoice prefix"/]:::form
+  B1 --> B2[/"FORM — add people +<br/>assign roles: SWAT / expert / requester"/]:::form
+  B2 --> B3[/"FORM — set up teams<br/>SWAT / QA / SME / pool"/]:::form
+  B3 --> B4[/"FORM — build catalog: an offering +<br/>delivery model + billing model + price"/]:::form
+  B4 --> B5[/"FORM — add skills + rate list<br/>Delivery skill added automatically"/]:::form
+  B5 --> B6[/"FORM — pricing / invoice codes<br/>+ payment type"/]:::form
+  B6 --> B7{"Prepaid?"}:::dec
+  B7 -->|Yes| B8[/"FORM — fund the wallet"/]:::form
+  B8 --> B9
+  B7 -->|No| B9{"Readiness check —<br/>is everything needed present?"}:::dec
+  B9 -->|"No — checklist shows what's missing"| B1
+  B9 -->|Yes| READY(["✅ ② WORKSPACE IS OPERATIONAL"]):::state
+
+  READY --> C1[/"Request comes in — brief + files + deadline<br/>manual form / email / Phrase"/]:::form
+  C1 --> C2["Ambient AI suggests the right<br/>offering + level → user approves"]:::sys
+  C2 --> C3["SWAT creates the assignment<br/>offering pre-filled"]:::sys
+  C3 --> C4{"Invoice code valid?<br/>Wallet funded, if prepaid?"}:::dec
+  C4 -->|No| C4X["Blocked — fix pricing / fund wallet"]:::sys
+  C4X --> C3
+  C4 -->|Yes| C5["System splits the file → activities<br/>TR / PR / QA + the Delivery activity"]:::sys
+  C5 --> C6{"Deliverable, or ongoing service?"}:::dec
+  C6 -->|"Ongoing — retainer / BOT"| D1["Create engagement, bind a committed team,<br/>open the first service period"]:::sys
+  C6 -->|"Deliverable"| E1["SWAT allocates the activity →<br/>AI proposes the best-fit expert"]:::sys
+  D1 --> E1
+  E1 --> E2["Expert notified on WhatsApp — one-tap"]:::sys
+  E2 --> E3{"Expert accepts?"}:::dec
+  E3 -->|"Rejects"| E1
+  E3 -->|"Accepts"| E4["Activity published → the request goes LIVE"]:::sys
+  E4 --> E5[/"Expert does the work — in TR42 or direct —<br/>and logs progress"/]:::form
+  E5 --> E6["All activities done →<br/>assignment auto-delivers up the tree"]:::sys
+  E6 --> E7["Owner signs off at the boundary →<br/>deliver to the client's store"]:::sys
+  E7 --> F1{"SWAT TL verifies? — the Verify gate"}:::dec
+  F1 -->|"Not yet — waits"| F1
+  F1 -->|"Verified"| F2["ONLY NOW: system raises the invoice<br/>+ expert payout — rolling"]:::sys
+  F2 --> G1{"Is this an ongoing engagement?"}:::dec
+  G1 -->|"Yes → next month's period opens"| D1
+  G1 -->|"No"| DONE(["✔ ③ Delivered · billed · paid"]):::state
