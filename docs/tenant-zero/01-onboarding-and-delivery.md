@@ -1,8 +1,157 @@
 # WS 3.0 — Onboarding & Delivery
 
-> Journey + unified deliverable/ongoing model + Type-B (retainer/outcome) lifecycle. See onboarding-to-delivery-flow.mmd for the visual.
+> The two efficiency-first flows are embedded below (they render on GitHub). Sources: `onboarding-flow.mmd`, `delivery-flow.mmd`. Detailed write-ups follow the diagrams.
+
+## Flow 1 — Onboarding (efficiency-first)
+
+```mermaid
+%% WS 3.0 — ORGANIZATION ONBOARDING (efficiency-first).
+%% Efficiency shift: NOT "fill 7 blank forms" — instead SEED a workspace from an
+%% industry archetype, then RATIFY + fill only the gaps the readiness engine flags (JIT).
+%% Dotted purple = AI does it · dotted teal (⚡) = why it's the efficient way.
+flowchart TD
+  classDef form fill:#E8ECFB,stroke:#3B5BDB,color:#12162a;
+  classDef sys fill:#EFF1F5,stroke:#9aa1ad,color:#191C22;
+  classDef dec fill:#F7ECD6,stroke:#B7791F,color:#3a2c0a;
+  classDef state fill:#E4F3EC,stroke:#2F9E6B,color:#123a25;
+  classDef ai fill:#F3E9FB,stroke:#8A4FBF,color:#2e1740;
+  classDef eff fill:#E3F0FA,stroke:#1F7A9E,color:#0c2e3a,stroke-dasharray:4 3;
+
+  %% ---- A. PROVISION (operator — minimal) ----
+  subgraph A["A · PROVISION  (platform operator)"]
+    S(["Start: New Organization"]):::state --> A1[/"MINIMAL FORM: org name + deployment tier + admin email"/]:::form
+    A1 --> A2["System creates workspace + emails admin an invite"]:::sys
+    A2 --> A3["Admin logs in → Setup home"]:::sys
+  end
+  A1 -.-> EA["⚡ 3 fields create a tenant — nothing asked until a feature needs it"]:::eff
+
+  %% ---- B. SEED FROM ARCHETYPE (the big efficiency move) ----
+  subgraph B["B · SEED THE WORKSPACE  (pick a starting point, don't build blank)"]
+    A3 --> B1{"Pick industry archetype<br/>translation · creative · research · tech · generic"}:::dec
+    B1 --> B2["AI builds a STARTER workspace from the archetype:<br/>catalog + capabilities · common skills · default roles ·<br/>SLA bands · pricing bands · notification defaults"]:::ai
+  end
+  B2 -.-> EB["⚡ ARCHETYPE SKELETON — you begin from a working draft, not empty forms"]:::eff
+
+  %% ---- C. RATIFY + JIT GAP-FILL (readiness engine drives it) ----
+  subgraph C["C · RATIFY & FILL ONLY THE GAPS  (readiness-engine driven)"]
+    B2 --> C0["Readiness dashboard: 'You can deliver once these are set' (live)"]:::sys
+    C0 --> C1[/"RATIFY operating entities — confirm/add (currency, tax, prefix)<br/>one org → many entities"/]:::form
+    C1 --> C2[/"RATIFY teams & roles — AI mapped them; rename/tweak<br/>(EZ: SWAT / QA / SME / pool)"/]:::form
+    C2 --> C3[/"RATIFY catalog — pre-filled offerings + levels + delivery/billing model;<br/>edit prices, add/remove"/]:::form
+    C3 --> C4[/"RATIFY skills + pricing units — pre-filled; adjust rates<br/>(EZ: coins/credits)"/]:::form
+  end
+  C0 -.-> EC1["⚡ JIT — asks ONLY what's missing to deliver, in priority order"]:::eff
+  C4 -.-> EC2["⚡ You EDIT AI proposals; you never author from a blank page"]:::eff
+
+  %% ---- D. PEOPLE (self-onboard) ----
+  subgraph D["D · ADD PEOPLE  (they self-onboard)"]
+    C4 --> D1["Bulk-invite / connect directory (SSO-ready)"]:::sys
+    D1 --> D2["Per person: AI pre-fills profile from their portable identity/history"]:::ai
+    D2 --> D3[/"Person ratifies profile + declares skills"/]:::form
+    D3 --> D4{"Auto-approve by policy?"}:::dec
+    D4 -->|"Yes"| D5["Person active"]:::sys
+    D4 -->|"Needs review"| D6[/"Admin approves"/]:::form
+    D6 --> D5
+  end
+  D5 -.-> ED["⚡ People onboard themselves; admin handles only exceptions"]:::eff
+
+  %% ---- E. GO LIVE, THEN DEEPEN JIT ----
+  D5 --> E1{"Any prepaid billing?"}:::dec
+  E1 -->|"Yes"| E2[/"Fund wallet"/]:::form
+  E1 -->|"No"| E3
+  E2 --> E3{"Readiness: minimum-viable config complete?"}:::dec
+  E3 -->|"No — 1-2 gaps shown"| C0
+  E3 -->|"Yes"| READY(["✅ WORKSPACE OPERATIONAL — it can deliver"]):::state
+  READY --> F1["Everything else stays JIT: more offerings, SLAs, integrations,<br/>modules (payroll/HR/invoicing) — activated only when a job needs them"]:::sys
+  F1 -.-> EF["⚡ No big-bang setup — the workspace deepens as it's used"]:::eff
+
+  %% ---- Tenant-Zero note ----
+  READY -.-> TZ["EZ onboards through THIS SAME flow (no back-door) —<br/>its SWAT/catalog/coins are just this workspace's config"]:::eff
+```
+
+## Flow 2 — Delivery (efficiency-first)
+
+```mermaid
+%% WS 3.0 — DELIVERY (efficiency-first re-cut).
+%% Core shift (vision 2.4/4.5): AI COMPOSES the whole plan from the brief; the human
+%% RATIFIES in ONE step — replacing the manual create→split→allocate→price chain.
+%% Human touchpoints drop from ~6 to ~2 (ratify plan, confirm verify).
+%% Dotted purple = AI does it · dotted teal (⚡) = the efficiency it buys.
+flowchart TD
+  classDef form fill:#E8ECFB,stroke:#3B5BDB,color:#12162a;
+  classDef sys fill:#EFF1F5,stroke:#9aa1ad,color:#191C22;
+  classDef dec fill:#F7ECD6,stroke:#B7791F,color:#3a2c0a;
+  classDef state fill:#E4F3EC,stroke:#2F9E6B,color:#123a25;
+  classDef ai fill:#F3E9FB,stroke:#8A4FBF,color:#2e1740;
+  classDef eff fill:#E3F0FA,stroke:#1F7A9E,color:#0c2e3a,stroke-dasharray:4 3;
+  classDef rework fill:#F8E6E1,stroke:#C6503C,color:#3a1712;
+
+  %% ---- 1. INTAKE + AI COMPOSE (the collapse) ----
+  IN(["Request arrives — any channel (form / email / client tool)"]):::state --> AI1["AI reads the brief + files in the sealed enclave"]:::ai
+  AI1 --> AI2["AI COMPOSES the whole plan in one pass:<br/>offering + level · file split · activities · performer picks ·<br/>deadline · scope sheet · price"]:::ai
+  AI2 -.-> E1["⚡ ONE AI draft replaces ~6 manual steps (create · split · allocate · price)"]:::eff
+
+  %% ---- 2. ONE RATIFICATION ----
+  AI2 --> R1{"Owner ratifies the plan?<br/>(human touchpoint #1)"}:::dec
+  R1 -->|"Tweak"| R2[/"Owner edits the proposal inline"/]:::form
+  R2 --> R1
+  R1 -->|"Reject"| RX["Owner re-briefs / re-scopes"]:::sys
+  RX --> AI2
+  R1 -->|"Approve — one click"| PUB["Published; request goes LIVE"]:::sys
+  PUB -.-> E2["⚡ One approval, not a multi-screen wizard"]:::eff
+
+  %% ---- 3. CHANNEL-NATIVE MOBILIZATION ----
+  PUB --> MB{"Prepaid/pricing check (auto)"}:::dec
+  MB -->|"Fails"| MBX["Auto-flag owner to fix / fund"]:::rework
+  MBX --> PUB
+  MB -->|"OK"| NOT["Performers notified in chat — WhatsApp/SMS, one-tap accept"]:::sys
+  NOT -.-> E3["⚡ Most performers never open the app — accept from their phone"]:::eff
+  NOT --> ACC{"Accept?"}:::dec
+  ACC -->|"Decline"| RE["AI proposes next best; auto-escalates by timezone/responsiveness"]:::ai
+  RE --> NOT
+  ACC -->|"Accept"| WK{"Performer type (already set in the plan)"}:::dec
+
+  %% ---- 4. PERFORM ----
+  WK -->|"AI agent"| AG["Agent first-pass (EZ: Flip / MT / OCR)"]:::ai
+  WK -->|"Human + tool"| HM[/"Person works; progress auto-logged from the tool"/]:::form
+  AG --> QAG
+  HM --> ITM{"Interim draft?"}:::dec
+  ITM -->|"Yes"| ITS["Auto-share draft to requester"]:::sys
+  ITS --> HM
+  ITM -->|"Final"| QAG
+
+  %% ---- 5. POLICY-DRIVEN QA ----
+  QAG{"QA policy for this activity?"}:::dec
+  QAG -->|"AI-safe → auto-QA"| DLV
+  QAG -->|"Needs human"| HQA[/"Reviewer checks (EZ: QA layer)"/]:::form
+  HQA --> HQD{"Pass?"}:::dec
+  HQD -->|"Fail — rework"| HM
+  HQD -->|"Pass"| DLV
+  QAG -.-> E4["⚡ Human QA only where policy requires — not on every job"]:::eff
+
+  %% ---- 6. AUTO-DELIVER + VERIFY (AI-preflighted) ----
+  DLV["Auto-deliver + auto-promote within the org;<br/>owner sign-off only at a trust boundary"]:::sys --> APR{"Requester approves? (only where required)"}:::dec
+  APR -->|"Reject — rework"| HM
+  APR -->|"Approve"| VP["AI pre-computes the reconciliation:<br/>splits · fees · counts · exceptions"]:::ai
+  VP --> VF{"Verifier one-tap confirm?<br/>(human touchpoint #2 — EZ: SWAT TL)"}:::dec
+  VF -.-> E5["⚡ Verify = a ~10-second confirm, not a manual reconciliation"]:::eff
+  VF -->|"Fix"| HM
+  VF -->|"Confirm"| BILL
+
+  %% ---- 7. ROLLING BILL + LOOPS ----
+  BILL["Invoice + performer payout raised (per billing model)"]:::sys
+  BILL -.-> E6["⚡ Rolling, the moment Verify clears — no month-end batch pile-up"]:::eff
+  BILL --> LP{"Ongoing engagement or recurring request?"}:::dec
+  LP -->|"Ongoing — next period"| AI2
+  LP -->|"Recurring — next cycle"| AI1
+  LP -->|"Done"| DONE(["Delivered · billed · paid"]):::state
+
+  %% ---- efficiency scoreboard ----
+  DONE -.-> SB["⚡ Net: ~6 human steps → 2 (ratify plan · confirm verify).<br/>Everything else is AI-composed or channel-native."]:::eff
+```
 
 ---
+
 
 # WS 3.0 — Full Journey: Organization Onboarding → Assignment Delivery
 
