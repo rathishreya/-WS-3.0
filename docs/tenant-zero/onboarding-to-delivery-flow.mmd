@@ -1,3 +1,5 @@
+%% PLATFORM flow (generic). Text in (EZ: ...) shows how Tenant-Zero CONFIGURES each step —
+%% it is illustration, NOT platform structure. Nothing EZ-specific is baked in.
 flowchart TD
   classDef form fill:#E8ECFB,stroke:#3B5BDB,color:#12162a;
   classDef sys fill:#EFF1F5,stroke:#9aa1ad,color:#191C22;
@@ -13,14 +15,14 @@ flowchart TD
   end
 
   %% ========== 2. CONFIGURE WORKSPACE ==========
-  subgraph CFG["2 · CONFIGURE WORKSPACE  (WS admin) — until it can deliver"]
+  subgraph CFG["2 · CONFIGURE WORKSPACE  (workspace admin) — configure ANYTHING, until it can deliver"]
     A3 --> B1[/"FORM: operating entity (currency, tax, prefix)"/]:::form
-    B1 --> B2[/"FORM: teams (SWAT / QA / SME / pool)"/]:::form
+    B1 --> B2[/"FORM: define teams & roles<br/>(EZ configures: SWAT / QA / SME / pool)"/]:::form
     B2 --> B3[/"FORM: catalog offering + delivery model + billing model + price"/]:::form
-    B3 --> B4[/"FORM: skills + rate list (Delivery skill auto-added)"/]:::form
-    B4 --> B5[/"FORM: pricing / invoice codes + payment type"/]:::form
+    B3 --> B4[/"FORM: skills + pricing/value units<br/>(EZ configures: coins/credits + rate list)"/]:::form
+    B4 --> B5[/"FORM: pricing records / codes + payment type"/]:::form
     B5 --> B6[/"INVITE people to join, accept, set profile + skills"/]:::form
-    B6 --> B7{"Prepaid?"}:::dec
+    B6 --> B7{"Prepaid billing?"}:::dec
     B7 -->|"Yes"| B8[/"FORM: fund wallet"/]:::form
     B7 -->|"No"| B9
     B8 --> B9{"Readiness check: everything present?"}:::dec
@@ -30,10 +32,10 @@ flowchart TD
 
   %% ========== 3. REQUEST IN ==========
   subgraph INT["3 · A REQUEST COMES IN"]
-    READY --> C0{"Intake channel"}:::dec
+    READY --> C0{"Intake channel (adapter)"}:::dec
     C0 -->|"Manual"| C1[/"FORM: brief + files + deadline + entity"/]:::form
-    C0 -->|"Email"| C1b["Dedicated Gmail auto-creates the request"]:::sys
-    C0 -->|"Phrase / TMS"| C1c["Phrase project syncs into a request"]:::sys
+    C0 -->|"Email"| C1b["Monitored inbox auto-creates the request"]:::sys
+    C0 -->|"External tool"| C1c["Client tool (EZ: Phrase) syncs into a request"]:::sys
     C1 --> C2
     C1b --> C2
     C1c --> C2["Ambient AI maps brief to offering + level"]:::sys
@@ -44,58 +46,58 @@ flowchart TD
   end
 
   %% ========== 4. SET UP THE WORK ==========
-  subgraph SET["4 · SET UP THE WORK  (SWAT)"]
-    C5 --> D1["SWAT creates the assignment"]:::sys
-    D1 --> D2{"Invoice code valid? Wallet funded if prepaid?"}:::dec
+  subgraph SET["4 · SET UP THE WORK  (owner/ops role — EZ: SWAT)"]
+    C5 --> D1["Owner creates the assignment"]:::sys
+    D1 --> D2{"Pricing/code valid? Wallet funded if prepaid?"}:::dec
     D2 -->|"No"| D2x["Blocked: fix pricing / fund wallet"]:::rework
     D2x --> D1
     D2 -->|"Yes, prepaid"| D3["Wallet debited"]:::sys
     D2 -->|"Yes, postpaid"| D4
-    D3 --> D4["Split file to parts to activities: TR / PR / QA + Delivery"]:::sys
+    D3 --> D4["Split file into activities per the offering's skill-chain<br/>(EZ translation: TR to PR to QA) + Delivery activity"]:::sys
     D4 --> D5{"Dependencies between activities?"}:::dec
     D5 -->|"Yes"| D6["Chain output to input; add nested sub-assignments"]:::sys
     D5 -->|"No"| D7
     D6 --> D7{"Deliverable, or ongoing service?"}:::dec
-    D7 -->|"Ongoing (retainer / BOT)"| D8["Create engagement, bind committed team, open service period"]:::sys
+    D7 -->|"Ongoing (retainer / outcome)"| D8["Create engagement, bind committed team, open service period"]:::sys
     D7 -->|"Deliverable"| ALLOC
     D8 --> ALLOC
   end
 
   %% ========== 5. ALLOCATE & PERFORM ==========
   subgraph PERF["5 · ALLOCATE & PERFORM"]
-    ALLOC["SWAT allocates activity; AI proposes best-fit performer"]:::sys --> P1{"Performer type?"}:::dec
-    P1 -->|"AI agent"| P2["Agent runs (Flip / MT / OCR) then outputs a first pass"]:::sys
-    P1 -->|"Human + tool"| P3["License assigned (TR42 / Canva); expert works"]:::form
-    P1 -->|"Human"| P4["Notify expert on WhatsApp (one-tap accept)"]:::sys
-    P4 --> P5{"Expert accepts?"}:::dec
+    ALLOC["Owner allocates activity; AI proposes best-fit performer"]:::sys --> P1{"Performer type?"}:::dec
+    P1 -->|"AI agent"| P2["Agent runs (EZ: Flip / MT / OCR) then outputs a first pass"]:::sys
+    P1 -->|"Human + tool"| P3["Mandated tool assigned (EZ: TR42 / Canva); person works"]:::form
+    P1 -->|"Human"| P4["Notify performer channel-native (WhatsApp/SMS one-tap accept)"]:::sys
+    P4 --> P5{"Performer accepts?"}:::dec
     P5 -->|"Rejects (reason)"| ALLOC
     P5 -->|"Accepts"| P6["Activity published; request goes LIVE"]:::sys
     P6 --> WK
     P3 --> WK
-    WK[/"Expert does the work + logs progress"/]:::form --> WI{"Interim draft to show client?"}:::dec
+    WK[/"Performer does the work + logs progress"/]:::form --> WI{"Interim draft to show requester?"}:::dec
     WI -->|"Yes"| WI2["Interim delivery; requester reviews / approves"]:::sys
     WI2 --> WK
-    WI -->|"Final output"| QA
-    P2 --> QA
+    WI -->|"Final output"| RV
+    P2 --> RV
   end
 
-  %% ========== 6. QA, DELIVER, VERIFY ==========
-  subgraph DEL["6 · QA · DELIVER · VERIFY"]
-    QA["QA layer reviews the output"]:::sys --> QG{"QA pass?"}:::dec
+  %% ========== 6. REVIEW, DELIVER, VERIFY ==========
+  subgraph DEL["6 · REVIEW · DELIVER · VERIFY"]
+    RV["Review role checks the output (EZ: QA layer)"]:::sys --> QG{"Review pass?"}:::dec
     QG -->|"Fail — rework"| WK
     QG -->|"Pass"| DA["All activities done; assignment auto-delivers up the tree"]:::sys
     DA --> OB["Owner signs off at the boundary (mandatory review)"]:::sys
-    OB --> DC["Deliver to the client's store"]:::sys
-    DC --> CAP{"Client approves?"}:::dec
+    OB --> DC["Deliver to the requester's store"]:::sys
+    DC --> CAP{"Requester approves?"}:::dec
     CAP -->|"Rejects — rework"| WK
-    CAP -->|"Approves"| VF{"SWAT TL verifies? (Verify gate)"}:::dec
+    CAP -->|"Approves"| VF{"Verifier signs off? (Verify gate — EZ: SWAT TL)"}:::dec
     VF -->|"Fail — fix"| WK
     VF -->|"Verified"| VOK(["Verified"]):::state
   end
 
   %% ========== 7. BILL & PAY ==========
   subgraph BILL["7 · BILL & PAY  (only after Verify — rolling)"]
-    VOK --> M1["Invoice raised + expert payout"]:::sys
+    VOK --> M1["Invoice raised + performer payout (per billing model)"]:::sys
     M1 --> M2{"Ongoing engagement?"}:::dec
     M2 -->|"Yes — next period opens"| D8
     M2 -->|"No"| M3{"Recurring request?"}:::dec
@@ -108,12 +110,12 @@ flowchart TD
   end
 
   %% ========== 8. CHANGE HANDLING (can trigger from any live state) ==========
-  subgraph CHG["8 · CHANGE HANDLING  (can trigger from any in-flight state)"]
+  subgraph CHG["8 · CHANGE HANDLING  (can trigger from any in-flight state; policy is tenant-config)"]
     LIVE(["Any live activity / assignment"]):::state --> CH{"Change type?"}:::dec
-    CH -->|"Scope change"| CH1["Re-quote; requester re-approves; TL confirms"]:::rework
-    CH -->|"Reassign (expert unavailable)"| CH2["Handover; fee-split; premium from at-fault party"]:::rework
+    CH -->|"Scope change"| CH1["Re-quote; requester re-approves; verifier confirms"]:::rework
+    CH -->|"Reassign (performer unavailable)"| CH2["Handover; fee-split per policy"]:::rework
     CH -->|"Pause"| CH3["Assignment paused"]:::rework
-    CH -->|"Cancel"| CH4["Sunk work paid per behavior; wallet refund"]:::rework
+    CH -->|"Cancel"| CH4["Sunk work paid per policy; wallet refund"]:::rework
     CH -->|"Dispute raised"| CH5["Ops resolves; adjust invoice / payout"]:::rework
     CH1 --> RES(["Resume flow"]):::state
     CH2 --> RES
