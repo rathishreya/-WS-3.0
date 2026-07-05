@@ -1,0 +1,207 @@
+<title>WS 3.0 — Onboarding to Delivery, at a glance</title>
+<style>
+  :root{
+    --ground:#F6F7F9; --surface:#FFFFFF; --surface-2:#EFF1F5;
+    --ink:#191C22; --muted:#5B6270; --faint:#8B92A0;
+    --border:#E1E4EA; --border-strong:#CFD4DD;
+    --accent:#3B5BDB; --accent-soft:#E8ECFB;
+    --good:#2F9E6B; --good-soft:#E4F3EC;
+    --warn:#B7791F; --warn-soft:#F7ECD6;
+    --miss:#C6503C; --miss-soft:#F8E6E1;
+    --shadow:0 1px 2px rgba(25,28,34,.04),0 4px 16px rgba(25,28,34,.05);
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,"Cascadia Code",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#14161B; --surface:#1C1F26; --surface-2:#232732;
+      --ink:#E8EAED; --muted:#9AA1AD; --faint:#6C7480;
+      --border:#2A2F3A; --border-strong:#3A414F;
+      --accent:#8098F5; --accent-soft:#20263C;
+      --good:#48B983; --good-soft:#16281F;
+      --warn:#D9A441; --warn-soft:#2B2416;
+      --miss:#E1715C; --miss-soft:#2E1B17;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 18px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#F6F7F9; --surface:#FFFFFF; --surface-2:#EFF1F5;
+    --ink:#191C22; --muted:#5B6270; --faint:#8B92A0; --border:#E1E4EA; --border-strong:#CFD4DD;
+    --accent:#3B5BDB; --accent-soft:#E8ECFB; --good:#2F9E6B; --good-soft:#E4F3EC;
+    --warn:#B7791F; --warn-soft:#F7ECD6; --miss:#C6503C; --miss-soft:#F8E6E1;
+    --shadow:0 1px 2px rgba(25,28,34,.04),0 4px 16px rgba(25,28,34,.05);
+  }
+  :root[data-theme="dark"]{
+    --ground:#14161B; --surface:#1C1F26; --surface-2:#232732;
+    --ink:#E8EAED; --muted:#9AA1AD; --faint:#6C7480; --border:#2A2F3A; --border-strong:#3A414F;
+    --accent:#8098F5; --accent-soft:#20263C; --good:#48B983; --good-soft:#16281F;
+    --warn:#D9A441; --warn-soft:#2B2416; --miss:#E1715C; --miss-soft:#2E1B17;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 18px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box}
+  body{margin:0}
+  .wrap{
+    font-family:var(--sans); background:var(--ground); color:var(--ink);
+    min-height:100vh; padding:clamp(20px,4vw,56px) clamp(16px,4vw,40px);
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1080px; margin:0 auto; display:flex; flex-direction:column; gap:34px}
+  .eyebrow{font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint)}
+  h1{font-size:clamp(24px,4vw,33px); line-height:1.12; margin:.32em 0 0; font-weight:760; letter-spacing:-.015em; text-wrap:balance; max-width:22ch}
+  .lede{font-size:clamp(15px,1.7vw,17px); color:var(--muted); margin:12px 0 0; max-width:62ch}
+  .lede b{color:var(--ink); font-weight:640}
+
+  /* legend */
+  .legend{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin-top:18px}
+  .key{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted)}
+  .dot{width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 3px color-mix(in srgb,var(--_c) 18%,transparent)}
+  .dot.good{--_c:var(--good); background:var(--good)}
+  .dot.warn{--_c:var(--warn); background:var(--warn)}
+  .dot.miss{--_c:var(--miss); background:var(--miss)}
+
+  section{display:flex; flex-direction:column; gap:16px}
+  .s-head{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
+  .s-head h2{font-size:15px; font-weight:680; margin:0; letter-spacing:-.005em}
+  .s-head .note{font-size:12.5px; color:var(--faint)}
+
+  /* flow rail */
+  .rail-scroll{overflow-x:auto; padding:4px 2px 10px; margin:0 -2px}
+  .rail{display:flex; align-items:stretch; gap:0; min-width:max-content}
+  .node{
+    position:relative; background:var(--surface); border:1px solid var(--border);
+    border-radius:11px; padding:12px 14px 11px; min-width:118px; max-width:150px;
+    box-shadow:var(--shadow); display:flex; flex-direction:column; gap:5px;
+  }
+  .node .who{font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; color:var(--faint); text-transform:uppercase}
+  .node .nm{font-size:13.5px; font-weight:620; line-height:1.2}
+  .node .st{position:absolute; top:11px; right:11px; width:9px; height:9px; border-radius:50%}
+  .node.good .st{background:var(--good)} .node.warn .st{background:var(--warn)} .node.miss .st{background:var(--miss)}
+  .node.miss{border-color:color-mix(in srgb,var(--miss) 45%,var(--border))}
+  .arrow{display:flex; align-items:center; color:var(--border-strong); padding:0 3px; font-size:18px; flex:none}
+  .fork{display:flex; flex-direction:column; gap:8px; justify-content:center}
+  .fork .node{min-width:132px}
+  .fork-tag{font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); margin-bottom:-2px}
+
+  /* completeness map */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:12px}
+  .col-head{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; display:flex; align-items:center; gap:8px; margin-bottom:2px}
+  .card{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--_edge,var(--border)); border-radius:10px; padding:12px 13px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:3px}
+  .card.good{--_edge:var(--good)} .card.warn{--_edge:var(--warn)} .card.miss{--_edge:var(--miss)}
+  .card .t{font-size:13.5px; font-weight:620; line-height:1.25}
+  .card .d{font-size:12px; color:var(--muted); line-height:1.35}
+  .card .own{font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); margin-top:2px}
+  .band{display:flex; flex-direction:column; gap:10px}
+
+  /* joy panel */
+  .joy{background:var(--surface); border:1px solid var(--border-strong); border-radius:14px; padding:clamp(18px,3vw,26px); box-shadow:var(--shadow); position:relative; overflow:hidden}
+  .joy::before{content:""; position:absolute; inset:0 auto 0 0; width:4px; background:var(--miss)}
+  .joy h2{font-size:17px; margin:0 0 4px; font-weight:720}
+  .joy .sub{font-size:13px; color:var(--muted); margin:0 0 16px}
+  .asks{display:flex; flex-direction:column; gap:11px; margin:0; padding:0; list-style:none; counter-reset:a}
+  .asks li{display:grid; grid-template-columns:26px 1fr; gap:12px; align-items:start}
+  .asks li::before{counter-increment:a; content:counter(a); font-family:var(--mono); font-size:12px; font-weight:600; color:var(--accent); background:var(--accent-soft); border-radius:7px; width:26px; height:26px; display:grid; place-items:center; margin-top:1px}
+  .asks .q{font-size:13.5px; line-height:1.4}
+  .asks .q b{font-weight:660}
+  .asks .q .tag{font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--miss); background:var(--miss-soft); padding:1px 6px; border-radius:5px; margin-left:6px; white-space:nowrap}
+  .star{color:var(--miss); font-weight:700}
+
+  .foot{font-size:12px; color:var(--faint); border-top:1px solid var(--border); padding-top:16px; font-family:var(--mono); letter-spacing:.02em}
+  a{color:var(--accent)}
+  @media (max-width:560px){ .asks li{grid-template-columns:22px 1fr; gap:9px} .node{min-width:104px} }
+</style>
+
+<div class="wrap"><div class="page">
+
+  <header>
+    <div class="eyebrow">Workspace 3.0 · Tenant-Zero · one-page brief</div>
+    <h1>Onboarding&nbsp;→ delivery, and what we need from you</h1>
+    <p class="lede">The whole design in one screen. A workspace is <b>onboarded, configured, then delivers work</b> — deliverables <i>and</i> ongoing/retainer — through one engine. Most of it is designed; <b>the red dots are where only you have the answer.</b></p>
+    <div class="legend">
+      <span class="key"><span class="dot good"></span>Designed — ready to build against</span>
+      <span class="key"><span class="dot warn"></span>Direction set — detail pending</span>
+      <span class="key"><span class="dot miss"></span>Needs your input</span>
+    </div>
+  </header>
+
+  <section aria-label="The journey">
+    <div class="s-head"><h2>The journey, end to end</h2><span class="note">left → right · dot = status</span></div>
+    <div class="rail-scroll"><div class="rail">
+      <div class="node good"><span class="st"></span><span class="who">Platform</span><span class="nm">Onboard org</span></div>
+      <div class="arrow">→</div>
+      <div class="node good"><span class="st"></span><span class="who">WS admin</span><span class="nm">Configure workspace</span></div>
+      <div class="arrow">→</div>
+      <div class="node warn"><span class="st"></span><span class="who">Intake</span><span class="nm">Request comes in</span></div>
+      <div class="arrow">→</div>
+      <div class="node good"><span class="st"></span><span class="who">SWAT</span><span class="nm">Create assignment</span></div>
+      <div class="arrow">→</div>
+      <div class="node miss"><span class="st"></span><span class="who">SWAT</span><span class="nm">Allocate &amp; mobilize</span></div>
+      <div class="arrow">→</div>
+      <div class="node warn"><span class="st"></span><span class="who">Expert</span><span class="nm">Do the work</span></div>
+      <div class="arrow">→</div>
+      <div class="fork">
+        <div><div class="fork-tag">deliverable</div><div class="node good"><span class="st"></span><span class="who">Type A</span><span class="nm">Deliver output</span></div></div>
+        <div><div class="fork-tag">ongoing</div><div class="node warn"><span class="st"></span><span class="who">Type B</span><span class="nm">Close service period</span></div></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node good"><span class="st"></span><span class="who">TL gate</span><span class="nm">Verify &amp; sign-off</span></div>
+      <div class="arrow">→</div>
+      <div class="node good"><span class="st"></span><span class="who">System</span><span class="nm">Invoice + pay</span></div>
+    </div></div>
+  </section>
+
+  <section aria-label="Completeness map">
+    <div class="s-head"><h2>Where the design stands</h2><span class="note">honest status of every part</span></div>
+    <div class="band">
+
+      <div>
+        <div class="col-head"><span class="dot good"></span>Designed — ready</div>
+        <div class="grid">
+          <div class="card good"><span class="t">Structure</span><span class="d">Platform → workspace → entities; roles</span></div>
+          <div class="card good"><span class="t">Unified work model</span><span class="d">Deliverable + ongoing in one engine</span></div>
+          <div class="card good"><span class="t">Onboarding + config</span><span class="d">"Onboarded = can deliver" readiness</span></div>
+          <div class="card good"><span class="t">Data model (schema)</span><span class="d">Typed — replaces the old loose data</span></div>
+          <div class="card good"><span class="t">AI · notifications · access</span><span class="d">Ambient AI, channel-native, secure</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="col-head"><span class="dot warn"></span>Direction set — detail pending</div>
+        <div class="grid">
+          <div class="card warn"><span class="t">The 9 ERP domains, rebuilt better</span><span class="d">Approach locked; exact rules pending</span><span class="own">some need you</span></div>
+          <div class="card warn"><span class="t">Ongoing-work lifecycle</span><span class="d">Modeled; BOT billing formula open</span><span class="own">needs you</span></div>
+          <div class="card warn"><span class="t">Statutory payroll</span><span class="d">Config-driven; the rules matrix open</span><span class="own">you / finance</span></div>
+          <div class="card warn"><span class="t">Isolation mechanism</span><span class="d">Entity-level designed; tech = Bhavya</span><span class="own">Bhavya</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="col-head"><span class="dot miss"></span>Missing — needs input</div>
+        <div class="grid">
+          <div class="card miss"><span class="t">Delivery engine ★</span><span class="d">SWAT / QA / SME / pool — undefined</span><span class="own">needs you</span></div>
+          <div class="card miss"><span class="t">The other 5 workflows</span><span class="d">Intake · agent · nesting · changes · invoicing</span><span class="own">needs you</span></div>
+          <div class="card miss"><span class="t">Delivery details (A1–A6)</span><span class="d">Allocation, mobilization, Verify gate</span><span class="own">needs you</span></div>
+          <div class="card miss"><span class="t">Architecture calls</span><span class="d">Isolation, engine, GraphQL, stack</span><span class="own">Bhavya</span></div>
+          <div class="card miss"><span class="t">Parity tests + migration</span><span class="d">The last two docs — I write next</span><span class="own">me</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section aria-label="What we need from Joy">
+    <div class="joy">
+      <h2>What only you can answer, Joy</h2>
+      <p class="sub">Best as one working session — you talk through real examples, I capture. Roughly an hour.</p>
+      <ol class="asks">
+        <li><span class="q"><b>Define SWAT / QA / SME / pool</b> <span class="star">★</span> — what each does, how work hands off, who signs off. <span class="tag">biggest gap</span></span></li>
+        <li><span class="q"><b>How does work actually get assigned &amp; the expert notified?</b> Today it's chasing on WhatsApp/calls — walk me through it.</span></li>
+        <li><span class="q"><b>The 5 other work-flows:</b> Phrase/email intake · AI-agent jobs (Flip/MT/OCR) · nested sub-work · scope-changes/reassign/cancel · invoicing.</span></li>
+        <li><span class="q"><b>How is ongoing work billed?</b> Retainer fee vs the AI-Transformation efficiency deal — the actual formula.</span></li>
+        <li><span class="q"><b>Which monthly runs can't ever be interrupted</b> (payroll, invoicing…), and <b>which service should we pilot first?</b></span></li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="foot">Full detail lives in docs/tenant-zero/ · this page = the 2-minute version</div>
+
+</div></div>
