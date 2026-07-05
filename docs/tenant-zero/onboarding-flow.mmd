@@ -1,7 +1,6 @@
-%% WS 3.0 — ORGANIZATION ONBOARDING (efficiency-first).
-%% Efficiency shift: NOT "fill 7 blank forms" — instead SEED a workspace from an
-%% industry archetype, then RATIFY + fill only the gaps the readiness engine flags (JIT).
-%% Dotted purple = AI does it · dotted teal (⚡) = why it's the efficient way.
+%% WS 3.0 — ORGANIZATION ONBOARDING (efficiency-first, vision-aligned).
+%% Shift: not "fill blank forms" — SEED from an archetype, RATIFY, then fill only the
+%% gaps the readiness engine flags (JIT). Purple = AI · teal ⚡ = why it's efficient · [J] = Joy QA.
 flowchart TD
   classDef form fill:#E8ECFB,stroke:#3B5BDB,color:#12162a;
   classDef sys fill:#EFF1F5,stroke:#9aa1ad,color:#191C22;
@@ -10,35 +9,40 @@ flowchart TD
   classDef ai fill:#F3E9FB,stroke:#8A4FBF,color:#2e1740;
   classDef eff fill:#E3F0FA,stroke:#1F7A9E,color:#0c2e3a,stroke-dasharray:4 3;
 
-  %% ---- A. PROVISION (operator — minimal) ----
+  %% ---- A. PROVISION ----
   subgraph A["A · PROVISION  (platform operator)"]
     S(["Start: New Organization"]):::state --> A1[/"MINIMAL FORM: org name + deployment tier + admin email"/]:::form
-    A1 --> A2["System creates workspace + emails admin an invite"]:::sys
+    A1 --> A1b{"Tier = regional/sovereign?"}:::dec
+    A1b -->|"Yes"| A1c["Set BYOK keys (customer-managed)"]:::sys
+    A1b -->|"No — shared"| A2
+    A1c --> A2["System creates workspace + sets module availability + invites admin"]:::sys
     A2 --> A3["Admin logs in → Setup home"]:::sys
   end
-  A1 -.-> EA["⚡ 3 fields create a tenant — nothing asked until a feature needs it"]:::eff
+  A1 -.-> EA["⚡ 3 fields create a tenant — nothing else asked yet"]:::eff
 
-  %% ---- B. SEED FROM ARCHETYPE (the big efficiency move) ----
-  subgraph B["B · SEED THE WORKSPACE  (pick a starting point, don't build blank)"]
+  %% ---- B. SEED FROM ARCHETYPE ----
+  subgraph B["B · SEED THE WORKSPACE  (start from a draft, not blank)"]
     A3 --> B1{"Pick industry archetype<br/>translation · creative · research · tech · generic"}:::dec
-    B1 --> B2["AI builds a STARTER workspace from the archetype:<br/>catalog + capabilities · common skills · default roles ·<br/>SLA bands · pricing bands · notification defaults"]:::ai
+    B1 --> B2["AI builds a STARTER workspace:<br/>catalog + capabilities · common skills · default roles ·<br/>SLA bands · pricing bands · notification defaults"]:::ai
   end
-  B2 -.-> EB["⚡ ARCHETYPE SKELETON — you begin from a working draft, not empty forms"]:::eff
+  B2 -.-> EB["⚡ ARCHETYPE SKELETON — begin from a working draft"]:::eff
 
-  %% ---- C. RATIFY + JIT GAP-FILL (readiness engine drives it) ----
+  %% ---- C. RATIFY + JIT GAP-FILL ----
   subgraph C["C · RATIFY & FILL ONLY THE GAPS  (readiness-engine driven)"]
     B2 --> C0["Readiness dashboard: 'You can deliver once these are set' (live)"]:::sys
-    C0 --> C1[/"RATIFY operating entities — confirm/add (currency, tax, prefix)<br/>one org → many entities"/]:::form
-    C1 --> C2[/"RATIFY teams & roles — AI mapped them; rename/tweak<br/>(EZ: SWAT / QA / SME / pool)"/]:::form
-    C2 --> C3[/"RATIFY catalog — pre-filled offerings + levels + delivery/billing model;<br/>edit prices, add/remove"/]:::form
-    C3 --> C4[/"RATIFY skills + pricing units — pre-filled; adjust rates<br/>(EZ: coins/credits)"/]:::form
+    C0 --> C1[/"RATIFY operating entities — confirm/add (currency, tax, prefix); one org → many"/]:::form
+    C1 --> C2[/"RATIFY teams & roles — AI-mapped; rename/tweak · optionally delegate module-admins<br/>[J] EZ: SWAT / QA / SME / pool"/]:::form
+    C2 --> C3[/"RATIFY catalog — pre-filled offerings + levels + delivery/billing model; edit"/]:::form
+    C3 --> C4[/"RATIFY skills + pricing units — pre-filled; adjust rates (EZ: coins/credits)"/]:::form
+    C4 --> C5[/"SET UP first client relationship — client + entity + requester +<br/>per-client pricing, SLA & transparency (isolated per entity)"/]:::form
+    C5 --> C6[/"ACTIVATE modules needed — Delivery always; Invoicing/Wallet/People/etc. as needed"/]:::form
   end
   C0 -.-> EC1["⚡ JIT — asks ONLY what's missing to deliver, in priority order"]:::eff
-  C4 -.-> EC2["⚡ You EDIT AI proposals; you never author from a blank page"]:::eff
+  C4 -.-> EC2["⚡ You EDIT AI proposals; never author from blank"]:::eff
 
-  %% ---- D. PEOPLE (self-onboard) ----
+  %% ---- D. PEOPLE SELF-ONBOARD ----
   subgraph D["D · ADD PEOPLE  (they self-onboard)"]
-    C4 --> D1["Bulk-invite / connect directory (SSO-ready)"]:::sys
+    C6 --> D1["Bulk-invite / connect directory (SSO-ready)"]:::sys
     D1 --> D2["Per person: AI pre-fills profile from their portable identity/history"]:::ai
     D2 --> D3[/"Person ratifies profile + declares skills"/]:::form
     D3 --> D4{"Auto-approve by policy?"}:::dec
@@ -48,15 +52,13 @@ flowchart TD
   end
   D5 -.-> ED["⚡ People onboard themselves; admin handles only exceptions"]:::eff
 
-  %% ---- E. GO LIVE, THEN DEEPEN JIT ----
+  %% ---- E. GO LIVE + DEEPEN JIT ----
   D5 --> E1{"Any prepaid billing?"}:::dec
   E1 -->|"Yes"| E2[/"Fund wallet"/]:::form
   E1 -->|"No"| E3
-  E2 --> E3{"Readiness: minimum-viable config complete?"}:::dec
-  E3 -->|"No — 1-2 gaps shown"| C0
+  E2 --> E3{"Readiness: minimum-viable config complete?<br/>(entity · team · offering · skills · client+requester · pricing · wallet-if-prepaid)"}:::dec
+  E3 -->|"No — gaps shown"| C0
   E3 -->|"Yes"| READY(["✅ WORKSPACE OPERATIONAL — it can deliver"]):::state
-  READY --> F1["Everything else stays JIT: more offerings, SLAs, integrations,<br/>modules (payroll/HR/invoicing) — activated only when a job needs them"]:::sys
-  F1 -.-> EF["⚡ No big-bang setup — the workspace deepens as it's used"]:::eff
-
-  %% ---- Tenant-Zero note ----
-  READY -.-> TZ["EZ onboards through THIS SAME flow (no back-door) —<br/>its SWAT/catalog/coins are just this workspace's config"]:::eff
+  READY --> F1["Rest stays JIT: more offerings, SLAs, integrations, modules —<br/>activated only when a job needs them"]:::sys
+  F1 -.-> EF["⚡ No big-bang setup — deepens as it's used"]:::eff
+  READY -.-> TZ["EZ onboards through THIS SAME flow (no back-door) — its config is just this workspace's data"]:::eff

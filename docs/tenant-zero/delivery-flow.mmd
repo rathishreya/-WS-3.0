@@ -1,8 +1,6 @@
-%% WS 3.0 — DELIVERY (efficiency-first re-cut).
-%% Core shift (vision 2.4/4.5): AI COMPOSES the whole plan from the brief; the human
-%% RATIFIES in ONE step — replacing the manual create→split→allocate→price chain.
-%% Human touchpoints drop from ~6 to ~2 (ratify plan, confirm verify).
-%% Dotted purple = AI does it · dotted teal (⚡) = the efficiency it buys.
+%% WS 3.0 — DELIVERY (efficiency-first, complete, vision-aligned).
+%% Core shift (vision 2.4/4.5): AI COMPOSES the whole plan from the brief; human RATIFIES once.
+%% Human touchpoints ~6 → 2. Purple = AI · teal ⚡ = efficiency · red = rework/exception · [J] = Joy QA.
 flowchart TD
   classDef form fill:#E8ECFB,stroke:#3B5BDB,color:#12162a;
   classDef sys fill:#EFF1F5,stroke:#9aa1ad,color:#191C22;
@@ -12,65 +10,87 @@ flowchart TD
   classDef eff fill:#E3F0FA,stroke:#1F7A9E,color:#0c2e3a,stroke-dasharray:4 3;
   classDef rework fill:#F8E6E1,stroke:#C6503C,color:#3a1712;
 
-  %% ---- 1. INTAKE + AI COMPOSE (the collapse) ----
-  IN(["Request arrives — any channel (form / email / client tool)"]):::state --> AI1["AI reads the brief + files in the sealed enclave"]:::ai
-  AI1 --> AI2["AI COMPOSES the whole plan in one pass:<br/>offering + level · file split · activities · performer picks ·<br/>deadline · scope sheet · price"]:::ai
+  %% ---- 1. REQUESTER + INTAKE + AI COMPOSE ----
+  REQ([/"Requester submits — brief + files + deadline<br/>(any channel: form / email / client tool)"/]):::form --> AI1["AI reads brief + files in the sealed enclave"]:::ai
+  AI1 --> AI2["AI COMPOSES the whole plan in one pass:<br/>offering + level · file split · a TREE of activities ·<br/>performer picks · deadline · scope sheet · price"]:::ai
   AI2 -.-> E1["⚡ ONE AI draft replaces ~6 manual steps (create · split · allocate · price)"]:::eff
+  AI2 -.-> TREE["Plan = a tree of activities: independent branches run in PARALLEL;<br/>dependent ones wait on their input (output→input gate)"]:::eff
 
   %% ---- 2. ONE RATIFICATION ----
-  AI2 --> R1{"Owner ratifies the plan?<br/>(human touchpoint #1)"}:::dec
-  R1 -->|"Tweak"| R2[/"Owner edits the proposal inline"/]:::form
+  AI2 --> R1{"Owner ratifies the plan?<br/>(human touchpoint #1 · [J] real allocation logic)"}:::dec
+  R1 -->|"Tweak"| R2[/"Owner edits inline"/]:::form
   R2 --> R1
   R1 -->|"Reject"| RX["Owner re-briefs / re-scopes"]:::sys
   RX --> AI2
-  R1 -->|"Approve — one click"| PUB["Published; request goes LIVE"]:::sys
+  R1 -->|"Approve — one click"| PUB["Published; request LIVE; activities fan out in parallel"]:::sys
   PUB -.-> E2["⚡ One approval, not a multi-screen wizard"]:::eff
 
-  %% ---- 3. CHANNEL-NATIVE MOBILIZATION ----
-  PUB --> MB{"Prepaid/pricing check (auto)"}:::dec
+  %% ---- 3. CHANNEL-NATIVE MOBILIZATION (per activity, in parallel) ----
+  PUB --> MB{"Pricing/wallet check (auto)"}:::dec
   MB -->|"Fails"| MBX["Auto-flag owner to fix / fund"]:::rework
   MBX --> PUB
-  MB -->|"OK"| NOT["Performers notified in chat — WhatsApp/SMS, one-tap accept"]:::sys
-  NOT -.-> E3["⚡ Most performers never open the app — accept from their phone"]:::eff
+  MB -->|"OK"| NOT["Performer notified in chat — WhatsApp/SMS, one-tap accept"]:::sys
+  NOT -.-> E3["⚡ Most performers never open the app"]:::eff
   NOT --> ACC{"Accept?"}:::dec
-  ACC -->|"Decline"| RE["AI proposes next best; auto-escalates by timezone/responsiveness"]:::ai
-  RE --> NOT
-  ACC -->|"Accept"| WK{"Performer type (already set in the plan)"}:::dec
+  ACC -->|"Decline"| RE["AI proposes next best; escalates by timezone/responsiveness"]:::ai
+  RE --> EX{"Candidates exhausted?"}:::dec
+  EX -->|"No"| NOT
+  EX -->|"Yes"| FALL["Fallback: open to curated bid · source externally · escalate to ops [J]"]:::rework
+  FALL --> NOT
+  ACC -->|"Accept"| WK{"Performer type (set in the plan)"}:::dec
 
-  %% ---- 4. PERFORM ----
-  WK -->|"AI agent"| AG["Agent first-pass (EZ: Flip / MT / OCR)"]:::ai
-  WK -->|"Human + tool"| HM[/"Person works; progress auto-logged from the tool"/]:::form
-  AG --> QAG
+  %% ---- 4. PERFORM (+ agent fallback, interim) ----
+  WK -->|"AI agent"| AG["Agent first-pass (EZ: Flip/MT/OCR)"]:::ai
+  AG --> AGF{"Agent succeeded?"}:::dec
+  AGF -->|"No"| HM
+  AGF -->|"Yes"| QAG
+  WK -->|"Human (+ tool)"| HM[/"Person works; progress auto-logged from the tool"/]:::form
   HM --> ITM{"Interim draft?"}:::dec
-  ITM -->|"Yes"| ITS["Auto-share draft to requester"]:::sys
+  ITM -->|"Yes"| ITS["Auto-share draft to requester (border-safe)"]:::sys
   ITS --> HM
   ITM -->|"Final"| QAG
 
+  %% ---- SLA monitor (cross-cutting) ----
+  HM -.-> SLA{"SLA at-risk / breached?"}:::dec
+  SLA -->|"At-risk"| SLAe["Auto-escalate + surface risk signal to requester [J: policy]"]:::rework
+  SLAe -.-> HM
+
   %% ---- 5. POLICY-DRIVEN QA ----
-  QAG{"QA policy for this activity?"}:::dec
+  QAG{"QA policy for this activity? [J]"}:::dec
   QAG -->|"AI-safe → auto-QA"| DLV
   QAG -->|"Needs human"| HQA[/"Reviewer checks (EZ: QA layer)"/]:::form
   HQA --> HQD{"Pass?"}:::dec
   HQD -->|"Fail — rework"| HM
   HQD -->|"Pass"| DLV
-  QAG -.-> E4["⚡ Human QA only where policy requires — not on every job"]:::eff
+  QAG -.-> E4["⚡ Human QA only where policy requires"]:::eff
 
-  %% ---- 6. AUTO-DELIVER + VERIFY (AI-preflighted) ----
-  DLV["Auto-deliver + auto-promote within the org;<br/>owner sign-off only at a trust boundary"]:::sys --> APR{"Requester approves? (only where required)"}:::dec
+  %% ---- 6. ASSEMBLE + DELIVER + VERIFY ----
+  DLV{"All sibling activities + child assignments terminal?"}:::dec
+  DLV -->|"No — wait for dependencies"| WAIT["Hold; other branches still running"]:::sys
+  WAIT -.-> DLV
+  DLV -->|"Yes"| ASM["Auto-deliver + auto-promote within org; assemble deliverable"]:::sys
+  ASM --> OB["Owner sign-off at trust boundary (mandatory review)"]:::sys
+  OB --> DC["Deliver to requester's store; requester gets status roll-up throughout"]:::sys
+  DC --> APR{"Requester approves? (only where required)"}:::dec
   APR -->|"Reject — rework"| HM
-  APR -->|"Approve"| VP["AI pre-computes the reconciliation:<br/>splits · fees · counts · exceptions"]:::ai
-  VP --> VF{"Verifier one-tap confirm?<br/>(human touchpoint #2 — EZ: SWAT TL)"}:::dec
-  VF -.-> E5["⚡ Verify = a ~10-second confirm, not a manual reconciliation"]:::eff
+  APR -->|"Approve"| VP["AI pre-computes reconciliation: splits · fees · counts · exceptions"]:::ai
+  VP --> VF{"Verifier one-tap confirm?<br/>(human touchpoint #2 · EZ: SWAT TL)"}:::dec
+  VF -.-> E5["⚡ Verify = ~10-second confirm, not manual reconciliation"]:::eff
   VF -->|"Fix"| HM
   VF -->|"Confirm"| BILL
 
   %% ---- 7. ROLLING BILL + LOOPS ----
   BILL["Invoice + performer payout raised (per billing model)"]:::sys
-  BILL -.-> E6["⚡ Rolling, the moment Verify clears — no month-end batch pile-up"]:::eff
-  BILL --> LP{"Ongoing engagement or recurring request?"}:::dec
+  BILL -.-> E6["⚡ Rolling the moment Verify clears — no batch pile-up"]:::eff
+  BILL --> LP{"Ongoing / recurring / one-off?"}:::dec
   LP -->|"Ongoing — next period"| AI2
   LP -->|"Recurring — next cycle"| AI1
-  LP -->|"Done"| DONE(["Delivered · billed · paid"]):::state
+  LP -->|"One-off — done"| DONE(["Delivered · billed · paid"]):::state
+  DONE --> GW{"Goodwill revision later?"}:::dec
+  GW -->|"Yes"| GW2["New linked assignment (no claw-back)"]:::sys
+  GW2 --> AI2
+  GW -->|"No"| CLOSED(["Closed"]):::state
+  DONE -.-> SB["⚡ Net human steps: ~6 → 2 (ratify plan · confirm verify)"]:::eff
 
-  %% ---- efficiency scoreboard ----
-  DONE -.-> SB["⚡ Net: ~6 human steps → 2 (ratify plan · confirm verify).<br/>Everything else is AI-composed or channel-native."]:::eff
+  %% ---- Phase-2 note ----
+  DC -.-> P2["Phase 2: if the requester is another org, this Deliver crosses a boundary —<br/>encapsulated, transparency-dialled, entity-isolated (EY case)"]:::eff
