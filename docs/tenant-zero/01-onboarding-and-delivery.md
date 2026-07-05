@@ -87,7 +87,7 @@ flowchart TD
   classDef rework fill:#F8E6E1,stroke:#C6503C,color:#3a1712;
 
   %% ---- 1. REQUESTER + INTAKE + AI COMPOSE ----
-  REQ([/"Requester submits — brief + files + deadline<br/>(any channel: form / email / client tool)"/]):::form --> AI1["AI reads brief + files in the sealed enclave"]:::ai
+  REQ[/"Requester submits — brief + files + deadline<br/>via any channel: form, email, client tool"/]:::form --> AI1["AI reads brief + files in the sealed enclave"]:::ai
   AI1 --> AI2["AI COMPOSES the whole plan in one pass:<br/>offering + level · file split · a TREE of activities ·<br/>performer picks · deadline · scope sheet · price"]:::ai
   AI2 -.-> E1["⚡ ONE AI draft replaces ~6 manual steps (create · split · allocate · price)"]:::eff
   AI2 -.-> TREE["Plan = a tree of activities: independent branches run in PARALLEL;<br/>dependent ones wait on their input (output→input gate)"]:::eff
@@ -120,7 +120,7 @@ flowchart TD
   AG --> AGF{"Agent succeeded?"}:::dec
   AGF -->|"No"| HM
   AGF -->|"Yes"| QAG
-  WK -->|"Human (+ tool)"| HM[/"Person works; progress auto-logged from the tool"/]:::form
+  WK -->|"Human + tool"| HM[/"Person works; progress auto-logged from the tool"/]:::form
   HM --> ITM{"Interim draft?"}:::dec
   ITM -->|"Yes"| ITS["Auto-share draft to requester (border-safe)"]:::sys
   ITS --> HM
@@ -173,6 +173,7 @@ flowchart TD
 ```
 
 ---
+
 
 
 
