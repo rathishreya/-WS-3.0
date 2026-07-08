@@ -1,187 +1,544 @@
-# WS 3.0 — Architecture
+# WS 3.0 — Technical Architecture
 
-**Audience:** Joy & Bhavya (review). **Companion:** [`spec.md`](./spec.md) (the *what* and the field-level detail). This doc is the *how it's built*: the shape of the system, the layers, the isolation model, and the build path.
+**Audience:** Bhavya (architecture sign-off) & Joy (review). **Companion:** [`spec.md`](./spec.md) — the *what* (layers, fields, use-cases). This doc is the **engineering**: stack, service decomposition, data model + DB diagram, communications, events, security/isolation, deployment, and the open architecture calls.
 
-> **One line:** WS 3.0 is a **multi-tenant control plane** for orchestrated work. It holds the *graph* of work (who, what, when, how much) — never the raw content. EZ is simply the **first tenant** ("Tenant-Zero"), configured through the same surface as everyone else. No EZ logic is baked into the platform; every EZ-ism is config.
+> **System in one line:** a **multi-tenant control plane** that stores the *graph* of orchestrated work (never raw content), runs a single lifecycle engine, and composes plans with AI in a zero-retention enclave. EZ is the first tenant, configured through the same surface as everyone else.
 
----
-
-## 1. The core stance (read this first)
-
-Three decisions shape everything below. If these are right, the rest follows.
-
-1. **Platform-generic, EZ-as-config.** The platform ships primitives (Party, Relationship, Request, Assignment, Activity, roles, money events). EZ's model — SWAT/QA/SME/pool teams, coins, 10:20:30 SLA, the 86-service catalog — is **data in EZ's workspace**, not code in the platform. Litmus test we applied throughout: *could a translation agency, a design studio, and a research firm each run on this untouched?* If a feature only makes sense for EZ, it's config.
-
-2. **Control plane, not system of record for content.** WS stores the **metadata graph** and **file pointers**. Raw bytes (briefs, deliverables, PII) live in the tenant's store and are processed ephemerally in a **sealed zero-retention enclave**. This is what makes multi-tenant confidentiality real rather than promised.
-
-3. **AI composes → human ratifies.** The efficiency thesis. AI drafts the whole plan from a brief; humans touch the work exactly twice (ratify the plan, confirm the verify). Everything else is system-derived. This is a *product* stance with architectural consequences (an enclave, a composer, a suggest-not-act contract).
+**Conventions:** ✅ = locked in our design discussion · **⚠️ Bhavya** = an open architecture decision for sign-off · `(EZ: …)` = illustrative config only.
 
 ---
 
-## 2. The structural model — L0 / L1 / L2
+## 1. Design tenets that constrain the architecture
 
-| Level | Who | Owns |
+Everything below serves five non-negotiables we locked (see `spec.md` §11):
+
+1. **One graph, one system, zero sync.** The single biggest lesson from the ERP: the ERP↔WS boundary + Google-Sheets-as-DB caused all the drift, rollback-by-delete, and repair-cron pain. **We do not rebuild that.** → a modular-monolith **core** with one transactional database, not a constellation of services that sync to each other.
+2. **Status is derived in the same transaction as the state change.** No async projection to compute state. Events exist for *reporting and integration*, never for deriving truth. → no repair crons, no drift.
+3. **Control plane, not content store.** The DB holds metadata + **file pointers**; raw bytes live in tenant storage and are processed in a **zero-retention enclave**. → the enclave and the byte-handling path are *physically separate* from the core.
+4. **Config-not-code.** Every EZ-ism is a row, not a branch. → a first-class config schema + a readiness engine, not hardcoded rules.
+5. **Two isolation levels.** `workspace_id` (crypto) and `operating_entity_id` (policy) on every record. → enforced at the data layer (RLS), server-authoritative.
+
+---
+
+## 2. Tech stack
+
+| Concern | Choice | Rationale / note |
 |---|---|---|
-| **L0 — Platform Operator** | WS team | Provisions workspaces, sets deployment tier + module availability, assigns the L1 admin. Oversight only — **no back-door** into tenant data. |
-| **L1 — Workspace = Organization = Tenant** | The workspace admin | Configures *everything* declaratively: entities, catalog, skills, teams/roles, pricing, billing/delivery models, wallet, SLAs, allocation policy, channels, terminology, module activation. |
-| **L2 — Operational roles** | Inside a workspace | Run the work: owner · performer · reviewer · verifier · requester · AI-agent. (EZ maps these to SWAT/QA/SME/pool — a naming, not a new structure.) |
-
-- **1 organization = 1 workspace, many operating-entities.** (EZ = one workspace holding EZ Lab / ArabEasy / CASPR.)
-- **EZ onboards through the same flow as any tenant** — the strongest proof the platform is generic.
-
----
-
-## 3. The six architectural layers
-
-Everything — cross-org work, multi-entity isolation, EZ itself — falls out of the **same six layers + config**. Nothing is a special case.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ 6 · AI / Edges     composer (enclave) · channel adapters      │  suggest→approve
-├─────────────────────────────────────────────────────────────┤
-│ 5 · Money & Files  billable events · invoicing · payout ·     │  pluggable, gated
-│                    wallet ledger · file pointers · enclave     │
-├─────────────────────────────────────────────────────────────┤
-│ 4 · Boundary       cross-org edge · encapsulation ·           │  one edge, two views
-│                    brokered files · transparency dial          │
-├─────────────────────────────────────────────────────────────┤
-│ 3 · Lifecycle      Request→Assignment→Activity ·              │  one engine, status
-│                    state+status in-engine · unified models     │  derived (no drift)
-├─────────────────────────────────────────────────────────────┤
-│ 2 · Config Engine  declarative knobs · readiness engine ·     │  config, not code
-│                    archetypes · capability gating              │
-├─────────────────────────────────────────────────────────────┤
-│ 1 · Tenancy/Identity  workspace · operating-entity ·          │  two isolation levels
-│                    Party + Relationship · RBAC                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Why this matters:** a cross-org job is not a new subsystem — it's Layer 1's Relationship edge (a "vendor" from one side, a "client" from the other) viewed through Layer 4. Multi-entity isolation is just Layer 1's second scoping key. EZ is just a fully-populated Layer 2. **The primitives are few; the behaviours are config.**
+| **API style** | **GraphQL gateway + persisted queries** | one typed contract for a POV-scoped UI; persisted queries cap the attack/perf surface. **⚠️ Bhavya** to confirm GraphQL vs REST. |
+| **Backend** | **Python 3.12 / FastAPI** | typed, async-native, fast. (ERP is Django today — **⚠️ Bhavya** confirms FastAPI vs staying Django.) |
+| **Core data** | **PostgreSQL 16** | typed relational schema (replaces JSONB `.get().get()`), **row-level security** for `(workspace_id, operating_entity_id)`, strong transactional guarantees for the one-graph engine. |
+| **Frontend** | **React + Apollo Client** | reuses WS 2.0 patterns incl. `chat-v2` (the default mobilization channel). |
+| **Cache / queue** | **Redis** + a real task runner (**Celery / RQ / Temporal — ⚠️ Bhavya**) | replaces the ~132 fire-and-forget management commands with retryable, audited jobs. |
+| **Event backbone** | **Postgres outbox → broker** (Redis Streams / Kafka / NATS — **⚠️ Bhavya**) | reliable event emission without dual-write drift (outbox pattern). |
+| **Object storage** | **S3-compatible**, plus connected-cloud & own-infra tiers | the graph stores `file_ref` pointers only; bytes never touch the core DB. |
+| **Enclave** | zero-retention compute sandbox (locked egress, ephemeral FS) | AI composer + agent performers run here; bytes in → result out → nothing retained. |
+| **AuthN** | OIDC / SSO-ready; portable identity (Phase 2) | replaces derived-password + email-allowlist patterns from the ERP. |
+| **Secrets / crypto** | per-workspace keys; **BYOK** for regional/sovereign; field-level encryption (Fernet-class) for cost/pay/PII | salary/PII never stored in plaintext. |
+| **Observability** | structured logs + traces + tenant-inspectable audit log | one engine → reporting is reliable by construction. |
+| **Infra** | containers + per-tier deployment (shared / regional / sovereign) | tier is a `Workspace` attribute; see §8. |
 
 ---
 
-## 4. Tenancy & isolation — the two levels
+## 3. Service decomposition
 
-This is the part Bhavya must sign off. There are **two** isolation keys, deliberately:
+**The honest call (⚠️ Bhavya to ratify): a modular-monolith *core*, not a microservice-per-domain.** Splitting config / lifecycle / allocation / money into separate networked services would force distributed transactions and cross-service sync to keep the work graph consistent — **exactly the ERP↔WS drift we are dissolving.** So those live as *modules inside one deployable core, sharing one DB and one transaction boundary.* We split out a service **only** where a genuine hard boundary exists: raw bytes, the enclave, external channels, or read/analytics load.
 
-| Key | Scope | Isolation mechanism | Use |
+```mermaid
+flowchart TB
+  subgraph Client["Clients"]
+    UI["React / Apollo UI"]
+    CH["Channels: WS-chat · WhatsApp · SMS · email · Phrase"]
+  end
+
+  GW["API Gateway / BFF<br/>GraphQL · persisted queries · authN · POV-scoping"]
+
+  subgraph Core["CORE ORCHESTRATION SERVICE  (modular monolith · one Postgres · one transaction)"]
+    direction TB
+    TEN["Tenancy & Identity<br/>Workspace · Entity · Party · Relationship · RBAC"]
+    CFG["Config Engine<br/>catalog · skills · pricing · policies · readiness"]
+    LC["Lifecycle Engine<br/>Request→Assignment→Activity · state+status in-txn"]
+    ALL["Allocation<br/>hard filters · scored proposal · fallback ladder"]
+    MON["Money<br/>billable event · invoicing · wallet ledger · payout"]
+    BND["Boundary / Federation<br/>cross-org edge · encapsulation · provenance strip"]
+  end
+
+  subgraph Sep["Split-out services (hard boundaries only)"]
+    CMP["AI Composer<br/>stateless · per-tenant · ZERO-RETENTION ENCLAVE"]
+    FB["File Broker<br/>file_refs · access grants · byte I/O · enclave feed"]
+    CG["Channel Gateway<br/>adapter interface · one-tap payloads · escalation"]
+    RPT["Reporting / Read-Model<br/>projections off domain events"]
+    WRK["Task Runtime<br/>retryable jobs: escalation · invoice · payout · period rollover"]
+  end
+
+  BUS["Domain Event Bus  (Postgres outbox → broker)"]
+
+  UI --> GW
+  CH --> CG
+  GW --> Core
+  Core -->|"compose (brief+files via scoped cred)"| CMP
+  CMP -->|"bytes on demand"| FB
+  Core <-->|"pointers · grants"| FB
+  Core -->|"mobilize command"| CG
+  CG -->|"one-tap callback (webhook)"| GW
+  Core -->|"outbox"| BUS
+  BUS --> RPT
+  BUS --> WRK
+  WRK --> Core
+  Core <-->|"signed, encapsulated boundary API"| Core2["Another Workspace's Core<br/>(cross-org peer)"]
+```
+
+| Service | Owns | Why separate (or not) | Sync/async |
 |---|---|---|---|
-| **`workspace_id`** | Separate org / tenant | **Cryptographic** — separate tenant, BYOK for regional/sovereign tiers | Two different organizations (EZ vs a client) |
-| **`operating_entity_id`** | A legal/billing unit *inside* one org | **Policy** — row-level scoping + need-to-know | EZ Lab vs ArabEasy inside EZ |
+| **API Gateway / BFF** | GraphQL schema, persisted queries, authN, POV-scoping | thin edge; one contract for the UI | sync |
+| **Core Orchestration** (modular monolith) | the **entire work graph + config + money events**, one Postgres, RLS | **deliberately not split** — one graph, one transaction, zero internal sync | sync (in-process modules) |
+| ├ Tenancy & Identity | Workspace, Entity, Party, Relationship, Users, RBAC | module | in-txn |
+| ├ Config Engine | catalog, skills, rates, teams, policies, readiness | module | in-txn |
+| ├ Lifecycle Engine | Request/Assignment/Activity, state **+ status derived in-txn** | module | in-txn |
+| ├ Allocation | hard filters → scored proposal → fallback ladder | module | in-txn |
+| ├ Money | billable event, invoicing, wallet ledger, payout | module | in-txn |
+| └ Boundary/Federation | cross-org edge, encapsulation, provenance strip | module with a **guarded external API** | sync + signed |
+| **AI Composer** | brief→plan composition | **must** be isolated: zero-retention enclave, per-tenant, stateless | sync request/response |
+| **File Broker** | `file_ref`s, access grants, enclave byte feed | **must** be isolated: it touches raw bytes | sync + short-lived creds |
+| **Channel Gateway** | WS-chat/WhatsApp/SMS/email adapters, escalation | isolates external providers behind one adapter interface | async out, webhook in |
+| **Reporting / Read-Model** | analytical projections | keeps read/analytics load off the transactional core (I3) | async (event-fed) |
+| **Task Runtime** | escalation, invoice gen, payout runs, period rollovers, pre-mobilization | replaces the 132 hand-run commands with retry+audit | async (queue) |
 
-- Every relationship / work / wallet record carries **both** keys; access is scoped by `(workspace_id, operating_entity_id)`.
-- **Default isolated at the entity level too:** sibling entities don't see each other's relationships or work. *(Entity-1 does not learn Entity-2 is a vendor to Org B — the confidentiality primitive the EY case needs, designed in from day one even though the flow is Phase 2.)*
-- The org admin sees across entities **unless** entity-delegated module-admins blind even the admin (`module_admin_scope = entity`).
-- **The mirror:** an external org sees only the entity it works with, never the org's other entities.
-
-**Entity-vs-workspace is the client's choice** (both supported, interoperable, migratable): entities-in-one-WS (policy isolation, shared config) vs a workspace-per-entity (crypto isolation, own keys/tier). Splitting an entity into its own crypto-isolated workspace later is supported but is a **data-separation operation**, not a config toggle — flagged honestly.
-
-**Open for Bhavya:** transactional vs event-sourced lifecycle engine; the exact RLS/tenant-isolation mechanism; GraphQL gateway + persisted queries; async infra; stack confirmation. These fill *parameters* — they don't reshape the layers.
-
----
-
-## 5. The boundary — how workspaces connect (Layer 4)
-
-A cross-org connection is **one Relationship edge**, "vendor" from A's side and "client" from B's side. There is no separate cross-org machinery.
-
-- **In A's graph:** the vendor is **one opaque boundary node** (`boundary_node_id → maps_to: request_id in B`). A never sees B's tree, performers, method, sub-vendors, or costs.
-- **In B's graph:** a **new Request** with A as the client. B runs its own lifecycle, invisible to A.
-- **Brokered files:** inputs stay in A's store; B gets a **JIT scoped credential**; deliverables are **written back into A's store**; provenance is stripped at each hop.
-- **Chains (A→B→C):** each hop re-encapsulates — **A never learns C exists.**
-- **Transparency dial (config):** default opaque; the vendor may raise its own ceiling per relationship.
-- **Non-WS parties:** reached via a client-system adapter (email / Phrase / API), bounded by that tool's surface.
-
-Everything crosses through **one channel-adapter interface** and **one boundary contract** — so a second or third workspace is not new code, it's another edge.
+**⚠️ Bhavya decision:** modular-monolith core (recommended) vs full microservice split. Recommendation stands on tenet #1 — but if the team wants independent scaling/deploy per domain, the trade is distributed-transaction complexity and a sync surface we've worked to eliminate.
 
 ---
 
-## 6. Efficiency architecture — why it's 2 touchpoints, not 6
+## 4. Data model & DB diagram
 
-The lifecycle is built around **AI composes → owner ratifies**:
+One Postgres schema for the core. Every tenant-scoped table carries **`workspace_id`** and (where work/money/relationships live) **`operating_entity_id`** — both enforced by **row-level security**. Money is typed `Decimal`; cost/pay/PII are field-encrypted; the wallet ledger and audit log are **append-only**.
 
+```mermaid
+erDiagram
+  WORKSPACE ||--o{ OPERATING_ENTITY : has
+  WORKSPACE ||--o{ PARTY : scopes
+  WORKSPACE ||--o{ RELATIONSHIP : scopes
+  WORKSPACE ||--o{ OFFERING : scopes
+  WORKSPACE ||--o{ SKILL : scopes
+
+  PARTY ||--o| PERSON : "is-a (person)"
+  PARTY ||--o{ RELATIONSHIP : "from/to"
+  PERSON ||--o{ USER_IDENTITY : authenticates
+  USER_IDENTITY ||--o{ ACCESS_GRANT_ROLE : holds
+
+  OPERATING_ENTITY ||--o{ RELATIONSHIP : scoped_to
+  RELATIONSHIP ||--o{ ENGAGEMENT : governs
+
+  OFFERING ||--o{ OFFERING_ACTIVITY_TEMPLATE : defines
+  OFFERING ||--o{ RATE : priced_by
+  SKILL ||--o{ OFFERING_ACTIVITY_TEMPLATE : used_in
+  SKILL ||--o{ RATE : priced_by
+
+  ENGAGEMENT ||--o{ SERVICE_PERIOD : "Type-B cycles"
+  ENGAGEMENT ||--o{ REQUEST : contains
+
+  REQUEST ||--o{ ASSIGNMENT : "AI-composed → ratified"
+  REQUEST ||--o| PROPOSAL : "composer output"
+  ASSIGNMENT ||--o{ ACTIVITY : "tree of"
+  ACTIVITY ||--o{ ACTIVITY_IO : "inputs/outputs"
+  ACTIVITY ||--o| ALLOCATION : proposes
+  ACTIVITY ||--o| MOBILIZATION : notifies
+  ACTIVITY ||--o| BOUNDARY_NODE : "if cross-org"
+
+  FILE_REF ||--o{ ACTIVITY_IO : referenced_by
+  FILE_REF ||--o{ ACCESS_GRANT : brokered_by
+
+  ASSIGNMENT ||--o| BILLABLE_EVENT : "emits on verify"
+  BILLABLE_EVENT ||--o| INVOICE_LINE : bills
+  INVOICE ||--o{ INVOICE_LINE : groups
+  BILLABLE_EVENT ||--o{ PAYOUT_LINE : pays
+  RELATIONSHIP ||--o| WALLET : "prepaid (client)"
+  WALLET ||--o{ WALLET_LOT : "FIFO lots"
+  WALLET ||--o{ WALLET_LEDGER : "append-only truth"
+
+  WORKSPACE {
+    uuid id PK
+    string org_code
+    string region
+    string deployment_tier
+    string byok_key_ref
+    jsonb modules_available
+  }
+  OPERATING_ENTITY {
+    uuid id PK
+    uuid workspace_id FK
+    string code
+    string country
+    string billing_currency
+    string tax_profile
+    bool entity_isolation
+  }
+  PARTY {
+    uuid id PK
+    uuid workspace_id FK
+    string type "org|person"
+    string display_name
+  }
+  PERSON {
+    uuid id PK
+    uuid party_id FK
+    string email
+    string party_role
+    string contract_type
+    uuid operating_entity_id FK
+    bytes cost_encrypted
+  }
+  RELATIONSHIP {
+    uuid id PK
+    uuid workspace_id FK
+    uuid from_party FK
+    uuid to_party FK
+    string type "employment|client|vendor|tenant"
+    uuid operating_entity_id FK
+    jsonb config
+    string status
+  }
+  OFFERING {
+    uuid id PK
+    uuid workspace_id FK
+    string name
+    string delivery_model "deliverable|retainer|outcome"
+    string billing_model
+    jsonb levels
+  }
+  SKILL {
+    uuid id PK
+    uuid workspace_id FK
+    string name
+    jsonb proficiency_scale
+  }
+  ENGAGEMENT {
+    uuid id PK
+    uuid client_relationship_id FK
+    string delivery_model
+    string billing_model
+  }
+  SERVICE_PERIOD {
+    uuid id PK
+    uuid engagement_id FK
+    string period
+    string status
+  }
+  REQUEST {
+    uuid id PK
+    uuid workspace_id FK
+    uuid operating_entity_id FK
+    uuid requester_id FK
+    uuid engagement_id FK
+    text brief
+    date deadline
+    string source_channel
+    string state
+    string status "derived in-txn"
+  }
+  PROPOSAL {
+    uuid id PK
+    uuid request_id FK
+    jsonb proposed_activities
+    jsonb scope_sheet
+    jsonb confidence
+    jsonb clarifying_questions
+    jsonb provenance
+  }
+  ASSIGNMENT {
+    uuid id PK
+    uuid request_id FK
+    uuid offering_id FK
+    string level
+    string unit_type
+    numeric unit_count
+    uuid owner_id FK
+    numeric price
+    string state
+    string status
+  }
+  ACTIVITY {
+    uuid id PK
+    uuid assignment_id FK
+    uuid skill_id FK
+    string performer_type "human|agent|human+tool"
+    uuid performer_id FK
+    uuid dependency_activity_id FK
+    int sort_order
+    string qa_policy
+    string state
+    string status "derived in-txn"
+  }
+  ACTIVITY_IO {
+    uuid id PK
+    uuid activity_id FK
+    uuid file_ref_id FK
+    string role "input|output"
+  }
+  FILE_REF {
+    uuid id PK
+    uuid workspace_id FK
+    string store_location
+    string key
+    string checksum
+    uuid owner_entity_id FK
+  }
+  ACCESS_GRANT {
+    uuid id PK
+    uuid file_ref_id FK
+    string grantee
+    jsonb scope
+    timestamp expiry
+    bool revocable
+  }
+  ALLOCATION {
+    uuid id PK
+    uuid activity_id FK
+    jsonb candidates_scored
+    uuid proposed_performer_id
+    jsonb alternates
+    jsonb reasons
+  }
+  MOBILIZATION {
+    uuid id PK
+    uuid activity_id FK
+    string channel
+    timestamp sent_at
+    string response
+    int escalation_step
+  }
+  BOUNDARY_NODE {
+    uuid id PK
+    uuid activity_id FK
+    uuid linked_relationship_id FK
+    string maps_to_request_ref
+    string visible_status
+    string opacity_level
+  }
+  BILLABLE_EVENT {
+    uuid id PK
+    uuid assignment_id FK
+    uuid verified_by FK
+    numeric unit_count
+    numeric unit_price
+    numeric amount
+    string currency
+    string billing_model
+    uuid operating_entity_id FK
+    uuid client_relationship_id FK
+  }
+  INVOICE {
+    uuid id PK
+    uuid operating_entity_id FK
+    string grouping_rule
+    jsonb tax
+    string status
+  }
+  INVOICE_LINE {
+    uuid id PK
+    uuid invoice_id FK
+    uuid billable_event_id FK
+    jsonb rate_snapshot
+  }
+  PAYOUT_LINE {
+    uuid id PK
+    uuid billable_event_id FK
+    uuid performer_id FK
+    string period
+    numeric amount
+    string status
+  }
+  WALLET {
+    uuid id PK
+    uuid relationship_id FK
+    numeric balance
+    numeric cost_per_credit
+  }
+  WALLET_LOT {
+    uuid id PK
+    uuid wallet_id FK
+    numeric credits
+    numeric remaining
+    date validity
+  }
+  WALLET_LEDGER {
+    uuid id PK
+    uuid wallet_id FK
+    string op "deduct|settle|refund"
+    numeric delta
+    timestamp at
+  }
+  USER_IDENTITY {
+    uuid id PK
+    uuid person_id FK
+    string auth_ref
+    bool sso
+  }
+  ACCESS_GRANT_ROLE {
+    uuid id PK
+    uuid user_id FK
+    string scope
+    string role_type
+    string role_status
+  }
+  RATE {
+    uuid id PK
+    uuid workspace_id FK
+    uuid skill_id FK
+    uuid relationship_id FK
+    string unit_type
+    numeric rate
+  }
+  OFFERING_ACTIVITY_TEMPLATE {
+    uuid id PK
+    uuid offering_id FK
+    uuid skill_id FK
+    int sort_order
+    uuid dependency_template_id FK
+    string qa_policy
+  }
 ```
-brief + files ─▶ [AI composer, in the enclave] ─▶ proposed plan
-                     (offering · file split · activity tree ·
-                      performers · deadline · scope · price)
-                                  │
-                          ┌───────┴────────┐
-                    OWNER RATIFIES  ◀── human touchpoint #1
-                          │
-                 activities fan out in parallel
-                 (channel-native one-tap mobilization; most
-                  performers never open the app)
-                          │
-                 perform → policy-driven QA → assemble → deliver
-                          │
-                 AI pre-computes reconciliation
-                          │
-                 VERIFIER CONFIRMS  ◀── human touchpoint #2
-                          │
-                 billable event → invoicing + payout (rolling)
-```
 
-- **The composer** reads only the tenant's own config, is stateless and per-tenant scoped, and **suggests — never acts**. Its output is always editable inline.
-- **Status is derived in the same transaction/event as the state change** — the single biggest reliability fix vs WS 2.0 (no async drift, no repair crons, no Google-Sheet shadow DB).
-- **Mobilization is channel-native:** WS-chat by default (reuses WS 2.0 `chat-v2`), WhatsApp/SMS as user-selectable paid fallbacks, all behind one adapter. **No bidding** (removed per Bhavya).
+**Notes on the model**
+- **Party + Relationship is the spine.** Tenant/client/vendor are `RELATIONSHIP.type` values, not tables. A cross-org link is one `RELATIONSHIP` row seen as `vendor` by A and `client` by B.
+- **The work graph is a tree** via `ACTIVITY.dependency_activity_id`; independent branches run in parallel, dependent ones gate on their input.
+- **`status` is a stored column written in the same transaction as `state`** — not a projection. Reporting reads it; it never computes it.
+- **Money is append-only where it must be:** `WALLET_LEDGER` is the source of truth (no sheet mirror); `BILLABLE_EVENT` is immutable once emitted.
+- **Files are pointers.** `FILE_REF` never holds bytes; `ACCESS_GRANT` issues the short-lived brokered credentials for the enclave and for cross-org.
+- **⚠️ Bhavya:** transactional (this model) vs event-sourced. Recommendation: transactional core with an **outbox** for events — gets reliability without the read-model-as-truth complexity.
 
 ---
 
-## 7. What we are dissolving (the ERP) and the discipline for it
+## 5. Communications
 
-The EZ ERP is **dissolved and improved** — not ported. One graph, no ERP↔WS sync, no Sheets-as-database, no ~132 hand-run management commands. Each domain gets a keep / kill / redesign pass (full table in `spec.md` §9 and `03-domain-redesigns.md`):
+**Principle:** *sync within a transaction boundary, async across one.* Core modules talk in-process (one transaction). Everything crossing the core — bytes, channels, reporting, other workspaces — is an explicit, guarded protocol.
 
-- **Kill the ERP↔WS boundary** → one system, zero sync (removes the whole drift/rollback class).
-- **Kill Google-Sheets-as-database** → the ledger *is* the source of truth.
-- **Kill fire-and-forget scripts** → UI + validated APIs + a real task queue (retry/audit).
-- **Config-not-code + one lifecycle engine** → the two changes that lift everything.
-- **Tested money math** → parity-test catalog before any money code is written.
-
----
-
-## 8. Stack (proposed — Bhavya to confirm)
-
-| Layer | Choice | Note |
+| Path | Mechanism | Why |
 |---|---|---|
-| Backend | **Python / FastAPI** | typed, async-ready |
-| Frontend | **React / Apollo** | reuses WS 2.0 patterns incl. `chat-v2` |
-| Data | **Postgres** | typed schema, RLS for entity scoping (replaces JSONB `.get().get()`) |
-| Cache/queue | **Redis** + a real task queue | retry + audit, not fire-and-forget threads |
-| Files | **S3-compatible** + connected-cloud + own-infra tiers | graph holds pointers only |
-| Enclave | zero-retention compute | bytes ephemeral; access flows to the tool, never a person |
+| UI → Gateway | GraphQL / HTTPS, persisted queries | one typed, POV-scoped contract |
+| Gateway → Core | sync call (in-proc or gRPC) | request/response for the graph |
+| **Core module ↔ Core module** | **in-process, one DB transaction** | the one-graph rule — **no network sync between config/lifecycle/allocation/money** |
+| Core → AI Composer | sync request/response, authenticated; brief/files handed as a **scoped credential**, not bytes | keeps content in the enclave, zero-retention |
+| Composer / agents → File Broker | short-lived credential; bytes streamed into the enclave, nothing retained | control-plane discipline |
+| Core → Channel Gateway | **async command** ("mobilize", payload) | external providers, ret/escalation |
+| Channel → Gateway | **webhook callback** (one-tap accept/decline) | performer never opens the app |
+| Core → Reporting / Workers | **domain events via outbox → broker** | reliable, drift-free (state already committed) |
+| Worker → Core | authenticated API calls | escalation, invoicing, payouts, period rollover |
+| **Core(A) ↔ Core(B)** cross-org | **signed, encapsulated Boundary API** + brokered file grants; provenance stripped per hop | A never sees B's internals; chains re-encapsulate so A never learns C exists |
+| Non-WS party | client-system **adapter** (email / Phrase / API) | bounded by that tool's surface |
 
-*(Today's ERP is Django; the redesign proposes FastAPI. Bhavya confirms.)*
+### The outbox pattern (why no drift)
+State + status commit in one transaction **together with** an `outbox` row. A relay publishes outbox rows to the broker. Consumers (reporting, workers) are eventually-consistent — but **truth is already committed in the core**, so a lost/late event never corrupts state. This is the structural fix for the ERP's sync/drift/repair-cron class of bugs.
+
+### Domain events (illustrative)
+`RequestCreated · PlanRatified · ActivityPublished · PerformerAccepted · OutputSubmitted · QAPassed · Delivered · BoundarySignedOff · Verified · BillableEventEmitted · InvoiceRaised · PayoutRaised · WalletDeducted/Settled/Refunded · PeriodClosed`. Events drive *reporting, notifications, and integrations* — never state derivation.
 
 ---
 
-## 9. The build path (gates, not a sprint)
+## 6. Key data-flow — brief → delivered → billed (the 2-touchpoint path, technically)
+
+```
+1. Intake      Channel/UI → Gateway → Core.Lifecycle: create REQUEST (source_channel, brief, files→FILE_REF via File Broker)
+2. Compose     Core → AI Composer (enclave): reads THIS workspace's config; returns PROPOSAL
+                 (offering, activity tree, performers, deadline, scope, price). Bytes stay in the enclave.
+3. Ratify #1   Owner approves in UI → Core writes ASSIGNMENT + ACTIVITY tree in ONE txn; state+status set together
+4. Mobilize    Core → Channel Gateway (async): one-tap payload per activity; WS-chat first, escalate to WhatsApp/SMS
+                 Performer taps accept → webhook → Core sets ACCESS_GRANT_ROLE.role_status=accepted
+5. Perform     Human/agent/tool produces output → ACTIVITY_IO(output) → FILE_REF; progress auto-logged
+6. QA          qa_policy: auto (agent-safe) or human reviewer Pass/Fail
+7. Assemble    When sibling activities + child assignments terminal → deliverable assembled; owner BOUNDARY_SIGNOFF
+8. Deliver     Written to requester's store (their property); status roll-up already visible throughout
+9. Verify #2   AI pre-computes reconciliation → verifier one-tap CONFIRM (the gate)
+10. Money      Core.Money emits BILLABLE_EVENT (immutable) → fans out:
+                 → Invoicing (if billing on): WS invoice / external connector / data-out
+                 → Payout: PAYOUT_LINE off verified work (rolling), independent of client payment
+                 → Wallet: settle the deduction; refund on cancel
+11. Loop       ongoing → next period (Type-B SERVICE_PERIOD) · recurring → next cycle · one-off → done
+```
+Human touchpoints across all of this: **two** (step 3, step 9). Cross-org (Phase 2) inserts a `BOUNDARY_NODE` at step 4 — the performer *is* another workspace, which runs steps 1–11 internally and opaquely.
+
+---
+
+## 7. Security & isolation architecture
+
+| Control | Mechanism |
+|---|---|
+| **Workspace isolation (crypto)** | separate keys per workspace; **BYOK** for regional/sovereign; sovereign tenants can get schema- or DB-level separation (**⚠️ Bhavya:** RLS-pooled vs schema-per-tenant vs db-per-tenant) |
+| **Entity isolation (policy)** | **Postgres RLS** on `(workspace_id, operating_entity_id)`; default isolated; `entity_isolation` flag; entity-delegated module-admins can blind even the org admin |
+| **Content confidentiality** | control-plane holds pointers only; bytes processed in a **zero-retention enclave** (locked egress, ephemeral FS, retain nothing); access flows to the *tool*, never a person |
+| **Cross-org encapsulation** | opaque `BOUNDARY_NODE`; provenance stripped per hop; brokered file `ACCESS_GRANT` (scoped, expiring, revocable); deliverables written to the recipient's store |
+| **RBAC** | **server-authoritative**, config-driven (replaces the ERP's frontend-JSON perms + email allowlists); POV-scoping at the Gateway |
+| **Encryption at rest** | field-level (Fernet-class) for cost/pay/PII; salary data never in plaintext |
+| **Audit** | append-only `AuditEvent`, tenant-inspectable; every state change and money event logged |
+| **AuthN** | OIDC/SSO-ready; Phase 2 portable identity for freelancers across orgs |
+
+---
+
+## 8. Deployment topology
+
+`Workspace.deployment_tier` selects the tier at provisioning:
+
+| Tier | Isolation | Keys | Infra |
+|---|---|---|---|
+| **Shared** | pooled multi-tenant, RLS | platform-managed | shared cluster |
+| **Regional** | region-pinned (data residency) | platform or BYOK | region-scoped cluster |
+| **Sovereign** | dedicated | **BYOK, customer-managed** | isolated infra / own cloud |
+
+- The enclave, File Broker, and Channel Gateway deploy **per region** so bytes and PII never leave residency.
+- Entity→separate-workspace migration (Layer 5) is a **data-separation operation** (re-key + move into a new keyed store) — supported, but heavier than a config toggle. Flagged honestly.
+
+---
+
+## 9. Reliability & the ERP failure classes we design out
+
+| ERP failure class | Structural fix here |
+|---|---|
+| ERP↔WS sync drift, rollback-by-delete | **one graph, one system, zero sync** (§1, §3) |
+| Google-Sheets-as-database | typed Postgres; **ledger is the source of truth** |
+| Status drift, repair crons | **status derived in the write transaction** (§4, §5) |
+| ~132 fire-and-forget management commands | **Task Runtime** with retry + audit (§3) |
+| Untested money math, xlsx imports | typed `Decimal`, **parity-test catalog before any money code**, live-fed (no imports) |
+| Frontend-JSON permissions, email allowlists | server-authoritative, config-driven RBAC (§7) |
+
+---
+
+## 10. Open architecture decisions — ⚠️ Bhavya sign-off
+
+1. **Core shape** — modular-monolith core (recommended, tenet #1) vs full microservices.
+2. **Engine model** — transactional + outbox (recommended) vs event-sourced.
+3. **API** — GraphQL + persisted queries (assumed) vs REST.
+4. **Isolation mechanism** — RLS-pooled vs schema-per-tenant vs db-per-tenant, per tier.
+5. **Async infra** — task runner (Celery / RQ / Temporal) and broker (Redis Streams / Kafka / NATS).
+6. **Stack confirmation** — FastAPI (proposed) vs staying on Django; Postgres version; deployment substrate.
+
+**None of these reshape the data model or the layer design** — they select mechanisms at the marked points.
+
+---
+
+## 11. Build path (gates, not a sprint)
 
 ```
 DESIGN (now, no code)
-   7-layer zero-cut design ✅  ·  architecture.md + spec.md ✅
-        │
+   spec.md ✅  ·  architecture.md ✅  ·  7-layer zero-cut design ✅
         ├─ Joy answers the [J] items ──┐
-        ├─ Bhavya answers architecture ┤→ ARCHITECTURE v2 → Bhavya sign-off
-        │                              │
-   parity-test catalog + migration mapping (last solo pieces)
-        ▼
+        ├─ Bhavya answers §10 ─────────┤→ ARCHITECTURE v2 → sign-off
+        └─ parity-test catalog + migration mapping (last solo pieces)
+                 ▼
    BUILD (only on Shreyanshi's "go")
-   scaffold → typed model → PARITY TESTS FIRST → migration →
+   scaffold → typed model (§4) → PARITY TESTS FIRST → migration →
    Phase-1 features → strangler-fig cutover (capability-by-capability)
-        ▼
-   PHASE 2 — turn on cross-org / multi-tenant (no rewrite; designed in)
+                 ▼
+   PHASE 2 — cross-org / multi-tenant (boundary + entity-isolation already in; no rewrite)
 ```
 
-**Phase 1** = EZ as Tenant-Zero, intra-workspace, all absorbed ERP domains — multi-tenant-*ready* by design. **Phase 2** = cross-org orchestration (the EY case), turned on without a rewrite because the boundary and entity-isolation primitives are already in.
-
-**Gates:** Design (solo) → Joy + Bhavya inputs → Architecture v2 sign-off → **Shreyanshi's "build"** → strangler-fig cutover.
+**Gates:** Design (solo) → Joy + Bhavya inputs → **Architecture v2 sign-off (Bhavya)** → Shreyanshi's "build" → strangler-fig cutover.
 
 ---
 
-## 10. What to review here
+## 12. What to review here
 
-- **§1** — do you agree with the three-part stance (generic-not-EZ, control-plane, AI-composes)?
-- **§4** — Bhavya: the two-level isolation model and the open architecture calls.
-- **§5** — the boundary/encapsulation contract for connecting workspaces.
-- **§9** — the gates and where your sign-off sits.
+- **§3** — the modular-monolith-core call (decision #1). This is the most consequential architecture choice; it's deliberately conservative to avoid rebuilding the ERP's sync pain.
+- **§4** — the data model / DB diagram. Is the Party+Relationship spine and the work-graph tree right?
+- **§5** — communications + the outbox pattern (how we kill drift for good).
+- **§7–§8** — isolation and deployment tiers.
+- **§10** — the six open decisions that need your sign-off.
 
-Field-level detail, use-cases, and how each scenario runs are in **[`spec.md`](./spec.md)**.
+The *what* (layers, fields, use-cases, how each scenario runs) is in **[`spec.md`](./spec.md)**.
