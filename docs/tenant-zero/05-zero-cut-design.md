@@ -116,6 +116,65 @@ proposed declines / times out → next-best (auto)
 
 ---
 
+## Layer 4 — Cross-Org / Boundary  *(in the zero cut)*
+
+**The insight:** a cross-WS connection is **one Relationship edge** that is *"vendor"* from one side and *"client"* from the other. No separate cross-org machinery — the Party+Relationship model viewed from both ends.
+
+### Establishing the link (handshake)
+WS-A onboards a vendor with `vendor_type = WS-tenant` → `linked_org_ref` (B) · `dispatchable_scope` (default *any*) · `cost_terms` (JIT) · `transparency_granted` · **`operating_entity` (A-side — entity-scoped)**. B accepts → sees it as an incoming **client** (`pricing_to_A`, `SLA`, `transparency_ceiling`). `connection_type`: WS-native | adapter (email/Phrase/API).
+
+### Request crossing
+- **In A's graph:** the assignment's performer = **"WS-B" — one opaque boundary node**. `boundary_node_id → maps_to: request_id (in B)`.
+- **In B's graph:** a **new Request** with **A as requester/client**; B runs its own internal lifecycle, invisible to A.
+
+### Visibility (both directions)
+- **A→B crosses:** brief · input files (brokered) · deadline. **Opaque to A:** B's tree, performers, method, sub-vendors, costs.
+- **B→A crosses:** border-safe status roll-up · deliverable · action-items · risk. **Opaque to B:** A's other vendors/entities.
+
+### Mechanics
+- **Brokered files:** input files stay in A's store; B gets a **JIT scoped credential** (`file_ref` · `access_grant{scope, grantee=B's WS-identity, expiry, revocable}`); deliverable **written into A's store**; **attribution** in A's own logs.
+- **Transparency dial (config):** default **opaque**; B may raise per relationship (`transparency_level ∈ {opaque→milestones→detailed}`) — vendor controls its ceiling.
+- **Mandatory boundary review:** `boundary_signoff` (B's owner) + **provenance stripped** before crossing.
+- **Allocation:** the boundary node is just `performer_type = vendor-workspace` in A's allocation engine (scored like any performer); the "accept" is by **B's owner**; B then allocates internally.
+- **2–3 WS chain:** A→B→C — each hop re-encapsulates; **A never learns C exists**; provenance stripped per hop.
+- **Non-WS party:** client-system adapter (email/Phrase/API) — functional but bounded by that tool's API.
+
+### Fields
+`relationship_id` · `{workspace_A, role=vendor}` · `{workspace_B, role=client}` · `linked_org_ref` · `operating_entity` (A-side) · `status` · A-cfg `{scope, cost, transparency_granted}` · B-cfg `{pricing, SLA, transparency_ceiling}` · `boundary_review_policy` · `connection_type`. Boundary node: `boundary_node_id · maps_to · visible_status · deliverable_ref · opacity_level`.
+
+---
+
+## Layer 5 — Multi-Entity & the Entity-vs-Workspace choice  *(in the zero cut)*
+
+**The rule:** **Entity = a billing/legal unit inside one org, policy-isolated. Workspace = a separate org/tenant, crypto-isolated.** The client picks how many of each; the same engine runs under both.
+
+### Multi-entity isolation (within one workspace)
+- Every relationship/work/wallet record carries **`operating_entity_id`**; access scoped by `(workspace_id, operating_entity_id)` (RLS + need-to-know).
+- **Default isolated:** sibling entities don't see each other's relationships/work. *(Ex: Entity-1 does not learn that Entity-2 is a vendor to Org B's Entity-3.)*
+- **Org admin sees all** across entities — unless **entity-delegated module-admins** (`module_admin_scope = entity`) blind even the admin.
+- `entity_isolation` flag (default **isolated**) — an org can flip it to share visibility across its entities.
+- **The mirror:** an external Org B sees **only** the entity it works with — never the org's other entities (cross-org encapsulation).
+
+### The client's choice (both supported, interoperable, migratable)
+| | Entities in one WS | Entity as its own WS |
+|---|---|---|
+| Isolation | policy (need-to-know + scoping) | **cryptographic** (separate tenant, BYOK) |
+| Sibling can see? | no by default (admin can) | **no — can't** |
+| Config/people/catalog | shared | fully separate |
+| Tier/keys | same | can differ (e.g. sovereign) |
+
+- Pick **one-WS** when entities share ops and policy-isolation suffices; **separate-WS** when a hard wall, own keys/tier, or a distinct operation is needed.
+- **Separate ≠ cut off:** a separated entity still links back via the **cross-org boundary** (Layer 4).
+- **Migratable:** start entities-in-one-WS, split one into its own WS later. *Honest note:* splitting into a crypto-isolated/BYOK workspace involves **separating that entity's data** into its own keyed store — supported, but heavier than a config toggle.
+- **Expressed at provisioning:** "one workspace with entities" vs "a workspace per entity" — a Foundation-layer decision the admin/operator sets.
+
+---
+
+## Zero-cut scope
+**Everything in Layers 1–5 is in the zero cut** — a full-fledged generic WS that onboards on bare-min info and delivers, across entities and across workspaces. The only genuinely *constrained* items (not scoping choices): **predictive pre-mobilization** (the hook is in; prediction only works once demand history exists) and **entity→separate-WS migration tooling** (the models are in; the smooth data-separation tooling is heavier). Everything else is zero-cut.
+
+---
+
 ## Pending Joy `[J]`
 1. The real `objective_weights` (allocation reality). 2. The empty-bench fallback (external vs escalate). 3. QA policy per activity. 4. SLA at-risk policy. 5. The delivery-engine role definitions (which map to `owner/performer/reviewer/verifier`). 6. BOT/outcome billing formula.
 
