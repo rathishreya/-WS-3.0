@@ -595,6 +595,7 @@ ledger.append(WalletEntry(op="deduct", delta=Money("-800", "USD"),
 4. **Isolation mechanism** — RLS-pooled vs schema-per-tenant vs db-per-tenant, per tier.
 5. **Async infra** — task runner (Celery / RQ / Temporal) and broker (Redis Streams / Kafka / NATS).
 6. **Stack confirmation** — FastAPI (proposed) vs staying on Django; Postgres version; deployment substrate.
+7. **Repository layout** — how many repos we build. Recommendation: **~2** — one **product monorepo** (core + frontend + File Broker/Channel Gateway/Reporting/Task Runtime as internal services) plus a **separate AI Composer / enclave repo**. The enclave is proposed as its own repo because it deploys into the sealed, zero-retention, sometimes in-tenant / no-egress environment and should stay minimal and independently auditable — **this specific split is for Bhavya to confirm.** The fork: if Bhavya prefers a classic backend/frontend split, it becomes **3** (backend + frontend + enclave). Everything else stays a module, not a repo, to avoid cross-repo sync.
 
 **None of these reshape the data model or the layer design** — they select mechanisms at the marked points.
 

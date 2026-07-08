@@ -887,7 +887,7 @@ Everything the workspace admin configures — **declarative, defaulted, versione
 ## 11. Open items — awaiting Joy & Bhavya
 
 **Joy `[J]`:** (1) allocation objective weights · (2) empty-bench fallback (external vs escalate) · (3) QA policy per activity · (4) SLA at-risk policy · (5) delivery-engine role definitions → owner/performer/reviewer/verifier · (6) BOT/outcome billing formula · (7) rework/reject escalation caps (the "N" values) · (+ delivery archetypes 02–06, statutory matrix).
-**Bhavya (architecture.md §10):** core shape (modular-monolith vs microservices) · transactional vs event-sourced · GraphQL vs REST · isolation mechanism per tier · async infra · stack confirmation.
+**Bhavya (architecture.md §11):** core shape (modular-monolith vs microservices) · transactional vs event-sourced · GraphQL vs REST · isolation mechanism per tier · async infra · stack confirmation · **repository layout** (the ~2-repo recommendation — confirm the separate AI Composer / enclave repo).
 
 **None of these change a workflow or a requirement** — they fill parameters at marked holes.
 
