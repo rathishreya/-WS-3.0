@@ -170,6 +170,37 @@ WS-A onboards a vendor with `vendor_type = WS-tenant` → `linked_org_ref` (B) �
 
 ---
 
+## Layer 6 — Money & Files  *(in the zero cut)*
+
+**Control plane, not data plane:** WS orchestrates the **money events** and holds **file pointers**; money-custody and bytes can live elsewhere.
+
+### The decoupling
+At **Verify**, WS emits one **billable event** → fans out to two **independent, capability-gated** sides: client **invoicing** (money in) and performer **payout** (money out). A performer is paid off *verified work*, not off client payment.
+
+**Billable event (always):** `billable_event_id · assignment_ref · verified_by/at · unit_count · unit_price · amount · currency · billing_model · operating_entity_id · client_relationship_id`.
+
+### Client side — invoicing *(gated: "bill through WS?")*
+Pluggable destination: **WS module** (generate) · **external connector** (push billable event to their system) · **data-out** (API/webhook).
+- **WS invoice:** `invoice_number` · **`grouping_rule` (config** — per-entity-per-period / per-request; *EZ's "1/entity/month" is a value*) · `rate_snapshot` · `line_items[]` · `tax` (from entity `tax_profile`) · `status`.
+- **External:** `pushed_to_external{system, external_ref, status}` — no WS invoice.
+
+### Wallet / credits *(gated: prepaid)*
+`Wallet{balance, cost_per_credit}` · `WalletLot{credits, remaining, validity}` (FIFO) · **`WalletLedger` (immutable — the source of truth, no sheet mirror)**. Deduct at assignment-create → settle at verify → refund on cancel.
+
+### Expert side — payout *(gated: "pay through WS?")*
+`payout{performer_id, period, amount/coins, source=billable events, status}`. Value unit + quota/incentive = **config** *(EZ: coins, quota×1.1)*. If not via WS → export to their payroll.
+
+### Files
+- **Graph holds `file_ref{store_location, key, checksum, size, mime, owner_entity}` — a pointer, not bytes.**
+- **Storage tiers (config):** WS-managed · connected cloud · own infra (sovereign).
+- **Enclave (zero-retention):** bytes pulled ephemerally → compute → return → retain nothing; access flows to the tool, never a person.
+- **Brokered access:** inputs read on-demand via JIT `access_grant{grantee, scope, expiry, revocable}`; deliverables **written to the recipient's store** (their property); attribution in the origin's logs.
+
+### Read
+Auto-fires on verify (no extra human touchpoint); rolling. All of grouping/billing/coins/quota/tax/destination/tier = config. Zero-cut: all in; only the broad external-connector catalogue is incremental.
+
+---
+
 ## Zero-cut scope
 **Everything in Layers 1–5 is in the zero cut** — a full-fledged generic WS that onboards on bare-min info and delivers, across entities and across workspaces. The only genuinely *constrained* items (not scoping choices): **predictive pre-mobilization** (the hook is in; prediction only works once demand history exists) and **entity→separate-WS migration tooling** (the models are in; the smooth data-separation tooling is heavier). Everything else is zero-cut.
 
