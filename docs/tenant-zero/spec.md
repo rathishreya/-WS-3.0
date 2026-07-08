@@ -9,7 +9,7 @@
 - **Developers:** additionally read the **`▸ Data (JSON)`** blocks (click to expand), the edge-case tables, the numbered **FR-x.y** requirements, and the config surface (§6).
 - **Conventions:** **FR-x.y** = testable requirement · **MUST/SHOULD** carry their usual force · **AC** = acceptance criteria · `(EZ: …)` = illustrative config only, never product behaviour · `[J]` = awaiting Joy · **⚠️ Bhavya** = architecture-owned.
 
-**Contents:** §1 Goals · §2 Personas · §3 Surfaces · §4 Domain model & data-at-a-glance · **§5 The 15 workflows (base + edge cases + JSON + FRs)** · §6 Config surface (JSON) · §7 Cross-cutting · §8 Non-functional · §9 Phasing · §10 Open items · §11 Glossary.
+**Contents:** §1 Goals · §2 Personas · §3 Surfaces · §4 Domain model & data-at-a-glance · **§5 The 15 workflows (base + edge cases + JSON + FRs)** · §6 Config surface (JSON) · §7 Cross-cutting · **§8 Data security, privacy & trust** · §9 Non-functional · §10 Phasing · §11 Open items · §12 Glossary.
 
 ---
 
@@ -810,7 +810,58 @@ Everything the workspace admin configures — **declarative, defaulted, versione
 
 ---
 
-## 8. Non-functional requirements
+## 8. Data security, privacy & trust  (SEC-x)
+
+**The trust model, straight from the vision (§2.1, §2.2, §8).** The whole platform's defensibility rests on this: *the operator can't read a tenant's data — cryptographically, not by promise.* These are hard product requirements, not aspirations. `[V§n]` cites the vision section.
+
+### 8.1 Data handling — control plane, tiers, sealed enclave
+
+| # | Requirement |
+|---|---|
+| **SEC-1** | **Control plane only** — WS holds the metadata graph (who/what/when/which skill/status/access grants) and **file pointers**; it **never custodies file content**. `[V§2.1]` |
+| **SEC-2** | **Tiered storage (tenant-configurable)** — WS-managed (convenience default) · connected cloud / SharePoint/Drive/S3 (regional/residency) · own infra, on-prem or cloud (sovereign). Sovereignty available to all, mandatory for none. *(EZ resells these as Standard/Compliant/Private — a mapping, not a product distinction.)* `[V§2.1,§8]` |
+| **SEC-3** | **Sealed zero-retention enclave** — when a feature needs bytes (split, page/word count, AI reading a brief) WS pulls them into an ephemeral enclave, computes, returns the result, **retains nothing**. `[V§2.1]` |
+| **SEC-4** | **Access flows to the tool, never a person** — no human at WS/operator/EZ ever sees tenant bytes; **no content in logs, no human debugging on raw data**; AI is stateless. `[V§2.1]` |
+| **SEC-5** | **Two processing modes by tier** — **Option B** (WS-controlled regional enclave) for shared/regional tenants; **Option A** (in-environment runtime, **no egress**) is **required** for sovereign tenants (government/PIF/financial) who mandate "nothing leaves our environment." Phase 2+. `[V§2.1,§8]` |
+
+### 8.2 Access, credentials & keys
+
+| # | Requirement |
+|---|---|
+| **SEC-6** | **Two layers of need-to-know** — (1) what WS-the-tool may pull from a tenant *at all*; (2) what a given user may see *within* that. Both enforced server-side. `[V§2.1]` |
+| **SEC-7** | **Scoped tenant-API credential = the crown jewel** — JIT, least-privilege, **short-lived per-grant tokens**, never a standing broad credential. A leaked token exposes **one file for minutes**. `[V§8]` |
+| **SEC-8** | **Per-tenant keys; BYOK at Regional/Sovereign** — the operator is **cryptographically unable** to read a tenant's data or client list — *can't, not "promises not to."* A competing agency can adopt on the sovereign tier with its own keys. `[V§8]` |
+| **SEC-9** | **Tenant-inspectable, tamper-evident audit** of operator/admin actions ("don't-trust-us-verify" applied to the operator) + the enclave's no-human-bytes governance. `[V§8]` |
+
+### 8.3 Identity, offboarding & the personal/corporate wall
+
+| # | Requirement |
+|---|---|
+| **SEC-10** | **Portable root identity + SSO federation** — org access via SSO; **revoke SSO → live access ends**. Freelancers authenticate against their **own** identity, never forced into one org's SSO. Phase 2. `[V§2.2]` |
+| **SEC-11** | **Offboarding = metadata-only snapshot** — WS projects an org-permitted **shadow log** (project names, volumes, roles, feedback — **no files, no confidential content**) into the person's personal workspace; the org superadmin governs how much. `[V§2.2]` |
+| **SEC-12** | **Personal/corporate separation by construction** — a person's personal workspace is **invisible to any org**; WS guarantees it, doesn't merely promise it. `[V§2.2]` |
+
+### 8.4 AI & data-use boundaries
+
+| # | Requirement |
+|---|---|
+| **SEC-13** | **No cross-tenant training** — the composer/allocator run **per-tenant, stateless, zero-retention**; cross-tenant training is **prohibited**. Any future training is consent-tiered and sovereignty-sensitive tenants are excluded **by design**. `[V§2.4,§6]` |
+| **SEC-14** | **Confidentiality governs the metadata** — even when file bytes are sovereign, the graph WS holds (names, volumes, turnaround) is confidential-by-scoping, not open. `[V§10]` |
+
+### 8.5 Trust tiers (what a tenant/client actually buys)
+
+| | Shared | Regional | Sovereign |
+|---|---|---|---|
+| **Storage** | WS multi-tenant | WS, region-pinned | Tenant infra, no egress |
+| **Processing/AI** | WS enclave (Option B) | WS enclave, regional | In-environment runtime (Option A) |
+| **Keys** | WS-managed | Customer-managed (BYOK) | Customer-managed (BYOK) |
+| **Operator can read?** | Yes (custodial) | **No (cryptographic)** | **No (cryptographic)** |
+
+**AC** — on a BYOK tier, an operator query for a tenant's briefs/deliverables/client list returns nothing decryptable; a leaked tenant-API token grants at most one file for minutes; no tenant bytes ever appear in a log or reach a human; a person's personal workspace is unreachable from any org.
+
+---
+
+## 9. Non-functional requirements
 
 | # | Requirement |
 |---|---|
@@ -825,7 +876,7 @@ Everything the workspace admin configures — **declarative, defaulted, versione
 
 ---
 
-## 9. Phasing & scope
+## 10. Phasing & scope
 
 **Phase 1 (EZ as Tenant-Zero, intra-workspace):** E1–E13 + all cross-cutting + absorbed ERP money/HR domains. Multi-tenant-*ready* by design.
 **Phase 2 (cross-org):** E14 turned on; E15 entity-isolation is **built in Phase 1** (the primitive) so Phase 2 needs no rewrite. Portable identity/SSO here.
@@ -833,7 +884,7 @@ Everything the workspace admin configures — **declarative, defaulted, versione
 
 ---
 
-## 10. Open items — awaiting Joy & Bhavya
+## 11. Open items — awaiting Joy & Bhavya
 
 **Joy `[J]`:** (1) allocation objective weights · (2) empty-bench fallback (external vs escalate) · (3) QA policy per activity · (4) SLA at-risk policy · (5) delivery-engine role definitions → owner/performer/reviewer/verifier · (6) BOT/outcome billing formula · (7) rework/reject escalation caps (the "N" values) · (+ delivery archetypes 02–06, statutory matrix).
 **Bhavya (architecture.md §10):** core shape (modular-monolith vs microservices) · transactional vs event-sourced · GraphQL vs REST · isolation mechanism per tier · async infra · stack confirmation.
@@ -842,7 +893,7 @@ Everything the workspace admin configures — **declarative, defaulted, versione
 
 ---
 
-## 11. Glossary
+## 12. Glossary
 
 **Party** — an org or person. **Relationship** — a typed edge (employment/client/vendor/tenant). **Request / Assignment / Activity** — the work-graph tree (BAT). **Deliver** — the mandatory last activity. **Billable event** — the single money-in/out trigger emitted at verify. **Committed capacity** — fixed-cost resources (~$0 marginal). **Archetype** — a generic industry starter kit that seeds config. **Readiness engine** — computes "can deliver" and asks only for gaps. **Boundary node** — the opaque representation of a vendor workspace in the client's graph. **Enclave** — the zero-retention sandbox where content is processed. **Operating entity** — a legal/billing unit inside one org (policy-isolated). **Workspace** — a tenant (crypto-isolated).
 

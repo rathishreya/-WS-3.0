@@ -459,30 +459,39 @@ Human touchpoints across all of this: **two** (step 3, step 9). Cross-org (Phase
 
 ## 7. Security & isolation architecture
 
-| Control | Mechanism |
-|---|---|
-| **Workspace isolation (crypto)** | separate keys per workspace; **BYOK** for regional/sovereign; sovereign tenants can get schema- or DB-level separation (**⚠️ Bhavya:** RLS-pooled vs schema-per-tenant vs db-per-tenant) |
-| **Entity isolation (policy)** | **Postgres RLS** on `(workspace_id, operating_entity_id)`; default isolated; `entity_isolation` flag; entity-delegated module-admins can blind even the org admin |
-| **Content confidentiality** | control-plane holds pointers only; bytes processed in a **zero-retention enclave** (locked egress, ephemeral FS, retain nothing); access flows to the *tool*, never a person |
-| **Cross-org encapsulation** | opaque `BOUNDARY_NODE`; provenance stripped per hop; brokered file `ACCESS_GRANT` (scoped, expiring, revocable); deliverables written to the recipient's store |
-| **RBAC** | **server-authoritative**, config-driven (replaces the ERP's frontend-JSON perms + email allowlists); POV-scoping at the Gateway |
-| **Encryption at rest** | field-level (Fernet-class) for cost/pay/PII; salary data never in plaintext |
-| **Audit** | append-only `AuditEvent`, tenant-inspectable; every state change and money event logged |
-| **AuthN** | OIDC/SSO-ready; Phase 2 portable identity for freelancers across orgs |
+**The defensibility principle (vision §8):** *the operator cannot read a BYOK tenant's data — cryptographically, not by promise.* Every mechanism below serves it. This maps to the PRD's SEC-1…SEC-14.
+
+| Control | Mechanism | PRD |
+|---|---|---|
+| **Workspace isolation (crypto)** | separate keys per workspace; **BYOK** for regional/sovereign; sovereign tenants can get schema-/DB-level separation (**⚠️ Bhavya:** RLS-pooled vs schema-per-tenant vs db-per-tenant). On BYOK, operator reads return ciphertext — **not decryptable, incl. the client list.** | SEC-8 |
+| **Entity isolation (policy)** | **Postgres RLS** on `(workspace_id, operating_entity_id)`; default isolated; `entity_isolation` flag; entity-delegated module-admins can blind even the org admin | SEC-6 |
+| **Control plane, not content** | the graph holds `file_ref` pointers only; **never custodies bytes** | SEC-1 |
+| **Sealed zero-retention enclave** | bytes pulled ephemerally → compute → return → retain nothing; **locked egress, ephemeral FS**; access flows to the *tool*, never a person | SEC-3 |
+| **Two processing modes by tier** | **Option B** (WS-controlled regional enclave) for shared/regional; **Option A** (in-environment runtime, **no egress**) required for sovereign — content-processing/AI runs inside the tenant's own environment. Phase 2+. | SEC-5 |
+| **Two-layer need-to-know** | (1) **tool-pull scope** — what WS-the-tool may fetch from a tenant at all (the scoped credential); (2) **user-view scope** — POV-scoping per role. Both server-side. | SEC-6 |
+| **Scoped tenant-API credential** | **JIT, least-privilege, short-lived per-grant tokens** minted by the File Broker; never a standing broad credential. A leak exposes **one file for minutes**. The crown-jewel surface. | SEC-7 |
+| **No-human-bytes governance** | **no tenant content in logs**, no human debugging on raw data, stateless AI; enforced, not policy | SEC-4 |
+| **Cross-org encapsulation** | opaque `BOUNDARY_NODE`; provenance stripped per hop; brokered file `ACCESS_GRANT` (scoped, expiring, revocable); deliverables written to the recipient's store | SEC-1, SEC-7 |
+| **RBAC** | **server-authoritative**, config-driven (replaces frontend-JSON perms + email allowlists); persisted, POV-scoped GraphQL | SEC-6 |
+| **Encryption at rest** | field-level (Fernet-class) for cost/pay/PII; salary never in plaintext | NFR-2 |
+| **Tamper-evident audit** | append-only `AuditEvent`, **tenant-inspectable**, covers **operator/admin actions** ("don't-trust-us-verify") | SEC-9 |
+| **Identity & revocation** | OIDC/SSO federation; **revoke SSO → live access ends**; freelancers on their own portable identity; personal workspace **unreachable from any org** (SEC-12). Phase 2. | SEC-10, SEC-12 |
+| **No cross-tenant training** | composer/allocator per-tenant, stateless, zero-retention; cross-tenant training **prohibited**; any training consent-tiered, sovereignty excluded by design | SEC-13 |
 
 ---
 
 ## 8. Deployment topology
 
-`Workspace.deployment_tier` selects the tier at provisioning:
+`Workspace.deployment_tier` selects the tier at provisioning. **The guarantee scales with the tier (vision §8):**
 
-| Tier | Isolation | Keys | Infra |
-|---|---|---|---|
-| **Shared** | pooled multi-tenant, RLS | platform-managed | shared cluster |
-| **Regional** | region-pinned (data residency) | platform or BYOK | region-scoped cluster |
-| **Sovereign** | dedicated | **BYOK, customer-managed** | isolated infra / own cloud |
+| Tier | Storage | Processing/AI | Keys | **Operator can read?** | Infra |
+|---|---|---|---|---|---|
+| **Shared** | WS multi-tenant (RLS) | WS enclave (Option B) | WS-managed | Yes (custodial) | shared cluster |
+| **Regional** | WS, region-pinned | WS enclave, regional (Option B) | **BYOK** | **No (cryptographic)** | region-scoped cluster |
+| **Sovereign** | Tenant infra, **no egress** | In-environment runtime (Option A) | **BYOK** | **No (cryptographic)** | isolated infra / own cloud |
 
 - The enclave, File Broker, and Channel Gateway deploy **per region** so bytes and PII never leave residency.
+- *(EZ resells these as its Standard/Compliant/Private tiers — a mapping, not a product distinction.)*
 - Entity→separate-workspace migration (Layer 5) is a **data-separation operation** (re-key + move into a new keyed store) — supported, but heavier than a config toggle. Flagged honestly.
 
 ---
