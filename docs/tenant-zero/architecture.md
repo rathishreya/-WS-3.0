@@ -500,7 +500,85 @@ Human touchpoints across all of this: **two** (step 3, step 9). Cross-org (Phase
 
 ---
 
-## 10. Open architecture decisions — ⚠️ Bhavya sign-off
+## 10. Engineering conventions — the efficient way to write the code
+
+**The point of this section:** the ERP failed less on *choice of framework* than on *how the code was written* — sheets used as a database, tenant rules hardcoded, status recomputed by crons, money math untested. These conventions are what keep WS 3.0 from repeating that. **They are binding, not stylistic.**
+
+| # | Convention | Rule | Never |
+|---|---|---|---|
+| **C1** | **Config, not code** | Behaviour is resolved from config rows at runtime. A new tenant/offering/rule is *data*. | `if tenant == "EZ"`; any org-specific branch |
+| **C2** | **Status in the write txn** | Derive `status` in the same transaction that changes `state`; store it. | a cron/job that "recomputes" or "repairs" status |
+| **C3** | **Outbox for events** | Emit domain events by writing an `outbox` row in the same txn; a relay publishes. | dual-writing to the DB and a broker separately |
+| **C4** | **RLS by default** | Every query is scoped by `(workspace_id, operating_entity_id)` at the data layer. | ad-hoc `WHERE` scoping in app code; trusting the client |
+| **C5** | **Typed, idempotent money** | `Decimal` + explicit currency; money ops carry an idempotency key; the ledger is append-only. | floats; mutable balances as source of truth; untested math |
+| **C6** | **Capability gating** | A turned-off capability's fields/endpoints don't exist for that workspace. | collecting/validating data a capability doesn't need |
+| **C7** | **Suggest, not act (AI)** | The composer/allocator return *proposals*; a human ratifies before anything is real. | auto-committing an AI plan or allocation |
+| **C8** | **One graph, one txn** | Config/lifecycle/allocation/money mutate the graph in one transaction, in-process. | networked service-to-service sync to keep the graph consistent |
+| **C9** | **Content stays in the enclave** | The core receives `file_ref`s + scoped credentials, never bytes; bytes live and die in the enclave. | passing raw content through the core or persisting it |
+| **C10** | **Persisted, POV-scoped GraphQL** | Only allowlisted queries; resolvers enforce role + scope server-side. | arbitrary client queries; client-side permission checks |
+
+### The patterns, concretely
+
+**C1 — resolve from config (no tenant branches):**
+```python
+# GOOD — behaviour is data
+offering = catalog.get(assignment.offering_id, version=assignment.offering_version)
+tree     = offering.activity_templates                 # the plan shape is config
+weights  = policy.objective_weights                    # allocation is config
+# BAD — never do this
+# if workspace.code == "EZ": tree = [...]              # hardcoded org rule
+```
+
+**C2 + C3 — status derived in-txn, event via outbox (kills drift):**
+```python
+with db.transaction():
+    activity.state  = "delivered"
+    activity.status = derive_status(activity)          # same txn, stored — not a cron
+    assignment.status = rollup(assignment)             # worst-of over the tree, same txn
+    outbox.append(Event("ActivityDelivered", activity.id))   # same txn
+# a separate relay publishes committed outbox rows → reporting/workers
+```
+
+<details>
+<summary>▸ JSON: a domain event (outbox → broker)</summary>
+
+```jsonc
+{
+  "event_id": "evt_uuid",
+  "type": "BillableEventEmitted",
+  "workspace_id": "ws_uuid", "operating_entity_id": "ent_uuid",
+  "occurred_at": "2026-07-17T10:00:00Z",
+  "payload": { "billable_event_id": "be_uuid", "assignment_ref": "asg_uuid", "amount": 800, "currency": "USD" },
+  "trace_id": "…"          // events drive reporting/notify/integration — never state derivation
+}
+```
+</details>
+
+<details>
+<summary>▸ JSON: a persisted, POV-scoped GraphQL query (C10)</summary>
+
+```jsonc
+// Client sends an ID, not a query string — server has the allowlisted document.
+{ "id": "q_workConsole_requestTree_v1",
+  "variables": { "request_id": "req_uuid" } }
+// Resolver enforces: actor role ∈ {owner,performer,…} AND row scope (workspace_id, operating_entity_id).
+// A performer sees only their activities; a sibling entity sees nothing.
+```
+</details>
+
+**C5 — money is typed, idempotent, append-only:**
+```python
+# deduct at assignment-create, settle at verify, refund on cancel — each idempotent
+ledger.append(WalletEntry(op="deduct", delta=Money("-800", "USD"),
+                          ref=assignment.id, idem_key=f"deduct:{assignment.id}"))
+# balance is a projection of the ledger, never the source of truth
+```
+
+**Definition of done for any feature:** config-driven (C1) · state+status atomic (C2) · events via outbox (C3) · RLS-scoped (C4) · money typed+tested against the parity catalog (C5, NFR-7) · gated by capability (C6) · no content through the core (C9).
+
+---
+
+## 11. Open architecture decisions — ⚠️ Bhavya sign-off
 
 1. **Core shape** — modular-monolith core (recommended, tenet #1) vs full microservices.
 2. **Engine model** — transactional + outbox (recommended) vs event-sourced.
@@ -513,13 +591,13 @@ Human touchpoints across all of this: **two** (step 3, step 9). Cross-org (Phase
 
 ---
 
-## 11. Build path (gates, not a sprint)
+## 12. Build path (gates, not a sprint)
 
 ```
 DESIGN (now, no code)
-   spec.md ✅  ·  architecture.md ✅  ·  7-layer zero-cut design ✅
+   spec.md ✅  (PRD/BRS, field-level)   ·   architecture.md ✅  (this doc)
         ├─ Joy answers the [J] items ──┐
-        ├─ Bhavya answers §10 ─────────┤→ ARCHITECTURE v2 → sign-off
+        ├─ Bhavya answers §11 ─────────┤→ ARCHITECTURE v2 → sign-off
         └─ parity-test catalog + migration mapping (last solo pieces)
                  ▼
    BUILD (only on Shreyanshi's "go")
@@ -533,12 +611,13 @@ DESIGN (now, no code)
 
 ---
 
-## 12. What to review here
+## 13. What to review here
 
 - **§3** — the modular-monolith-core call (decision #1). This is the most consequential architecture choice; it's deliberately conservative to avoid rebuilding the ERP's sync pain.
 - **§4** — the data model / DB diagram. Is the Party+Relationship spine and the work-graph tree right?
 - **§5** — communications + the outbox pattern (how we kill drift for good).
 - **§7–§8** — isolation and deployment tiers.
-- **§10** — the six open decisions that need your sign-off.
+- **§10** — the engineering conventions (the binding "how to write the code" rules).
+- **§11** — the six open decisions that need your sign-off.
 
 The *what* (layers, fields, use-cases, how each scenario runs) is in **[`spec.md`](./spec.md)**.
