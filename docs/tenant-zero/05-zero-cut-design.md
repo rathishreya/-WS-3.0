@@ -1,6 +1,6 @@
-# WS 3.0 — Zero-Cut Design: Onboarding · Work Lifecycle · Allocation
+# WS 3.0 — Zero-Cut Design (7 layers, field-level)
 
-**The locked, field-level design** for the three core layers, from the layer-by-layer walkthrough. Platform-generic (no EZ baked); efficiency-first; capability-gated. `(EZ: …)` = illustrative config only. `[J]` = pending Joy's confirmation.
+**The locked, field-level design** for the seven layers — Onboarding · Work Lifecycle · Allocation · Cross-Org · Multi-Entity · Money & Files · AI-Composes — from the layer-by-layer walkthrough. Platform-generic (no EZ baked); efficiency-first; capability-gated. `(EZ: …)` = illustrative config only. `[J]` = pending Joy's confirmation.
 
 ## Principles that govern all three layers
 1. **Party + Relationship** — a Party (Org or Person) + a Relationship edge (employment / client / vendor / tenant). Tenant/client/vendor are *relationship types*, not separate systems.
@@ -201,6 +201,40 @@ Auto-fires on verify (no extra human touchpoint); rolling. All of grouping/billi
 
 ---
 
+## Layer 7 — AI-Composes (how a brief becomes a plan)  *(in the zero cut)*
+
+**The efficiency engine.** This is the step that collapses ~6 manual steps (create · split · allocate · price) into one AI draft the owner ratifies. It sits between Request-intake and the owner's single ratification (Layer 2), and it feeds Layer 3's allocation.
+
+### Principles
+1. **Composes from the tenant's OWN config** — offerings, skills, levels, pricing, teams. It never invents structure; it selects and arranges what the workspace already declared. A new tenant with a thin catalog gets a thin plan; nothing EZ-specific is assumed.
+2. **Per-tenant scoped · stateless · zero-retention enclave** — brief + files are read ephemerally in the sealed enclave (Layer 6); nothing is retained; the model sees only this tenant's config, never another tenant's data.
+3. **Suggest → approve, never act** — the output is a *proposal*; the owner's ratification is the only thing that makes it real (vision's "AI composes → human ratifies").
+4. **Federated by the boundary** — across a cross-org edge (Layer 4), each side composes within its own workspace; the composer never reaches across the boundary.
+5. **Declarative templates, not hardcoded logic** — mapping rules (brief-signal → offering, complexity → level, tree shape per offering) are config/templates the admin can inspect and tune, not baked code.
+
+### The pass (one shot, in the enclave)
+```
+understand brief + files
+  → map to an offering + level (from THIS tenant's catalog)
+  → scope: unit_type · unit_count (page/word/hour counts from the files)
+  → compose the activity TREE (skills, order, dependencies, Deliver last)
+  → propose a performer per activity (hands to Layer 3's engine)
+  → estimate deadline (from scope + capacity + SLA bands)
+  → price (only if billing on — from rate lists)
+  → assemble the scope sheet + confidence + any clarifying questions
+```
+
+### Fields (AI-composed → owner ratifies)
+`proposed_offering_id · proposed_level` · `proposed_activities[]{skill_id, performer_type, proposed_performer_id, input_split, dependency, unit_count}` · `scope_sheet{unit_type, unit_count, assumptions[]}` · `proposed_deadline` · `proposed_price` (gated) · `confidence` (per section) · `clarifying_questions[]` (only when a gap blocks composing) · `provenance` (which config/templates it drew from).
+
+### Honest risk notes
+- **Garbage-in** — a vague brief yields a low-confidence plan; the composer surfaces `clarifying_questions[]` rather than guessing silently. Owner ratification is the backstop.
+- **Thin-catalog cold start** — a brand-new tenant with little config gets little composition; archetypes (Layer 1) mitigate by pre-seeding, but the honest floor is "as good as the config."
+- **Mis-mapping** — the proposal is always editable inline (Layer 2's "Tweak"); the composer learns from edits *within the tenant* (not across tenants).
+- **Not zero-retention-negotiable** — the enclave discipline is non-optional; the composer must never persist brief/file content.
+
+---
+
 ## Zero-cut scope
 **Everything in Layers 1–5 is in the zero cut** — a full-fledged generic WS that onboards on bare-min info and delivers, across entities and across workspaces. The only genuinely *constrained* items (not scoping choices): **predictive pre-mobilization** (the hook is in; prediction only works once demand history exists) and **entity→separate-WS migration tooling** (the models are in; the smooth data-separation tooling is heavier). Everything else is zero-cut.
 
@@ -210,4 +244,4 @@ Auto-fires on verify (no extra human touchpoint); rolling. All of grouping/billi
 1. The real `objective_weights` (allocation reality). 2. The empty-bench fallback (external vs escalate). 3. QA policy per activity. 4. SLA at-risk policy. 5. The delivery-engine role definitions (which map to `owner/performer/reviewer/verifier`). 6. BOT/outcome billing formula.
 
 ## Decisions locked here
-- Party+Relationship model · capability-gated/JIT fields · archetypes generic · 2-touchpoint lifecycle · status in-engine · propose→ratify→accept · committed-capacity-first · **WS-chat default channel + WhatsApp/SMS opt-in via adapter** · **bidding removed** · pre-mobilization hooked-but-later.
+- Party+Relationship model · capability-gated/JIT fields · archetypes generic · 2-touchpoint lifecycle · status in-engine · propose→ratify→accept · committed-capacity-first · **WS-chat default channel + WhatsApp/SMS opt-in via adapter** · **bidding removed** · pre-mobilization hooked-but-later · **AI composes from the tenant's own config, suggest→approve, zero-retention enclave.**
