@@ -654,3 +654,487 @@ DESIGN (now, no code)
 - **§11** — the six open decisions that need your sign-off.
 
 The *what* (layers, fields, use-cases, how each scenario runs) is in **[`spec.md`](./spec.md)**.
+
+---
+
+## Appendix A — Formal JSON Schema (the interface contract)
+
+**This is the machine-validatable contract** (JSON Schema Draft 2020-12) for the core entities — types, `required`, `enum`s, and constraints. Unlike the illustrative JSON in `spec.md`, a build's payloads can be **validated against this**, so "does it match the spec?" becomes a mechanical check. Enums are the locked value sets; `[J]` weights and Bhavya's mechanism choices don't appear here (they're config/values, not shape). `additionalProperties:false` on records means **no undeclared fields** — undeclared config lives in the explicit `config`/`jsonb` objects only.
+
+> Scope: the load-bearing entities. Config records (Offering/Skill/Rate/AllocationPolicy) are summarized; their full schema follows the same pattern. This appendix is the source of truth for field shape; the ER (§4) is the source of truth for relationships.
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ws3/schema/core.json",
+  "title": "WS 3.0 — Core Entities",
+  "$defs": {
+    "uuid":      { "type": "string", "format": "uuid" },
+    "ts":        { "type": "string", "format": "date-time" },
+    "date":      { "type": "string", "format": "date" },
+    "currency":  { "type": "string", "minLength": 3, "maxLength": 3 },
+    "money": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "amount": { "type": "number", "minimum": 0 }, "currency": { "$ref": "#/$defs/currency" } },
+      "required": ["amount", "currency"]
+    },
+    "derivedStatus": { "type": "string", "enum": ["not_started","on_track","slightly_delayed","critical","completed"] },
+
+    "Workspace": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "org_legal_name": { "type": "string" },
+        "org_display_name": { "type": "string" },
+        "org_code": { "type": "string", "pattern": "^[A-Z0-9_-]+$" },
+        "region": { "type": "string" },
+        "deployment_tier": { "type": "string", "enum": ["shared","regional","sovereign"] },
+        "byok_key_ref": { "type": ["string","null"] },
+        "admin_email": { "type": "string", "format": "email" },
+        "modules_available": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["provisioning","active","suspended"] }
+      },
+      "required": ["id","org_legal_name","org_code","deployment_tier","admin_email","status"],
+      "allOf": [
+        { "if": { "properties": { "deployment_tier": { "enum": ["regional","sovereign"] } } },
+          "then": { "properties": { "byok_key_ref": { "type": "string" } }, "required": ["byok_key_ref"] } }
+      ]
+    },
+
+    "OperatingEntity": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "legal_name": { "type": "string" },
+        "code": { "type": "string" },
+        "country": { "type": "string", "minLength": 2, "maxLength": 2 },
+        "billing_currency": { "$ref": "#/$defs/currency" },
+        "tax_profile": { "type": ["string","null"] },
+        "invoice_prefix": { "type": ["string","null"] },
+        "entity_isolation": { "type": "boolean", "default": true },
+        "module_admin_scope": { "type": "string", "enum": ["workspace","entity"], "default": "workspace" }
+      },
+      "required": ["id","workspace_id","legal_name","code","country"]
+    },
+
+    "RootIdentity": {
+      "type": "object", "additionalProperties": false,
+      "description": "GLOBAL — no workspace_id. One per human.",
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "owner_auth_ref": { "type": "string" },
+        "personal_workspace_ref": { "type": ["string","null"] },
+        "portable_reputation": { "type": "object" }
+      },
+      "required": ["id","owner_auth_ref"]
+    },
+
+    "Entity": {
+      "type": "object", "additionalProperties": false,
+      "description": "The actor (org or person). Formerly 'Party'.",
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "type": { "type": "string", "enum": ["org","person"] },
+        "display_name": { "type": "string" }
+      },
+      "required": ["id","workspace_id","type","display_name"]
+    },
+
+    "Person": {
+      "type": "object", "additionalProperties": false,
+      "description": "A membership — one per (human, workspace).",
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "entity_id": { "$ref": "#/$defs/uuid" },
+        "root_identity_id": { "$ref": "#/$defs/uuid" },
+        "email": { "type": "string", "format": "email" },
+        "entity_role": { "type": "string", "enum": ["owner","performer","reviewer","verifier","admin","requester"] },
+        "contract_type": { "type": ["string","null"], "enum": ["payroll","contractor",null] },
+        "operating_entity_id": { "oneOf": [ { "$ref": "#/$defs/uuid" }, { "type": "null" } ] },
+        "sso_federated": { "type": "boolean", "default": false },
+        "cost_encrypted": { "type": ["string","null"] },
+        "bank_ref": { "type": ["string","null"] },
+        "status": { "type": "string", "enum": ["invited","active","offboarded"] }
+      },
+      "required": ["id","workspace_id","entity_id","root_identity_id","email","entity_role","status"]
+    },
+
+    "PersonSkill": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "person_id": { "$ref": "#/$defs/uuid" },
+        "skill_id": { "$ref": "#/$defs/uuid" },
+        "proficiency": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "status": { "type": "string", "enum": ["declared","verified"] }
+      },
+      "required": ["id","workspace_id","person_id","skill_id","proficiency","status"]
+    },
+
+    "Relationship": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "operating_entity_id": { "$ref": "#/$defs/uuid" },
+        "type": { "type": "string", "enum": ["employment","client","vendor","tenant"] },
+        "from_entity": { "$ref": "#/$defs/uuid" },
+        "to_entity": { "$ref": "#/$defs/uuid" },
+        "vendor_type": { "type": ["string","null"], "enum": ["external","ws_tenant",null] },
+        "linked_org_ref": { "type": ["string","null"] },
+        "invoice_code": { "type": ["string","null"] },
+        "config": { "type": "object" },
+        "status": { "type": "string", "enum": ["pending","active","suspended","ended"] }
+      },
+      "required": ["id","workspace_id","operating_entity_id","type","from_entity","to_entity","status"],
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "vendor" }, "vendor_type": { "const": "ws_tenant" } } },
+          "then": { "required": ["linked_org_ref"] } }
+      ]
+    },
+
+    "Offering": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "name": { "type": "string" },
+        "version": { "type": "integer", "minimum": 1 },
+        "delivery_model": { "type": "string", "enum": ["deliverable","retainer","outcome"] },
+        "billing_model": { "type": "string", "enum": ["unit_x_price","flat_retainer","retainer_plus_usage","outcome"] },
+        "levels": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id","workspace_id","name","version","delivery_model","billing_model"]
+    },
+
+    "Engagement": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "client_relationship_id": { "$ref": "#/$defs/uuid" },
+        "delivery_model": { "type": "string", "enum": ["deliverable","retainer","outcome"] },
+        "billing_model": { "type": "string", "enum": ["unit_x_price","flat_retainer","retainer_plus_usage","outcome"] }
+      },
+      "required": ["id","workspace_id","client_relationship_id","delivery_model","billing_model"]
+    },
+
+    "ServicePeriod": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "engagement_id": { "$ref": "#/$defs/uuid" },
+        "period": { "type": "string" },
+        "status": { "type": "string", "enum": ["open","closed","verified","billed"] },
+        "outcome_metric": { "type": ["number","null"] }
+      },
+      "required": ["id","engagement_id","period","status"]
+    },
+
+    "Request": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "operating_entity_id": { "$ref": "#/$defs/uuid" },
+        "requester_id": { "$ref": "#/$defs/uuid" },
+        "engagement_id": { "oneOf": [ { "$ref": "#/$defs/uuid" }, { "type": "null" } ] },
+        "brief": { "type": "string" },
+        "input_files": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+        "deadline": { "$ref": "#/$defs/date" },
+        "source_channel": { "type": "string", "enum": ["manual","email","phrase","api"] },
+        "state": { "type": "string", "enum": ["created","live","delivered","verified","billed","paused","cancelled"] },
+        "status": { "$ref": "#/$defs/derivedStatus" }
+      },
+      "required": ["id","workspace_id","operating_entity_id","requester_id","brief","deadline","source_channel","state","status"]
+    },
+
+    "Proposal": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "request_id": { "$ref": "#/$defs/uuid" },
+        "proposed_offering_id": { "$ref": "#/$defs/uuid" },
+        "proposed_level": { "type": "string" },
+        "scope_sheet": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "unit_type": { "type": "string" },
+            "unit_count": { "type": "number", "minimum": 0 },
+            "assumptions": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["unit_type","unit_count"]
+        },
+        "proposed_activities": { "type": "array", "items": { "type": "object" } },
+        "proposed_deadline": { "$ref": "#/$defs/date" },
+        "proposed_price": { "oneOf": [ { "$ref": "#/$defs/money" }, { "type": "null" } ] },
+        "confidence": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 } },
+        "clarifying_questions": { "type": "array", "items": { "type": "string" } },
+        "provenance": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id","request_id","proposed_offering_id","scope_sheet","confidence"]
+    },
+
+    "Assignment": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "request_id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "operating_entity_id": { "$ref": "#/$defs/uuid" },
+        "offering_id": { "$ref": "#/$defs/uuid" },
+        "offering_version": { "type": "integer", "minimum": 1 },
+        "level": { "type": "string" },
+        "unit_type": { "type": "string" },
+        "unit_count": { "type": "number", "minimum": 0 },
+        "delivery_model": { "type": "string", "enum": ["deliverable","retainer","outcome"] },
+        "billing_model": { "type": "string", "enum": ["unit_x_price","flat_retainer","retainer_plus_usage","outcome"] },
+        "owner_id": { "$ref": "#/$defs/uuid" },
+        "price": { "oneOf": [ { "$ref": "#/$defs/money" }, { "type": "null" } ] },
+        "invoice_code": { "type": ["string","null"] },
+        "payment_type": { "type": ["string","null"], "enum": ["prepaid","postpaid",null] },
+        "deadline": { "$ref": "#/$defs/date" },
+        "state": { "type": "string", "enum": ["created","published","delivered","verified"] },
+        "status": { "$ref": "#/$defs/derivedStatus" }
+      },
+      "required": ["id","request_id","workspace_id","operating_entity_id","offering_id","unit_type","unit_count","delivery_model","billing_model","owner_id","state","status"]
+    },
+
+    "Activity": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "assignment_id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "operating_entity_id": { "$ref": "#/$defs/uuid" },
+        "skill_id": { "$ref": "#/$defs/uuid" },
+        "performer_type": { "type": "string", "enum": ["human","agent","human_tool"] },
+        "performer_id": { "oneOf": [ { "$ref": "#/$defs/uuid" }, { "type": "null" } ] },
+        "dependency_activity_id": { "oneOf": [ { "$ref": "#/$defs/uuid" }, { "type": "null" } ] },
+        "unit_count": { "type": "number", "minimum": 0 },
+        "start_by": { "$ref": "#/$defs/date" },
+        "deliver_by": { "$ref": "#/$defs/date" },
+        "sort_order": { "type": "integer", "minimum": 1 },
+        "qa_policy": { "type": "string", "enum": ["auto","human"] },
+        "outputs": { "type": "array", "items": { "$ref": "#/$defs/uuid" } },
+        "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+        "state": { "type": "string", "enum": ["created","published","delivered"] },
+        "status": { "$ref": "#/$defs/derivedStatus" }
+      },
+      "required": ["id","assignment_id","workspace_id","operating_entity_id","skill_id","performer_type","sort_order","qa_policy","state","status"]
+    },
+
+    "Allocation": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "activity_id": { "$ref": "#/$defs/uuid" },
+        "candidates_scored": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "properties": {
+              "performer_id": { "$ref": "#/$defs/uuid" },
+              "score": { "type": "number", "minimum": 0, "maximum": 1 },
+              "reasons": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["performer_id","score"]
+          }
+        },
+        "proposed_performer_id": { "$ref": "#/$defs/uuid" },
+        "alternates": { "type": "array", "items": { "$ref": "#/$defs/uuid" } }
+      },
+      "required": ["id","activity_id","proposed_performer_id"]
+    },
+
+    "Mobilization": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "activity_id": { "$ref": "#/$defs/uuid" },
+        "channel": { "type": "string", "enum": ["ws_chat","whatsapp","sms","email"] },
+        "sent_at": { "$ref": "#/$defs/ts" },
+        "response": { "type": ["string","null"], "enum": ["accepted","declined",null] },
+        "escalation_step": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["id","activity_id","channel","escalation_step"]
+    },
+
+    "AccessGrantRole": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "person_id": { "$ref": "#/$defs/uuid" },
+        "scope": { "type": "string" },
+        "role_type": { "type": "string", "enum": ["activity","assignment","workspace"] },
+        "role_status": { "type": "string", "enum": ["pending","accepted","rejected"] },
+        "reject_reason": { "type": ["string","null"] }
+      },
+      "required": ["id","person_id","scope","role_type","role_status"]
+    },
+
+    "FileRef": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "store_location": { "type": "string" },
+        "storage_tier": { "type": "string", "enum": ["ws_managed","connected_cloud","own_infra"] },
+        "key": { "type": "string" },
+        "checksum": { "type": "string" },
+        "size": { "type": "integer", "minimum": 0 },
+        "mime": { "type": "string" },
+        "owner_entity_id": { "$ref": "#/$defs/uuid" }
+      },
+      "required": ["id","workspace_id","store_location","key","owner_entity_id"]
+    },
+
+    "AccessGrant": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "file_ref_id": { "$ref": "#/$defs/uuid" },
+        "grantee": { "type": "string" },
+        "scope": { "type": "array", "items": { "type": "string" } },
+        "expiry": { "$ref": "#/$defs/ts" },
+        "revocable": { "type": "boolean" }
+      },
+      "required": ["id","file_ref_id","grantee","scope","expiry","revocable"]
+    },
+
+    "BillableEvent": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "assignment_ref": { "$ref": "#/$defs/uuid" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "operating_entity_id": { "$ref": "#/$defs/uuid" },
+        "client_relationship_id": { "$ref": "#/$defs/uuid" },
+        "verified_by": { "$ref": "#/$defs/uuid" },
+        "verified_at": { "$ref": "#/$defs/ts" },
+        "unit_count": { "type": "number", "minimum": 0 },
+        "unit_price": { "type": "number", "minimum": 0 },
+        "amount": { "type": "number", "minimum": 0 },
+        "currency": { "$ref": "#/$defs/currency" },
+        "billing_model": { "type": "string", "enum": ["unit_x_price","flat_retainer","retainer_plus_usage","outcome"] }
+      },
+      "required": ["id","assignment_ref","workspace_id","operating_entity_id","client_relationship_id","verified_by","verified_at","amount","currency","billing_model"]
+    },
+
+    "Invoice": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "operating_entity_id": { "$ref": "#/$defs/uuid" },
+        "client_relationship_id": { "$ref": "#/$defs/uuid" },
+        "invoice_number": { "type": "string" },
+        "invoice_code": { "type": ["string","null"] },
+        "grouping_rule": { "type": "string", "enum": ["per_entity_per_period","per_request"] },
+        "line_items": { "type": "array", "items": { "$ref": "#/$defs/InvoiceLine" } },
+        "tax": { "type": "object" },
+        "status": { "type": "string", "enum": ["draft","raised","sent","paid","disputed"] }
+      },
+      "required": ["id","operating_entity_id","client_relationship_id","invoice_number","grouping_rule","status"]
+    },
+    "InvoiceLine": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "invoice_id": { "$ref": "#/$defs/uuid" },
+        "billable_event_id": { "$ref": "#/$defs/uuid" },
+        "rate_snapshot": { "type": "object" }
+      },
+      "required": ["id","invoice_id","billable_event_id"]
+    },
+
+    "Wallet": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "relationship_id": { "$ref": "#/$defs/uuid" },
+        "denomination": { "type": "string", "default": "credits" },
+        "balance": { "type": "number" },
+        "cost_per_credit": { "type": "number", "minimum": 0 },
+        "consumption_policy": { "type": "string", "enum": ["none","fifo","lifo"], "default": "fifo" },
+        "expiry_enabled": { "type": "boolean", "default": false },
+        "negative_balance_allowed": { "type": "boolean", "default": false }
+      },
+      "required": ["id","relationship_id","denomination","balance"]
+    },
+    "WalletLot": {
+      "type": "object", "additionalProperties": false,
+      "description": "Materializes only when expiry_enabled or lotting is on.",
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "wallet_id": { "$ref": "#/$defs/uuid" },
+        "credits": { "type": "number", "minimum": 0 },
+        "remaining": { "type": "number", "minimum": 0 },
+        "validity": { "oneOf": [ { "$ref": "#/$defs/date" }, { "type": "null" } ] }
+      },
+      "required": ["id","wallet_id","credits","remaining"]
+    },
+    "WalletLedger": {
+      "type": "object", "additionalProperties": false,
+      "description": "Append-only. The source of truth. Balance is a projection.",
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "wallet_id": { "$ref": "#/$defs/uuid" },
+        "op": { "type": "string", "enum": ["deduct","settle","refund"] },
+        "delta": { "type": "number" },
+        "ref": { "type": "string" },
+        "idem_key": { "type": "string" },
+        "at": { "$ref": "#/$defs/ts" }
+      },
+      "required": ["id","wallet_id","op","delta","idem_key","at"]
+    },
+
+    "PayoutLine": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "billable_event_id": { "$ref": "#/$defs/uuid" },
+        "performer_id": { "$ref": "#/$defs/uuid" },
+        "period": { "type": "string" },
+        "unit": { "type": "string", "default": "currency" },
+        "amount": { "type": "number", "minimum": 0 },
+        "status": { "type": "string", "enum": ["accrued","paid","exported"] }
+      },
+      "required": ["id","billable_event_id","performer_id","period","amount","status"]
+    },
+
+    "BoundaryNode": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "activity_id": { "$ref": "#/$defs/uuid" },
+        "linked_relationship_id": { "$ref": "#/$defs/uuid" },
+        "maps_to_request_ref": { "type": "string" },
+        "visible_status": { "$ref": "#/$defs/derivedStatus" },
+        "deliverable_ref": { "oneOf": [ { "$ref": "#/$defs/uuid" }, { "type": "null" } ] },
+        "opacity_level": { "type": "string", "enum": ["opaque","milestones","detailed"] }
+      },
+      "required": ["id","activity_id","linked_relationship_id","maps_to_request_ref","opacity_level"]
+    },
+
+    "DomainEvent": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "event_id": { "$ref": "#/$defs/uuid" },
+        "type": { "type": "string" },
+        "workspace_id": { "$ref": "#/$defs/uuid" },
+        "operating_entity_id": { "$ref": "#/$defs/uuid" },
+        "occurred_at": { "$ref": "#/$defs/ts" },
+        "payload": { "type": "object" },
+        "trace_id": { "type": "string" }
+      },
+      "required": ["event_id","type","workspace_id","occurred_at","payload"]
+    }
+  }
+}
+```
+
+**How to use it as a gate:** every API payload and DB row for a core entity MUST validate against its `$defs` schema. The enums above are the **locked value sets** — a build that introduces, say, a `billing_model` outside `{unit_x_price, flat_retainer, retainer_plus_usage, outcome}` fails validation. The two isolation keys (`workspace_id`, `operating_entity_id`) are `required` on every tenant-scoped entity, so a row that forgets them can't validate — which is how the schema enforces isolation-by-construction. `[J]`/Bhavya items are deliberately absent (they're values/mechanisms, not shape), so filling them later doesn't change this contract.
