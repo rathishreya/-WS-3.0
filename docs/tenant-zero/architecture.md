@@ -54,7 +54,7 @@ flowchart TB
 
   subgraph Core["CORE ORCHESTRATION SERVICE  (modular monolith · one Postgres · one transaction)"]
     direction TB
-    TEN["Tenancy & Identity<br/>Workspace · Entity · Party · Relationship · RBAC"]
+    TEN["Tenancy & Identity<br/>Workspace · Operating-entity · Entity · Relationship · RBAC"]
     CFG["Config Engine<br/>catalog · skills · pricing · policies · readiness"]
     LC["Lifecycle Engine<br/>Request→Assignment→Activity · state+status in-txn"]
     ALL["Allocation<br/>hard filters · scored proposal · fallback ladder"]
@@ -91,7 +91,7 @@ flowchart TB
 |---|---|---|---|
 | **API Gateway / BFF** | GraphQL schema, persisted queries, authN, POV-scoping | thin edge; one contract for the UI | sync |
 | **Core Orchestration** (modular monolith) | the **entire work graph + config + money events**, one Postgres, RLS | **deliberately not split** — one graph, one transaction, zero internal sync | sync (in-process modules) |
-| ├ Tenancy & Identity | Workspace, Entity, Party, Relationship, Users, RBAC | module | in-txn |
+| ├ Tenancy & Identity | Workspace, Operating-entity, Entity, Relationship, Users, RBAC | module | in-txn |
 | ├ Config Engine | catalog, skills, rates, teams, policies, readiness | module | in-txn |
 | ├ Lifecycle Engine | Request/Assignment/Activity, state **+ status derived in-txn** | module | in-txn |
 | ├ Allocation | hard filters → scored proposal → fallback ladder | module | in-txn |
@@ -114,13 +114,13 @@ One Postgres schema for the core. Every tenant-scoped table carries **`workspace
 ```mermaid
 erDiagram
   WORKSPACE ||--o{ OPERATING_ENTITY : has
-  WORKSPACE ||--o{ PARTY : scopes
+  WORKSPACE ||--o{ ENTITY : scopes
   WORKSPACE ||--o{ RELATIONSHIP : scopes
   WORKSPACE ||--o{ OFFERING : scopes
   WORKSPACE ||--o{ SKILL : scopes
 
-  PARTY ||--o| PERSON : "is-a (person)"
-  PARTY ||--o{ RELATIONSHIP : "from/to"
+  ENTITY ||--o| PERSON : "is-a (person)"
+  ENTITY ||--o{ RELATIONSHIP : "from/to"
   ROOT_IDENTITY ||--o{ PERSON : "one human, many workspace memberships"
   PERSON ||--o{ ACCESS_GRANT_ROLE : holds
   PERSON ||--o{ PERSON_SKILL : "declares (expert skills)"
@@ -175,7 +175,7 @@ erDiagram
     string tax_profile
     bool entity_isolation
   }
-  PARTY {
+  ENTITY {
     uuid id PK
     uuid workspace_id FK
     string type "org|person"
@@ -184,10 +184,10 @@ erDiagram
   PERSON {
     uuid id PK
     uuid workspace_id FK
-    uuid party_id FK
+    uuid entity_id FK
     uuid root_identity_id FK "global — links memberships across workspaces"
     string email
-    string party_role
+    string entity_role
     string contract_type
     uuid operating_entity_id FK
     bytes cost_encrypted
@@ -196,8 +196,8 @@ erDiagram
   RELATIONSHIP {
     uuid id PK
     uuid workspace_id FK
-    uuid from_party FK
-    uuid to_party FK
+    uuid from_entity FK
+    uuid to_entity FK
     string type "employment|client|vendor|tenant"
     uuid operating_entity_id FK
     string invoice_code "per-client billing code (client rel; gated)"
@@ -417,15 +417,15 @@ erDiagram
 ```
 
 **Notes on the model**
-- **Party + Relationship is the spine.** Tenant/client/vendor are `RELATIONSHIP.type` values, not tables. A cross-org link is one `RELATIONSHIP` row seen as `vendor` by A and `client` by B.
+- **Entity + Relationship is the spine.** Tenant/client/vendor are `RELATIONSHIP.type` values, not tables. A cross-org link is one `RELATIONSHIP` row seen as `vendor` by A and `client` by B.
 - **Two-layer identity (one person in N workspaces).** `ROOT_IDENTITY` is **global** — one per human, above all workspaces (their login, personal workspace, portable reputation). Each workspace they join gets its own **workspace-scoped `PERSON` membership** that references the root identity. A workspace's core sees only its own `PERSON` rows; **the root→membership mapping is resolved at the identity/gateway layer and never exposed into a tenant's graph** — so WS-A cannot learn the person is also in WS-B. Auth once at the root; act per membership; revoke SSO/offboard ends *that* membership only. The only deliberate cross-workspace signal is `portable_reputation` (metadata-only, superadmin-governed). *(Phase 2 — but modeled now so it needs no rewrite.)*
 - **The work graph is a tree** via `ACTIVITY.dependency_activity_id`; independent branches run in parallel, dependent ones gate on their input.
 - **`status` is a stored column written in the same transaction as `state`** — not a projection. Reporting reads it; it never computes it.
 - **Money is append-only where it must be:** `WALLET_LEDGER` is the source of truth (no sheet mirror); `BILLABLE_EVENT` is immutable once emitted.
 - **Files are pointers.** `FILE_REF` never holds bytes; `ACCESS_GRANT` issues the short-lived brokered credentials for the enclave and for cross-org.
-- **The expert lives across several tables (not one "expert" table).** An expert is a `PERSON` (`party_role=performer`) whose skills are `PERSON_SKILL` rows; allocation records the pick in `ALLOCATION.proposed_performer_id`; acceptance is an `ACCESS_GRANT_ROLE`; the person `performs` an `ACTIVITY` and writes outputs via `ACTIVITY_IO`; and is paid by `PAYOUT_LINE` off the `BILLABLE_EVENT`. (Traced end-to-end in `spec.md` Appendix A.)
-- **Terminology — "Party" ≠ "entity".** `PARTY` is an actor (org or person). `OPERATING_ENTITY` is a legal/billing sub-unit of an org. We deliberately do **not** call a Party an "entity" — it would collide with `operating_entity`. (If "Party" reads oddly to reviewers, "Actor" is the only acceptable rename; "Entity" is not.)
-- **The client user is a `PARTY(person)`.** A client company is `PARTY(org)` (the `to_party` of a `client` RELATIONSHIP); its requester is a `PARTY(person)` under that org, referenced by `REQUEST.requester_id`. They only get a `ROOT_IDENTITY`/login if the client is itself on the platform (cross-org); otherwise they're a contact record you deliver to.
+- **The expert lives across several tables (not one "expert" table).** An expert is a `PERSON` (`entity_role=performer`) whose skills are `PERSON_SKILL` rows; allocation records the pick in `ALLOCATION.proposed_performer_id`; acceptance is an `ACCESS_GRANT_ROLE`; the person `performs` an `ACTIVITY` and writes outputs via `ACTIVITY_IO`; and is paid by `PAYOUT_LINE` off the `BILLABLE_EVENT`. (Traced end-to-end in `spec.md` Appendix A.)
+- **Terminology — `ENTITY` vs `OPERATING_ENTITY` (two distinct things).** `ENTITY` is an **actor** — an org or a person (this is the old "Party"). `OPERATING_ENTITY` is a **legal/billing sub-unit inside one org**. An `ENTITY(org)` can contain several `OPERATING_ENTITY` rows (Acme → Acme Lab, ArabEasy). Rule to avoid confusion: the actor is always **Entity** (`entity_id`); the billing unit is always the fully-qualified **operating_entity** (`operating_entity_id`) — never write bare "entity" to mean the billing unit.
+- **The client user is a `ENTITY(person)`.** A client company is `ENTITY(org)` (the `to_entity` of a `client` RELATIONSHIP); its requester is a `ENTITY(person)` under that org, referenced by `REQUEST.requester_id`. They only get a `ROOT_IDENTITY`/login if the client is itself on the platform (cross-org); otherwise they're a contact record you deliver to.
 - **⚠️ Bhavya:** transactional (this model) vs event-sourced. Recommendation: transactional core with an **outbox** for events — gets reliability without the read-model-as-truth complexity.
 
 ---
@@ -446,7 +446,7 @@ erDiagram
 | Core → Reporting / Workers | **domain events via outbox → broker** | reliable, drift-free (state already committed) |
 | Worker → Core | authenticated API calls | escalation, invoicing, payouts, period rollover |
 | **Core(A) ↔ Core(B)** cross-org | **signed, encapsulated Boundary API** + brokered file grants; provenance stripped per hop | A never sees B's internals; chains re-encapsulate so A never learns C exists |
-| Non-WS party | client-system **adapter** (email / Phrase / API) | bounded by that tool's surface |
+| Non-WS entity | client-system **adapter** (email / Phrase / API) | bounded by that tool's surface |
 
 ### The outbox pattern (why no drift)
 State + status commit in one transaction **together with** an `outbox` row. A relay publishes outbox rows to the broker. Consumers (reporting, workers) are eventually-consistent — but **truth is already committed in the core**, so a lost/late event never corrupts state. This is the structural fix for the ERP's sync/drift/repair-cron class of bugs.
@@ -578,7 +578,7 @@ with db.transaction():
 {
   "event_id": "evt_uuid",
   "type": "BillableEventEmitted",
-  "workspace_id": "ws_uuid", "operating_entity_id": "ent_uuid",
+  "workspace_id": "ws_uuid", "operating_entity_id": "oe_uuid",
   "occurred_at": "2026-07-17T10:00:00Z",
   "payload": { "billable_event_id": "be_uuid", "assignment_ref": "asg_uuid", "amount": 800, "currency": "USD" },
   "trace_id": "…"          // events drive reporting/notify/integration — never state derivation
@@ -647,7 +647,7 @@ DESIGN (now, no code)
 ## 13. What to review here
 
 - **§3** — the modular-monolith-core call (decision #1). This is the most consequential architecture choice; it's deliberately conservative to avoid rebuilding the ERP's sync pain.
-- **§4** — the data model / DB diagram. Is the Party+Relationship spine and the work-graph tree right?
+- **§4** — the data model / DB diagram. Is the Entity+Relationship spine and the work-graph tree right?
 - **§5** — communications + the outbox pattern (how we kill drift for good).
 - **§7–§8** — isolation and deployment tiers.
 - **§10** — the engineering conventions (the binding "how to write the code" rules).

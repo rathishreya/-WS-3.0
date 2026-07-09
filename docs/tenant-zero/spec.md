@@ -63,7 +63,7 @@ Role-scoped surfaces over **one work graph**. Each shows only what the actor's r
 ## 4. Domain model & data at a glance
 
 **Governing principles**
-1. **Party + Relationship** — a Party (Org/Person) with typed Relationship edges (`employment/client/vendor/tenant`). Tenant/client/vendor are relationship *types*, not separate systems. A cross-org link is one edge — "vendor" from one side, "client" from the other.
+1. **Entity + Relationship** — an Entity (Org/Person) with typed Relationship edges (`employment/client/vendor/tenant`). Tenant/client/vendor are relationship *types*, not separate systems. A cross-org link is one edge — "vendor" from one side, "client" from the other.
 2. **Capability-gated + JIT fields** — only fields a turned-on capability needs are asked; the rest surface at first use.
 3. **Platform-generic** — roles, activities, money are generic; every EZ value is config.
 4. **Efficiency-first** — AI composes, humans ratify; edges are channel-native.
@@ -79,11 +79,11 @@ Role-scoped surfaces over **one work graph**. Each shows only what the actor's r
 
 ```jsonc
 // Every tenant record carries these two keys — enforced by row-level security.
-{ "workspace_id": "ws_uuid", "operating_entity_id": "ent_uuid" }
+{ "workspace_id": "ws_uuid", "operating_entity_id": "oe_uuid" }
 
 // The object graph (details per workflow below):
 Workspace ─┬─ OperatingEntity[]
-           ├─ Party[] ──── Person | Org
+           ├─ Entity[] ──── Person | Org
            ├─ Relationship[]  // employment | client | vendor | tenant
            ├─ Offering[] ─── OfferingActivityTemplate[], Rate[]
            ├─ Skill[]
@@ -193,7 +193,7 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 |---|---|
 | **One person in 2 workspaces** | One root identity + two isolated memberships; WS-A can't see the WS-B membership; leaving A doesn't touch B. Only portable reputation (metadata-only, governed) crosses. |
 | Skill needs verification | Active for non-gated work; gated skills pending approval. |
-| Same person, two entities | One Party; entity-scoped relationships; no duplicate identity. |
+| Same person, two entities | One Entity; entity-scoped relationships; no duplicate identity. |
 | Contractor vs payroll | Payroll-only fields asked only for payroll contracts. |
 | Offboarded mid-assignment | In-flight activities flagged for reassignment (→ E13); no silent drop. |
 | SSO deprovisioned upstream | Access revoked on next auth; history retained (append-only). |
@@ -216,13 +216,13 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 {
   "id": "person_uuid",
   "workspace_id": "ws_uuid",            // this membership's workspace
-  "party_id": "party_uuid",
+  "entity_id": "ent_uuid",
   "root_identity_id": "root_uuid",      // links to the global identity (identity layer only)
   "name": "Sara Khan",                  // always
   "email": "sara@acme.com",             // always
-  "party_role": "performer",            // owner|performer|reviewer|verifier|admin
+  "entity_role": "performer",            // owner|performer|reviewer|verifier|admin
   "contract_type": "payroll",           // only if on WS payroll
-  "operating_entity_id": "ent_uuid",    // only if on payroll
+  "operating_entity_id": "oe_uuid",    // only if on payroll
   "sso_federated": true,                // employee SSO; revoke → THIS membership ends
   "skills": [ { "skill_id": "skill_translate_ar_en", "proficiency": 4 } ],  // if performer
   "cost_encrypted": "<fernet>",         // only if paid through WS — never plaintext
@@ -232,7 +232,7 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 ```
 </details>
 
-**FRs** — FR-3.1 self-onboard, admin-exceptions-only · FR-3.2 AI pre-fill · FR-3.3 skill-gated approval · FR-3.4 one Party, many entity relationships · FR-3.5 encrypted cost/pay/PII · FR-3.6 offboarding reassigns in-flight work · FR-3.7 **two-layer identity: one global root identity + per-workspace memberships; workspaces can't see each other's membership; auth once, act per membership, revoke per membership** (Phase 2).
+**FRs** — FR-3.1 self-onboard, admin-exceptions-only · FR-3.2 AI pre-fill · FR-3.3 skill-gated approval · FR-3.4 one Entity, many entity relationships · FR-3.5 encrypted cost/pay/PII · FR-3.6 offboarding reassigns in-flight work · FR-3.7 **two-layer identity: one global root identity + per-workspace memberships; workspaces can't see each other's membership; auth once, act per membership, revoke per membership** (Phase 2).
 **AC** — a person self-onboards active without admin touch when policy allows; salary never returns in plaintext; offboarding never orphans live activities.
 
 ---
@@ -258,9 +258,9 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 ```jsonc
 // CLIENT
 {
-  "id": "rel_uuid", "workspace_id": "ws_uuid", "operating_entity_id": "ent_uuid",
+  "id": "rel_uuid", "workspace_id": "ws_uuid", "operating_entity_id": "oe_uuid",
   "type": "client",
-  "from_party": "party_acme", "to_party": "party_client",
+  "from_entity": "ent_acme", "to_entity": "ent_client",
   "config": {
     "company_name": "Globex", "code": "GLBX",
     "requesters": [{ "name": "Ravi", "email": "ravi@globex.com" }],
@@ -272,7 +272,7 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 
 // VENDOR (identity-only first; the rest JIT)
 {
-  "id": "rel_uuid2", "workspace_id": "ws_uuid", "operating_entity_id": "ent_uuid",
+  "id": "rel_uuid2", "workspace_id": "ws_uuid", "operating_entity_id": "oe_uuid",
   "type": "vendor",
   "vendor_type": "external",           // external | ws_tenant
   "linked_org_ref": null,              // set if vendor_type = ws_tenant
@@ -315,8 +315,8 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 ```jsonc
 {
   "id": "req_uuid",
-  "workspace_id": "ws_uuid", "operating_entity_id": "ent_uuid",   // system
-  "requester_id": "party_client",                                 // system (mapped)
+  "workspace_id": "ws_uuid", "operating_entity_id": "oe_uuid",   // system
+  "requester_id": "ent_client",                                 // system (mapped)
   "engagement_id": "eng_uuid",                                    // system
   "brief": "Translate the attached 40-page report to Arabic",     // requester
   "input_files": ["file_ref_1", "file_ref_2"],                    // requester (pointers)
@@ -463,7 +463,7 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 </details>
 
 **FRs** — FR-8.1 two-pass allocation · FR-8.2 committed-capacity-first · FR-8.3 propose→ratify→accept, no bidding · FR-8.4 fallback ladder on decline/exhaust · FR-8.5 channel-native, escalating, cost-aware · FR-8.6 SLA monitor auto-escalates · FR-8.7 objective weights are tenant config.
-**AC** — an empty bench never leaves an activity silently unassigned; a costly channel is used only after the free one fails; a party can't sit on both sides of an activity.
+**AC** — an empty bench never leaves an activity silently unassigned; a costly channel is used only after the free one fails; an entity can't sit on both sides of an activity.
 
 ---
 
@@ -582,7 +582,7 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
     "verified_by": "person_verifier", "verified_at": "2026-07-17T10:00:00Z",
     "unit_count": 40, "unit_price": 20, "amount": 800, "currency": "USD",
     "billing_model": "unit_x_price",
-    "operating_entity_id": "ent_uuid", "client_relationship_id": "rel_uuid"
+    "operating_entity_id": "oe_uuid", "client_relationship_id": "rel_uuid"
   }
 }
 
@@ -611,7 +611,7 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 // Files are pointers, never bytes
 { "file_ref": { "id": "file_ref_1", "store_location": "s3://acme/in/report.pdf",
     "key": "report.pdf", "checksum": "sha256:...", "size": 82113, "mime": "application/pdf",
-    "owner_entity_id": "ent_uuid" },
+    "owner_entity_id": "oe_uuid" },
   "access_grant": { "grantee": "ws_b_identity", "scope": ["read:file_ref_1"],
     "expiry": "2026-07-20T00:00:00Z", "revocable": true } }
 ```
@@ -707,7 +707,7 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 {
   "relationship": {                              // ONE edge, two views
     "id": "rel_xorg", "linked_org_ref": "ws_b",
-    "workspace_A": { "id": "ws_a", "role": "vendor", "operating_entity_id": "ent_a2" },
+    "workspace_A": { "id": "ws_a", "role": "vendor", "operating_entity_id": "oe_a2" },
     "workspace_B": { "id": "ws_b", "role": "client" },
     "A_cfg": { "dispatchable_scope": "translation", "cost_terms": "…", "transparency_granted": "milestones" },
     "B_cfg": { "pricing_to_A": "…", "sla": "…", "transparency_ceiling": "milestones" },
@@ -749,7 +749,7 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 ```jsonc
 {
   "operating_entity": {
-    "id": "ent_uuid", "workspace_id": "ws_uuid",
+    "id": "oe_uuid", "workspace_id": "ws_uuid",
     "legal_name": "Acme Lab", "code": "LAB", "country": "IN",
     "billing_currency": "INR", "tax_profile": "IN-GST", "invoice_prefix": "LAB",
     "entity_isolation": true,                 // default isolated
@@ -910,7 +910,7 @@ Everything the workspace admin configures — **declarative, defaulted, versione
 
 ## 12. Glossary
 
-**Party** — an org or person. **Relationship** — a typed edge (employment/client/vendor/tenant). **Request / Assignment / Activity** — the work-graph tree (BAT). **Deliver** — the mandatory last activity. **Billable event** — the single money-in/out trigger emitted at verify. **Committed capacity** — fixed-cost resources (~$0 marginal). **Archetype** — a generic industry starter kit that seeds config. **Readiness engine** — computes "can deliver" and asks only for gaps. **Boundary node** — the opaque representation of a vendor workspace in the client's graph. **Enclave** — the zero-retention sandbox where content is processed. **Operating entity** — a legal/billing unit inside one org (policy-isolated). **Workspace** — a tenant (crypto-isolated).
+**Entity** — an **actor**: an org or a person (replaces the old term "Party"); distinct from *operating entity* below. **Relationship** — a typed edge (employment/client/vendor/tenant). **Request / Assignment / Activity** — the work-graph tree (BAT). **Deliver** — the mandatory last activity. **Billable event** — the single money-in/out trigger emitted at verify. **Committed capacity** — fixed-cost resources (~$0 marginal). **Archetype** — a generic industry starter kit that seeds config. **Readiness engine** — computes "can deliver" and asks only for gaps. **Boundary node** — the opaque representation of a vendor workspace in the client's graph. **Enclave** — the zero-retention sandbox where content is processed. **Operating entity** — a legal/billing unit inside one org (policy-isolated). **Workspace** — a tenant (crypto-isolated).
 
 ---
 
@@ -925,7 +925,7 @@ workspace         { "id":"ws_acme", "org_code":"ACME", "deployment_tier":"shared
 
 **Step 2 — Admin configures (seeded from the translation archetype, then ratified)** (E2, §6)
 ```jsonc
-operating_entity  { "id":"ent_acme", "workspace_id":"ws_acme", "legal_name":"Acme Lab", "code":"LAB", "billing_currency":"USD", "tax_profile":"—", "invoice_prefix":"LAB" }
+operating_entity  { "id":"oe_acme", "workspace_id":"ws_acme", "legal_name":"Acme Lab", "code":"LAB", "billing_currency":"USD", "tax_profile":"—", "invoice_prefix":"LAB" }
 offering          { "id":"off_tr", "workspace_id":"ws_acme", "name":"Document Translation", "delivery_model":"deliverable", "billing_model":"unit_x_price", "version":1 }
 skill             { "id":"sk_ocr",   "workspace_id":"ws_acme", "name":"OCR" }
 skill             { "id":"sk_tr",    "workspace_id":"ws_acme", "name":"Translate EN→AR" }
@@ -942,28 +942,28 @@ allocation_policy { "workspace_id":"ws_acme", "objective_weights":{...}, "channe
 **Step 3 — Add the expert Sara** (E3) — *this is the "where is people-skill / where is the expert" answer*
 ```jsonc
 root_identity     { "id":"root_sara", "owner_auth_ref":"oidc|sara", "personal_workspace_ref":"pws_sara" }   // GLOBAL
-party             { "id":"pty_sara", "workspace_id":"ws_acme", "type":"person", "display_name":"Sara Khan" }
-person            { "id":"per_sara", "workspace_id":"ws_acme", "party_id":"pty_sara", "root_identity_id":"root_sara",
-                    "party_role":"performer", "contract_type":"payroll", "operating_entity_id":"ent_acme", "cost_encrypted":"<fernet>" }
+entity             { "id":"ent_sara", "workspace_id":"ws_acme", "type":"person", "display_name":"Sara Khan" }
+person            { "id":"per_sara", "workspace_id":"ws_acme", "entity_id":"ent_sara", "root_identity_id":"root_sara",
+                    "entity_role":"performer", "contract_type":"payroll", "operating_entity_id":"oe_acme", "cost_encrypted":"<fernet>" }
 person_skill      { "id":"ps_1", "workspace_id":"ws_acme", "person_id":"per_sara", "skill_id":"sk_tr", "proficiency":4, "status":"verified" }
 ```
 
 **Step 4 — Add the client Globex + its user (requester)** (E4) — *this is "where the client user sits"*
 ```jsonc
-party             { "id":"pty_globex", "workspace_id":"ws_acme", "type":"org", "display_name":"Globex" }        // client COMPANY
-relationship      { "id":"rel_globex", "workspace_id":"ws_acme", "operating_entity_id":"ent_acme",
-                    "type":"client", "from_party":"ent_acme", "to_party":"pty_globex",
+entity             { "id":"ent_globex", "workspace_id":"ws_acme", "type":"org", "display_name":"Globex" }        // client COMPANY
+relationship      { "id":"rel_globex", "workspace_id":"ws_acme", "operating_entity_id":"oe_acme",
+                    "type":"client", "from_entity":"oe_acme", "to_entity":"ent_globex",
                     "invoice_code":"GLBX-01",                    // ← invoice_code lives here (per client)
                     "config":{ "code":"GLBX" }, "status":"active" }
-party             { "id":"pty_ravi", "workspace_id":"ws_acme", "type":"person", "display_name":"Ravi (Globex)" } // client USER
+entity             { "id":"ent_ravi", "workspace_id":"ws_acme", "type":"person", "display_name":"Ravi (Globex)" } // client USER
 ```
 
 **Step 5 — Request comes in** (E5)
 ```jsonc
-request           { "id":"req_1", "workspace_id":"ws_acme", "operating_entity_id":"ent_acme",
-                    "requester_id":"pty_ravi", "brief":"Translate to Arabic", "input_files":["fr_src"], "deadline":"2026-07-20",
+request           { "id":"req_1", "workspace_id":"ws_acme", "operating_entity_id":"oe_acme",
+                    "requester_id":"ent_ravi", "brief":"Translate to Arabic", "input_files":["fr_src"], "deadline":"2026-07-20",
                     "source_channel":"email", "state":"created", "status":"not_started" }
-file_ref          { "id":"fr_src", "workspace_id":"ws_acme", "store_location":"s3://acme/in/report.pdf", "owner_entity_id":"ent_acme" }
+file_ref          { "id":"fr_src", "workspace_id":"ws_acme", "store_location":"s3://acme/in/report.pdf", "owner_entity_id":"oe_acme" }
 ```
 
 **Step 6 — AI composes → owner ratifies** (E6/E7)
@@ -988,7 +988,7 @@ activity (update) { "id":"act_tr", "performer_id":"per_sara" }
 **Step 8 — Perform + QA + deliver + verify** (E9/E10) — *the expert delivers*
 ```jsonc
 activity_io       { "activity_id":"act_tr", "file_ref_id":"fr_tr_out", "role":"output" }
-file_ref          { "id":"fr_tr_out", "workspace_id":"ws_acme", "store_location":"enclave→acme store", "owner_entity_id":"ent_acme" }
+file_ref          { "id":"fr_tr_out", "workspace_id":"ws_acme", "store_location":"enclave→acme store", "owner_entity_id":"oe_acme" }
 activity (update) { "id":"act_del", "state":"delivered" }                          // deliverable assembled + written to Globex store
 verify            { "assignment_id":"asg_1", "reconciliation":{"unit_count":40,"splits":[{"performer":"per_sara","units":40}]}, "verified_by":"per_verifier", "confirm":true }
 ```
@@ -996,8 +996,8 @@ verify            { "assignment_id":"asg_1", "reconciliation":{"unit_count":40,"
 **Step 9 — Money: bill Globex, pay Sara** (E11) — *the expert gets paid*
 ```jsonc
 billable_event    { "id":"be_1", "assignment_ref":"asg_1", "verified_by":"per_verifier", "unit_count":40, "unit_price":20, "amount":800,
-                    "currency":"USD", "billing_model":"unit_x_price", "operating_entity_id":"ent_acme", "client_relationship_id":"rel_globex" }
-invoice           { "id":"inv_1", "operating_entity_id":"ent_acme", "client_relationship_id":"rel_globex",
+                    "currency":"USD", "billing_model":"unit_x_price", "operating_entity_id":"oe_acme", "client_relationship_id":"rel_globex" }
+invoice           { "id":"inv_1", "operating_entity_id":"oe_acme", "client_relationship_id":"rel_globex",
                     "invoice_number":"LAB-2026-07-001", "invoice_code":"GLBX-01", "grouping_rule":"per_entity_per_period", "status":"raised" }
 invoice_line      { "invoice_id":"inv_1", "billable_event_id":"be_1", "rate_snapshot":{"page":20} }
 payout_line       { "billable_event_id":"be_1", "performer_id":"per_sara", "period":"2026-07", "amount":400, "status":"accrued" }   // ← Sara paid
