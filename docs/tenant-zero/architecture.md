@@ -123,6 +123,10 @@ erDiagram
   PARTY ||--o{ RELATIONSHIP : "from/to"
   ROOT_IDENTITY ||--o{ PERSON : "one human, many workspace memberships"
   PERSON ||--o{ ACCESS_GRANT_ROLE : holds
+  PERSON ||--o{ PERSON_SKILL : "declares (expert skills)"
+  SKILL ||--o{ PERSON_SKILL : "rated in"
+  PERSON ||--o{ ACTIVITY : "performs (expert)"
+  PERSON ||--o{ PAYOUT_LINE : "paid via"
 
   OPERATING_ENTITY ||--o{ RELATIONSHIP : scoped_to
   RELATIONSHIP ||--o{ ENGAGEMENT : governs
@@ -196,6 +200,7 @@ erDiagram
     uuid to_party FK
     string type "employment|client|vendor|tenant"
     uuid operating_entity_id FK
+    string invoice_code "per-client billing code (client rel; gated)"
     jsonb config
     string status
   }
@@ -331,6 +336,9 @@ erDiagram
   INVOICE {
     uuid id PK
     uuid operating_entity_id FK
+    uuid client_relationship_id FK
+    string invoice_number
+    string invoice_code "per-client billing code (from the client relationship)"
     string grouping_rule
     jsonb tax
     string status
@@ -390,6 +398,14 @@ erDiagram
     string unit_type
     numeric rate
   }
+  PERSON_SKILL {
+    uuid id PK
+    uuid workspace_id FK
+    uuid person_id FK
+    uuid skill_id FK
+    int proficiency "1..5"
+    string status "declared|verified"
+  }
   OFFERING_ACTIVITY_TEMPLATE {
     uuid id PK
     uuid offering_id FK
@@ -407,6 +423,9 @@ erDiagram
 - **`status` is a stored column written in the same transaction as `state`** — not a projection. Reporting reads it; it never computes it.
 - **Money is append-only where it must be:** `WALLET_LEDGER` is the source of truth (no sheet mirror); `BILLABLE_EVENT` is immutable once emitted.
 - **Files are pointers.** `FILE_REF` never holds bytes; `ACCESS_GRANT` issues the short-lived brokered credentials for the enclave and for cross-org.
+- **The expert lives across several tables (not one "expert" table).** An expert is a `PERSON` (`party_role=performer`) whose skills are `PERSON_SKILL` rows; allocation records the pick in `ALLOCATION.proposed_performer_id`; acceptance is an `ACCESS_GRANT_ROLE`; the person `performs` an `ACTIVITY` and writes outputs via `ACTIVITY_IO`; and is paid by `PAYOUT_LINE` off the `BILLABLE_EVENT`. (Traced end-to-end in `spec.md` Appendix A.)
+- **Terminology — "Party" ≠ "entity".** `PARTY` is an actor (org or person). `OPERATING_ENTITY` is a legal/billing sub-unit of an org. We deliberately do **not** call a Party an "entity" — it would collide with `operating_entity`. (If "Party" reads oddly to reviewers, "Actor" is the only acceptable rename; "Entity" is not.)
+- **The client user is a `PARTY(person)`.** A client company is `PARTY(org)` (the `to_party` of a `client` RELATIONSHIP); its requester is a `PARTY(person)` under that org, referenced by `REQUEST.requester_id`. They only get a `ROOT_IDENTITY`/login if the client is itself on the platform (cross-org); otherwise they're a contact record you deliver to.
 - **⚠️ Bhavya:** transactional (this model) vs event-sourced. Recommendation: transactional core with an **outbox** for events — gets reliability without the read-model-as-truth complexity.
 
 ---

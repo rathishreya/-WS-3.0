@@ -9,7 +9,7 @@
 - **Developers:** additionally read the **`▸ Data (JSON)`** blocks (click to expand), the edge-case tables, the numbered **FR-x.y** requirements, and the config surface (§6).
 - **Conventions:** **FR-x.y** = testable requirement · **MUST/SHOULD** carry their usual force · **AC** = acceptance criteria · `(EZ: …)` = illustrative config only, never product behaviour · `[J]` = awaiting Joy · **⚠️ Bhavya** = architecture-owned.
 
-**Contents:** §1 Goals · §2 Personas · §3 Surfaces · §4 Domain model & data-at-a-glance · **§5 The 15 workflows (base + edge cases + JSON + FRs)** · §6 Config surface (JSON) · §7 Cross-cutting · **§8 Data security, privacy & trust** · §9 Non-functional · §10 Phasing · §11 Open items · §12 Glossary.
+**Contents:** §1 Goals · §2 Personas · §3 Surfaces · §4 Domain model & data-at-a-glance · **§5 The 15 workflows (base + edge cases + JSON + FRs)** · §6 Config surface (JSON) · §7 Cross-cutting · **§8 Data security, privacy & trust** · §9 Non-functional · §10 Phasing · §11 Open items · §12 Glossary · **Appendix A — worked example (row by row)**.
 
 ---
 
@@ -911,6 +911,99 @@ Everything the workspace admin configures — **declarative, defaulted, versione
 ## 12. Glossary
 
 **Party** — an org or person. **Relationship** — a typed edge (employment/client/vendor/tenant). **Request / Assignment / Activity** — the work-graph tree (BAT). **Deliver** — the mandatory last activity. **Billable event** — the single money-in/out trigger emitted at verify. **Committed capacity** — fixed-cost resources (~$0 marginal). **Archetype** — a generic industry starter kit that seeds config. **Readiness engine** — computes "can deliver" and asks only for gaps. **Boundary node** — the opaque representation of a vendor workspace in the client's graph. **Enclave** — the zero-retention sandbox where content is processed. **Operating entity** — a legal/billing unit inside one org (policy-isolated). **Workspace** — a tenant (crypto-isolated).
+
+---
+
+## Appendix A — Worked example: one use case, row by row
+
+**The scenario (answers "show how data entry is done"):** *Acme* (a translation agency) runs on WS. It onboards, adds a client *Globex*, receives a 40-page document to translate into Arabic, delivers it, invoices Globex, and pays the translator *Sara*. Below is **every row created**, in order. IDs are illustrative. This also traces the **expert (Sara)** end-to-end and shows **where `invoice_code`, `person_skill`, and the client user sit**.
+
+**Step 1 — L0 provisions the workspace** (E1)
+```jsonc
+workspace         { "id":"ws_acme", "org_code":"ACME", "deployment_tier":"shared", "admin_email":"admin@acme.com", "status":"active" }
+```
+
+**Step 2 — Admin configures (seeded from the translation archetype, then ratified)** (E2, §6)
+```jsonc
+operating_entity  { "id":"ent_acme", "workspace_id":"ws_acme", "legal_name":"Acme Lab", "code":"LAB", "billing_currency":"USD", "tax_profile":"—", "invoice_prefix":"LAB" }
+offering          { "id":"off_tr", "workspace_id":"ws_acme", "name":"Document Translation", "delivery_model":"deliverable", "billing_model":"unit_x_price", "version":1 }
+skill             { "id":"sk_ocr",   "workspace_id":"ws_acme", "name":"OCR" }
+skill             { "id":"sk_tr",    "workspace_id":"ws_acme", "name":"Translate EN→AR" }
+skill             { "id":"sk_rev",   "workspace_id":"ws_acme", "name":"Review" }
+skill             { "id":"sk_del",   "workspace_id":"ws_acme", "name":"Deliver" }        // mandatory last
+offering_activity_template  { "offering_id":"off_tr", "seq":1, "skill_id":"sk_ocr", "qa_policy":"auto",  "dependency":null }
+offering_activity_template  { "offering_id":"off_tr", "seq":2, "skill_id":"sk_tr",  "qa_policy":"human", "dependency":1 }
+offering_activity_template  { "offering_id":"off_tr", "seq":3, "skill_id":"sk_rev", "qa_policy":"human", "dependency":2 }
+offering_activity_template  { "offering_id":"off_tr", "seq":4, "skill_id":"sk_del", "qa_policy":"auto",  "dependency":3 }
+rate              { "id":"rt_1", "workspace_id":"ws_acme", "skill_id":"sk_tr", "unit_type":"page", "rate":20, "relationship_id":null }
+allocation_policy { "workspace_id":"ws_acme", "objective_weights":{...}, "channel_policy":{"default":"ws_chat"} }
+```
+
+**Step 3 — Add the expert Sara** (E3) — *this is the "where is people-skill / where is the expert" answer*
+```jsonc
+root_identity     { "id":"root_sara", "owner_auth_ref":"oidc|sara", "personal_workspace_ref":"pws_sara" }   // GLOBAL
+party             { "id":"pty_sara", "workspace_id":"ws_acme", "type":"person", "display_name":"Sara Khan" }
+person            { "id":"per_sara", "workspace_id":"ws_acme", "party_id":"pty_sara", "root_identity_id":"root_sara",
+                    "party_role":"performer", "contract_type":"payroll", "operating_entity_id":"ent_acme", "cost_encrypted":"<fernet>" }
+person_skill      { "id":"ps_1", "workspace_id":"ws_acme", "person_id":"per_sara", "skill_id":"sk_tr", "proficiency":4, "status":"verified" }
+```
+
+**Step 4 — Add the client Globex + its user (requester)** (E4) — *this is "where the client user sits"*
+```jsonc
+party             { "id":"pty_globex", "workspace_id":"ws_acme", "type":"org", "display_name":"Globex" }        // client COMPANY
+relationship      { "id":"rel_globex", "workspace_id":"ws_acme", "operating_entity_id":"ent_acme",
+                    "type":"client", "from_party":"ent_acme", "to_party":"pty_globex",
+                    "invoice_code":"GLBX-01",                    // ← invoice_code lives here (per client)
+                    "config":{ "code":"GLBX" }, "status":"active" }
+party             { "id":"pty_ravi", "workspace_id":"ws_acme", "type":"person", "display_name":"Ravi (Globex)" } // client USER
+```
+
+**Step 5 — Request comes in** (E5)
+```jsonc
+request           { "id":"req_1", "workspace_id":"ws_acme", "operating_entity_id":"ent_acme",
+                    "requester_id":"pty_ravi", "brief":"Translate to Arabic", "input_files":["fr_src"], "deadline":"2026-07-20",
+                    "source_channel":"email", "state":"created", "status":"not_started" }
+file_ref          { "id":"fr_src", "workspace_id":"ws_acme", "store_location":"s3://acme/in/report.pdf", "owner_entity_id":"ent_acme" }
+```
+
+**Step 6 — AI composes → owner ratifies** (E6/E7)
+```jsonc
+proposal          { "id":"prop_1", "request_id":"req_1", "proposed_offering_id":"off_tr", "scope_sheet":{"unit_type":"page","unit_count":40}, "confidence":{...} }
+assignment        { "id":"asg_1", "request_id":"req_1", "offering_id":"off_tr", "level":"standard", "unit_type":"page", "unit_count":40,
+                    "owner_id":"per_owner", "price":{"amount":800,"currency":"USD"}, "invoice_code":"GLBX-01", "state":"published", "status":"on_track" }
+activity          { "id":"act_ocr", "assignment_id":"asg_1", "skill_id":"sk_ocr", "performer_type":"agent", "sort_order":1, "state":"published" }
+activity          { "id":"act_tr",  "assignment_id":"asg_1", "skill_id":"sk_tr",  "performer_type":"human", "dependency_activity_id":"act_ocr", "sort_order":2, "qa_policy":"human", "state":"published" }
+activity          { "id":"act_rev", "assignment_id":"asg_1", "skill_id":"sk_rev", "performer_type":"human", "dependency_activity_id":"act_tr", "sort_order":3, "state":"published" }
+activity          { "id":"act_del", "assignment_id":"asg_1", "skill_id":"sk_del", "performer_type":"human", "dependency_activity_id":"act_rev", "sort_order":4, "state":"published" }
+```
+
+**Step 7 — Allocate + mobilize + Sara accepts** (E8) — *the expert gets the work*
+```jsonc
+allocation        { "activity_id":"act_tr", "proposed_performer_id":"per_sara", "candidates_scored":[{"performer_id":"per_sara","score":0.91}] }
+mobilization      { "activity_id":"act_tr", "channel":"ws_chat", "sent_at":"...", "escalation_step":0 }
+access_grant_role { "id":"agr_1", "person_id":"per_sara", "scope":"act_tr", "role_type":"activity", "role_status":"accepted" }
+activity (update) { "id":"act_tr", "performer_id":"per_sara" }
+```
+
+**Step 8 — Perform + QA + deliver + verify** (E9/E10) — *the expert delivers*
+```jsonc
+activity_io       { "activity_id":"act_tr", "file_ref_id":"fr_tr_out", "role":"output" }
+file_ref          { "id":"fr_tr_out", "workspace_id":"ws_acme", "store_location":"enclave→acme store", "owner_entity_id":"ent_acme" }
+activity (update) { "id":"act_del", "state":"delivered" }                          // deliverable assembled + written to Globex store
+verify            { "assignment_id":"asg_1", "reconciliation":{"unit_count":40,"splits":[{"performer":"per_sara","units":40}]}, "verified_by":"per_verifier", "confirm":true }
+```
+
+**Step 9 — Money: bill Globex, pay Sara** (E11) — *the expert gets paid*
+```jsonc
+billable_event    { "id":"be_1", "assignment_ref":"asg_1", "verified_by":"per_verifier", "unit_count":40, "unit_price":20, "amount":800,
+                    "currency":"USD", "billing_model":"unit_x_price", "operating_entity_id":"ent_acme", "client_relationship_id":"rel_globex" }
+invoice           { "id":"inv_1", "operating_entity_id":"ent_acme", "client_relationship_id":"rel_globex",
+                    "invoice_number":"LAB-2026-07-001", "invoice_code":"GLBX-01", "grouping_rule":"per_entity_per_period", "status":"raised" }
+invoice_line      { "invoice_id":"inv_1", "billable_event_id":"be_1", "rate_snapshot":{"page":20} }
+payout_line       { "billable_event_id":"be_1", "performer_id":"per_sara", "period":"2026-07", "amount":400, "status":"accrued" }   // ← Sara paid
+```
+
+**The expert path, isolated (Bhavya's Q7):** `per_sara` → `person_skill` (what she can do) → `allocation.proposed_performer_id` (picked) → `access_grant_role` (accepted) → `activity.performer_id` + `activity_io` (did the work) → `payout_line.performer_id` (got paid). No standalone "expert" table — the expert *is* a Person with a role, which is why the same human can be a performer here and a client's requester elsewhere.
 
 ---
 
