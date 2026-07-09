@@ -186,9 +186,12 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 
 **Business rules** — people self-onboard; admin handles exceptions only. Payroll fields only if on WS payroll; `skills` only if a performer; `cost/pay` (encrypted) only if paid through WS; `bank` JIT at first payout. Cost/pay/PII MUST be field-encrypted; salary never in plaintext.
 
+**Two-layer identity (one person, many workspaces).** One human = **one global root identity** (their login, personal workspace, portable reputation — lives *above* all workspaces) + **one workspace-scoped membership per workspace** they join (that workspace's role, skills, contract, cost, access). A workspace sees only its own membership; **it cannot learn the person is in another workspace** (the root→membership link is resolved at the identity layer, never in a tenant's graph). Auth once at the root; act per membership; revoke SSO/offboard ends *that* membership only. *(Portable identity is Phase 2 — modeled now so it needs no rewrite; in Phase 1 a person is in one workspace.)*
+
 **Edge cases**
 | Scenario | Expected behaviour |
 |---|---|
+| **One person in 2 workspaces** | One root identity + two isolated memberships; WS-A can't see the WS-B membership; leaving A doesn't touch B. Only portable reputation (metadata-only, governed) crosses. |
 | Skill needs verification | Active for non-gated work; gated skills pending approval. |
 | Same person, two entities | One Party; entity-scoped relationships; no duplicate identity. |
 | Contractor vs payroll | Payroll-only fields asked only for payroll contracts. |
@@ -196,28 +199,40 @@ Config JSON (entity, offering, skill, rate, policies, archetype) is in **§6 Con
 | SSO deprovisioned upstream | Access revoked on next auth; history retained (append-only). |
 
 <details>
-<summary>▸ Data (JSON): Person</summary>
+<summary>▸ Data (JSON): RootIdentity (global) + Person-membership (per workspace)</summary>
 
 ```jsonc
+// ROOT IDENTITY — one per human, GLOBAL, above all workspaces. No workspace_id.
+{
+  "root_identity": {
+    "id": "root_uuid",
+    "owner_auth_ref": "<the human's own credential>",
+    "personal_workspace_ref": "pws_uuid",     // invisible to any org (SEC-12)
+    "portable_reputation": { "rating": 4.6, "jobs": 120 }  // metadata-only, crosses orgs
+  }
+}
+
+// PERSON = a MEMBERSHIP, one per workspace, scoped. Same human → many of these.
 {
   "id": "person_uuid",
+  "workspace_id": "ws_uuid",            // this membership's workspace
   "party_id": "party_uuid",
-  "name": "Sara Khan",                 // always
-  "email": "sara@acme.com",            // always
-  "party_role": "performer",           // always: owner|performer|reviewer|verifier|admin
-  "contract_type": "payroll",          // only if on WS payroll
-  "operating_entity_id": "ent_uuid",   // only if on payroll
-  "skills": [                          // only if a performer
-    { "skill_id": "skill_translate_ar_en", "proficiency": 4 }
-  ],
-  "cost_encrypted": "<fernet>",        // only if paid through WS — never plaintext
-  "bank_ref": null,                    // JIT at first payout
-  "status": "active"                   // invited | active | offboarded
+  "root_identity_id": "root_uuid",      // links to the global identity (identity layer only)
+  "name": "Sara Khan",                  // always
+  "email": "sara@acme.com",             // always
+  "party_role": "performer",            // owner|performer|reviewer|verifier|admin
+  "contract_type": "payroll",           // only if on WS payroll
+  "operating_entity_id": "ent_uuid",    // only if on payroll
+  "sso_federated": true,                // employee SSO; revoke → THIS membership ends
+  "skills": [ { "skill_id": "skill_translate_ar_en", "proficiency": 4 } ],  // if performer
+  "cost_encrypted": "<fernet>",         // only if paid through WS — never plaintext
+  "bank_ref": null,                     // JIT at first payout
+  "status": "active"                    // invited | active | offboarded
 }
 ```
 </details>
 
-**FRs** — FR-3.1 self-onboard, admin-exceptions-only · FR-3.2 AI pre-fill · FR-3.3 skill-gated approval · FR-3.4 one Party, many entity relationships · FR-3.5 encrypted cost/pay/PII · FR-3.6 offboarding reassigns in-flight work.
+**FRs** — FR-3.1 self-onboard, admin-exceptions-only · FR-3.2 AI pre-fill · FR-3.3 skill-gated approval · FR-3.4 one Party, many entity relationships · FR-3.5 encrypted cost/pay/PII · FR-3.6 offboarding reassigns in-flight work · FR-3.7 **two-layer identity: one global root identity + per-workspace memberships; workspaces can't see each other's membership; auth once, act per membership, revoke per membership** (Phase 2).
 **AC** — a person self-onboards active without admin touch when policy allows; salary never returns in plaintext; offboarding never orphans live activities.
 
 ---

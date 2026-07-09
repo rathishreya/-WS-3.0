@@ -121,8 +121,8 @@ erDiagram
 
   PARTY ||--o| PERSON : "is-a (person)"
   PARTY ||--o{ RELATIONSHIP : "from/to"
-  PERSON ||--o{ USER_IDENTITY : authenticates
-  USER_IDENTITY ||--o{ ACCESS_GRANT_ROLE : holds
+  ROOT_IDENTITY ||--o{ PERSON : "one human, many workspace memberships"
+  PERSON ||--o{ ACCESS_GRANT_ROLE : holds
 
   OPERATING_ENTITY ||--o{ RELATIONSHIP : scoped_to
   RELATIONSHIP ||--o{ ENGAGEMENT : governs
@@ -179,12 +179,15 @@ erDiagram
   }
   PERSON {
     uuid id PK
+    uuid workspace_id FK
     uuid party_id FK
+    uuid root_identity_id FK "global — links memberships across workspaces"
     string email
     string party_role
     string contract_type
     uuid operating_entity_id FK
     bytes cost_encrypted
+    bool sso_federated "employee SSO; revoke → this membership's access ends"
   }
   RELATIONSHIP {
     uuid id PK
@@ -366,15 +369,15 @@ erDiagram
     numeric delta
     timestamp at
   }
-  USER_IDENTITY {
-    uuid id PK
-    uuid person_id FK
-    string auth_ref
-    bool sso
+  ROOT_IDENTITY {
+    uuid id PK "GLOBAL — lives above every workspace; no workspace_id"
+    string owner_auth_ref "the human's own credential"
+    uuid personal_workspace_ref "invisible to any org (SEC-12)"
+    jsonb portable_reputation "travels across orgs, metadata-only"
   }
   ACCESS_GRANT_ROLE {
     uuid id PK
-    uuid user_id FK
+    uuid person_id FK
     string scope
     string role_type
     string role_status
@@ -399,6 +402,7 @@ erDiagram
 
 **Notes on the model**
 - **Party + Relationship is the spine.** Tenant/client/vendor are `RELATIONSHIP.type` values, not tables. A cross-org link is one `RELATIONSHIP` row seen as `vendor` by A and `client` by B.
+- **Two-layer identity (one person in N workspaces).** `ROOT_IDENTITY` is **global** — one per human, above all workspaces (their login, personal workspace, portable reputation). Each workspace they join gets its own **workspace-scoped `PERSON` membership** that references the root identity. A workspace's core sees only its own `PERSON` rows; **the root→membership mapping is resolved at the identity/gateway layer and never exposed into a tenant's graph** — so WS-A cannot learn the person is also in WS-B. Auth once at the root; act per membership; revoke SSO/offboard ends *that* membership only. The only deliberate cross-workspace signal is `portable_reputation` (metadata-only, superadmin-governed). *(Phase 2 — but modeled now so it needs no rewrite.)*
 - **The work graph is a tree** via `ACTIVITY.dependency_activity_id`; independent branches run in parallel, dependent ones gate on their input.
 - **`status` is a stored column written in the same transaction as `state`** — not a projection. Reporting reads it; it never computes it.
 - **Money is append-only where it must be:** `WALLET_LEDGER` is the source of truth (no sheet mirror); `BILLABLE_EVENT` is immutable once emitted.
