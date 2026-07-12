@@ -1,0 +1,749 @@
+<style>
+  :root{
+    --bg:#EEF0F6; --dot:rgba(20,26,44,.05); --surface:#FFFFFF; --elev:#FFFFFF; --soft:#E9ECF3;
+    --line:#E0E4EE; --line-2:#ECEEF5; --ink:#0C1019; --muted:#535B70; --faint:#8A92A6;
+    --brand:#3A4DF5; --brand-ink:#2634C0; --brand-soft:#E7E9FE; --brand-2:#5B6BFF;
+    --ai:#8B5CF6; --ai-soft:#F0EBFE; --ai-ink:#6D3EE0;
+    --good:#0E9F67; --good-soft:#E0F3EA; --warn:#B9760C; --warn-soft:#F8EDD9; --crit:#DE554D; --crit-soft:#FBE7E5;
+    --r:18px; --r-md:13px; --r-sm:10px; --r-xs:7px;
+    --ui:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,"Cascadia Code",Consolas,monospace;
+    --sh1:0 1px 2px rgba(12,16,25,.04),0 1px 1px rgba(12,16,25,.03);
+    --sh2:0 2px 4px rgba(12,16,25,.04),0 12px 28px -14px rgba(12,16,25,.22);
+    --sh3:0 4px 10px rgba(12,16,25,.05),0 28px 56px -24px rgba(12,16,25,.32);
+    --ring:0 0 0 3.5px var(--brand-soft);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#080A10; --dot:rgba(255,255,255,.035); --surface:#11141E; --elev:#171B27; --soft:#1A1F2D;
+    --line:#262C3B; --line-2:#1D2331; --ink:#EBEEF6; --muted:#97A0B5; --faint:#5E6883;
+    --brand:#6E7CFF; --brand-ink:#9AA6FF; --brand-soft:#181F3D; --brand-2:#8A96FF;
+    --ai:#A78BFA; --ai-soft:#1E1938; --ai-ink:#C4B2FF;
+    --good:#37CE8C; --good-soft:#0E2C21; --warn:#DD9A44; --warn-soft:#2E2410; --crit:#F0736D; --crit-soft:#331A19;
+    --sh1:0 1px 2px rgba(0,0,0,.4); --sh2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -18px rgba(0,0,0,.7);
+    --sh3:0 4px 12px rgba(0,0,0,.5),0 34px 64px -28px rgba(0,0,0,.85); --ring:0 0 0 3.5px var(--brand-soft);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#080A10;--dot:rgba(255,255,255,.035);--surface:#11141E;--elev:#171B27;--soft:#1A1F2D;
+    --line:#262C3B;--line-2:#1D2331;--ink:#EBEEF6;--muted:#97A0B5;--faint:#5E6883;
+    --brand:#6E7CFF;--brand-ink:#9AA6FF;--brand-soft:#181F3D;--brand-2:#8A96FF;
+    --ai:#A78BFA;--ai-soft:#1E1938;--ai-ink:#C4B2FF;
+    --good:#37CE8C;--good-soft:#0E2C21;--warn:#DD9A44;--warn-soft:#2E2410;--crit:#F0736D;--crit-soft:#331A19;
+    --sh1:0 1px 2px rgba(0,0,0,.4);--sh2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -18px rgba(0,0,0,.7);
+    --sh3:0 4px 12px rgba(0,0,0,.5),0 34px 64px -28px rgba(0,0,0,.85);--ring:0 0 0 3.5px var(--brand-soft);
+  }
+  :root[data-theme="light"]{
+    --bg:#EEF0F6;--dot:rgba(20,26,44,.05);--surface:#FFFFFF;--elev:#FFFFFF;--soft:#E9ECF3;
+    --line:#E0E4EE;--line-2:#ECEEF5;--ink:#0C1019;--muted:#535B70;--faint:#8A92A6;
+    --brand:#3A4DF5;--brand-ink:#2634C0;--brand-soft:#E7E9FE;--brand-2:#5B6BFF;
+    --ai:#8B5CF6;--ai-soft:#F0EBFE;--ai-ink:#6D3EE0;
+    --good:#0E9F67;--good-soft:#E0F3EA;--warn:#B9760C;--warn-soft:#F8EDD9;--crit:#DE554D;--crit-soft:#FBE7E5;
+    --sh1:0 1px 2px rgba(12,16,25,.04),0 1px 1px rgba(12,16,25,.03);
+    --sh2:0 2px 4px rgba(12,16,25,.04),0 12px 28px -14px rgba(12,16,25,.22);
+    --sh3:0 4px 10px rgba(12,16,25,.05),0 28px 56px -24px rgba(12,16,25,.32);--ring:0 0 0 3.5px var(--brand-soft);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--ui);font-size:14.5px;line-height:1.55;color:var(--ink);
+    background:var(--bg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  h1,h2,h3,h4{margin:0;letter-spacing:-.022em;text-wrap:balance;font-weight:670}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.92em}
+  .num{font-variant-numeric:tabular-nums}
+  ::selection{background:var(--brand-soft)}
+  .ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  button{font-family:inherit}
+
+  .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+
+  /* ---------- sidebar ---------- */
+  .side{background:var(--surface);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column}
+  .side::-webkit-scrollbar{width:7px}.side::-webkit-scrollbar-thumb{background:var(--line);border-radius:7px}
+  .ws{display:flex;align-items:center;gap:11px;padding:14px 14px;margin:8px;border-radius:14px;cursor:pointer;transition:background .12s}
+  .ws:hover{background:var(--soft)}
+  .mark{width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,var(--brand),var(--ai));display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;flex:none;box-shadow:var(--sh1)}
+  .ws b{font-size:14px;display:block;letter-spacing:-.02em;line-height:1.2}
+  .ws small{color:var(--faint);font-size:11px}
+  .ws .chev{margin-left:auto;color:var(--faint)}
+  .grp{padding:11px 10px 2px}
+  .grp h5{margin:0 0 4px;padding:0 12px;font-size:10px;font-weight:750;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+  .nav{display:flex;flex-direction:column;gap:1px}
+  .nav a{position:relative;display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:9px;color:var(--muted);font-size:13.5px;cursor:pointer;font-weight:520;transition:background .12s,color .12s;text-decoration:none}
+  .nav a .ic{width:17px;height:17px;opacity:.88}
+  .nav a:hover{background:var(--soft);color:var(--ink)}
+  .nav a.on{background:var(--brand-soft);color:var(--brand-ink);font-weight:640}
+  .nav a.on .ic{opacity:1}
+  .nav a.on::before{content:"";position:absolute;left:-2px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--brand)}
+  .badge{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--faint)}
+  .sfoot{margin-top:auto;padding:14px;border-top:1px solid var(--line)}
+  .twotouch{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);background:var(--soft);border-radius:10px;padding:9px 11px}
+  .twotouch b{color:var(--ink)}
+  .tdot{width:14px;height:14px;border-radius:50%;border:2px solid var(--brand);display:grid;place-items:center;flex:none}
+  .tdot i{width:5px;height:5px;border-radius:50%;background:var(--brand)}
+
+  /* ---------- main ---------- */
+  .main{min-width:0;display:flex;flex-direction:column;
+    background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:22px 22px}
+  .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:12px 24px;
+    background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .role{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:680;color:var(--brand-ink);background:var(--brand-soft);padding:5px 11px;border-radius:8px}
+  .role .d{width:6px;height:6px;border-radius:50%;background:var(--brand)}
+  .crumb{color:var(--faint);font-size:12.5px}
+  .cmd{margin-left:auto;display:flex;align-items:center;gap:9px;min-width:210px;padding:8px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--faint);font-size:13px;cursor:text}
+  .cmd .k{margin-left:auto;font-size:10.5px;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--faint)}
+  .icobtn{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:.12s}
+  .icobtn:hover{color:var(--ink);border-color:var(--muted)}
+  .me{width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,#2AA3A0,#1D7FBF);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12.5px}
+
+  .wrap{width:100%;max-width:900px;margin:0 auto;padding:32px 26px 100px;flex:1}
+  .screen{display:none}
+  .screen.on{display:block;animation:rise .34s cubic-bezier(.16,.8,.24,1)}
+  @keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.screen.on{animation:none}*{scroll-behavior:auto!important}}
+
+  .head{margin-bottom:24px;display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+  .head .lead{flex:1;min-width:260px}
+  .eye{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:730;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-bottom:9px}
+  .head h1{font-size:28px;line-height:1.12}
+  .head p{color:var(--muted);font-size:14.5px;margin:9px 0 0;max-width:62ch}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh1)}
+  .card.p{padding:22px}
+  .card.hover{transition:transform .14s,box-shadow .14s,border-color .14s}
+  .card.hover:hover{transform:translateY(-2px);box-shadow:var(--sh2);border-color:color-mix(in srgb,var(--brand) 22%,var(--line))}
+  .stack{display:flex;flex-direction:column;gap:15px}
+  .rg{display:grid;gap:15px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:720px){.g2,.g3{grid-template-columns:1fr}}
+
+  /* forms */
+  .field{display:flex;flex-direction:column;gap:7px;margin-bottom:17px}.field:last-child{margin-bottom:0}
+  .field label{font-size:13px;font-weight:650}.field .hint{font-weight:450;color:var(--faint)}
+  .inp{border:1.5px solid var(--line);background:var(--bg);border-radius:var(--r-sm);padding:12px 14px;color:var(--ink);font:inherit;font-size:14.5px;width:100%;transition:border .12s,box-shadow .12s}
+  .inp::placeholder{color:var(--faint)} .inp:focus{outline:none;border-color:var(--brand);box-shadow:var(--ring)}
+  textarea.inp{resize:vertical;min-height:96px;line-height:1.55}
+  select.inp{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--faint) 50%),linear-gradient(135deg,var(--faint) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;cursor:pointer}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:15px}@media(max-width:560px){.two{grid-template-columns:1fr}}
+  .seg{display:inline-flex;background:var(--soft);border-radius:12px;padding:4px;gap:3px}
+  .seg button{border:0;background:transparent;color:var(--muted);padding:9px 16px;border-radius:9px;font-size:13px;font-weight:640;cursor:pointer;transition:.12s}
+  .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--sh1)}
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 16px;border:1.5px solid var(--line);border-radius:var(--r-sm);background:var(--surface)}
+  .switch .lb b{font-size:14px}.switch .lb small{display:block;color:var(--faint);font-size:12px;margin-top:1px}
+  .knob{width:44px;height:26px;border-radius:20px;background:var(--brand);position:relative;flex:none;cursor:pointer;transition:background .18s}
+  .knob::after{content:"";position:absolute;top:3px;left:21px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .18s}
+  .knob.off{background:var(--line)}.knob.off::after{left:3px}
+
+  .btn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:11px 18px;border-radius:11px;font-size:14px;font-weight:660;cursor:pointer;transition:.13s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{border-color:var(--muted);transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 8px 18px -9px var(--brand)}
+  .btn.primary:hover{background:var(--brand-ink)}
+  .btn.ai{background:var(--ai);border-color:var(--ai);color:#fff}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}.btn.ghost:hover{background:var(--soft);color:var(--ink);transform:none}
+  .btn.sm{padding:8px 13px;font-size:13px;border-radius:9px}
+  .bar{display:flex;gap:11px;align-items:center;margin-top:22px}.bar .sp{margin-left:auto}
+
+  /* pills */
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:680;padding:4px 10px;border-radius:20px;white-space:nowrap;line-height:1.4}
+  .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .ok{background:var(--good-soft);color:var(--good)}.wa{background:var(--warn-soft);color:var(--warn)}
+  .cr{background:var(--crit-soft);color:var(--crit)}.id{background:var(--soft);color:var(--muted)}.id::before{background:var(--faint)}
+  .aip{background:var(--ai-soft);color:var(--ai-ink)}.aip::before{background:var(--ai)}
+
+  /* list */
+  .list{display:flex;flex-direction:column}
+  .li{display:flex;align-items:center;gap:13px;padding:14px 4px;border-bottom:1px solid var(--line-2)}.li:last-child{border-bottom:0}
+  .av{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-weight:720;font-size:13px;flex:none;color:#fff}
+  .li .g{flex:1;min-width:0}.li .g b{font-size:14px}.li .g small{display:block;color:var(--faint);font-size:12px;margin-top:1px}
+
+  /* AI + callout */
+  .ai-c{border:1px solid color-mix(in srgb,var(--ai) 30%,var(--line));background:linear-gradient(180deg,var(--ai-soft),transparent);border-radius:var(--r-md);padding:15px 16px;font-size:13.5px;position:relative}
+  .ai-c .t{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:740;letter-spacing:.08em;text-transform:uppercase;color:var(--ai-ink);margin-bottom:8px}
+  .callout{border:1px solid var(--line);background:var(--soft);border-radius:var(--r-md);padding:14px 16px;font-size:13.5px;color:var(--muted);display:flex;gap:11px;align-items:flex-start}
+  .callout b{color:var(--ink)}
+  .callout .ic{color:var(--brand);margin-top:1px}
+
+  .kv{display:grid;grid-template-columns:140px 1fr;gap:11px 14px;font-size:14px;margin:0}
+  .kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:560}
+
+  /* work graph tree */
+  .tree{display:flex;flex-direction:column}
+  .tn{position:relative;display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);margin-left:26px}
+  .tn.hover{cursor:pointer;transition:border-color .12s,background .12s}.tn.hover:hover{border-color:var(--brand);background:color-mix(in srgb,var(--brand-soft) 40%,var(--surface))}
+  .tn.sel{border-color:var(--brand);box-shadow:var(--ring)}
+  .tnwrap{position:relative}
+  .tnwrap+.tnwrap{margin-top:9px}
+  .tnwrap::before{content:"";position:absolute;left:13px;top:-9px;height:calc(50% + 9px);width:13px;border-left:2px solid var(--line);border-bottom:2px solid var(--line);border-bottom-left-radius:8px}
+  .tnwrap:first-child::before{top:22px;height:calc(50% - 22px + 9px);border-bottom:0;border-bottom-left-radius:0}
+  .tnwrap::after{content:"";position:absolute;left:13px;top:22px;bottom:-9px;border-left:2px solid var(--line)}
+  .tnwrap:last-child::after{display:none}
+  .s{width:26px;height:26px;border-radius:9px;background:var(--soft);color:var(--muted);display:grid;place-items:center;font-size:12px;font-weight:730;flex:none}
+  .s.done{background:var(--good);color:#fff}.s.now{background:var(--brand);color:#fff;box-shadow:0 0 0 4px var(--brand-soft)}.s.bad{background:var(--crit-soft);color:var(--crit)}
+  .tn .g{flex:1;min-width:0}.tn .g b{font-size:14px}.tn .g small{display:block;color:var(--faint);font-size:12px;margin-top:1px}
+
+  /* readiness */
+  .ready{display:grid;grid-template-columns:1.15fr .85fr;gap:15px}@media(max-width:760px){.ready{grid-template-columns:1fr}}
+  .ritem{display:flex;align-items:center;gap:13px;padding:14px 2px;border-bottom:1px solid var(--line-2)}.ritem:last-child{border-bottom:0}
+  .rck{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .rck.done{background:var(--good);color:#fff}.rck.need{background:var(--warn-soft);color:var(--warn);border:1.5px solid var(--warn)}.rck.opt{color:var(--faint);border:1.5px dashed var(--line)}
+  .ritem .g{flex:1}.ritem .g b{font-size:14px}.ritem .g small{display:block;color:var(--faint);font-size:12px}
+  .gauge{position:relative;width:150px;height:150px;margin:2px auto 10px}
+  .gauge .lbl{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+  .gauge .lbl b{font-size:30px;line-height:1;letter-spacing:-.03em}.gauge .lbl small{color:var(--faint);font-size:11px;display:block;margin-top:3px}
+
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh1)}
+  .kpi .k{font-size:11.5px;color:var(--muted);font-weight:640;display:flex;align-items:center;gap:7px}
+  .kpi .v{font-size:27px;font-weight:720;letter-spacing:-.025em;margin-top:6px}
+  .kpi .d{font-size:11.5px;color:var(--faint);margin-top:2px}
+
+  .step{display:flex;align-items:center;flex-wrap:wrap;gap:3px 0}
+  .step .b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:730;flex:none}
+  .step .b.done{background:var(--good);color:#fff}.step .b.now{background:var(--brand);color:#fff;box-shadow:0 0 0 4px var(--brand-soft)}.step .b.next{background:var(--soft);color:var(--faint)}
+  .step .lb{font-size:11.5px;color:var(--muted);font-weight:620;margin:0 5px}.step .ln{width:22px;height:2px;background:var(--line)}
+
+  .empty{border:1.5px dashed var(--line);border-radius:var(--r-md);padding:22px;text-align:center;color:var(--muted);font-size:13.5px}
+
+  /* banner with graph motif */
+  .banner{position:relative;overflow:hidden;border-radius:var(--r);padding:24px 26px;color:#fff;background:linear-gradient(120deg,var(--brand),var(--ai));box-shadow:var(--sh2)}
+  .banner h2{color:#fff;font-size:20px}.banner p{margin:7px 0 0;font-size:13.5px;opacity:.92;max-width:44ch}
+  .banner .gmotif{position:absolute;right:-10px;top:-10px;opacity:.5}
+
+  /* phone */
+  .phone{width:270px;margin:0 auto;border:1px solid var(--line);border-radius:32px;background:var(--soft);padding:12px;box-shadow:var(--sh3)}
+  .phone .scr{background:#0b141a;border-radius:22px;padding:15px;display:flex;flex-direction:column;gap:9px;min-height:320px}
+  .phh{color:#bfe0cd;font-size:12px;border-bottom:1px solid #163038;padding-bottom:8px;display:flex;align-items:center;gap:8px}
+  .bub{background:#1e2b32;color:#e9f1ef;border-radius:15px 15px 15px 5px;padding:11px 13px;font-size:13px;max-width:92%}
+  .bub.meb{background:#12503a;align-self:flex-end;border-radius:15px 15px 5px 15px}
+  .waa{display:flex;gap:8px;margin-top:2px}
+  .wab{flex:1;text-align:center;background:#0a7d5a;color:#effff8;border-radius:12px;padding:11px;font-size:13px;font-weight:730}
+  .wab.sec{background:#26333b;color:#aebcc4}
+
+  /* flow / how-it-works */
+  .leg{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .leg span{display:inline-flex;align-items:center;gap:6px}
+  .leg i{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .flabel{font-size:14px;font-weight:680;margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+  .flabel .n{width:24px;height:24px;border-radius:8px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .flow{display:flex;align-items:stretch;gap:2px;overflow-x:auto;padding:6px 2px 12px}
+  .flow::-webkit-scrollbar{height:7px}.flow::-webkit-scrollbar-thumb{background:var(--line);border-radius:7px}
+  .fstep{flex:none;width:158px;border:1.5px solid var(--line);border-radius:13px;padding:11px 13px;background:var(--surface);position:relative}
+  .fstep .who{font-size:9.5px;font-weight:760;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+  .fstep b{font-size:13px;display:block;margin:3px 0 3px}
+  .fstep small{color:var(--faint);font-size:11.5px;line-height:1.34;display:block}
+  .fstep.hu{border-color:color-mix(in srgb,var(--brand) 42%,var(--line))}.fstep.hu .who{color:var(--brand-ink)}
+  .fstep.aic{border-color:color-mix(in srgb,var(--ai) 42%,var(--line));background:linear-gradient(180deg,var(--ai-soft),transparent)}.fstep.aic .who{color:var(--ai-ink)}
+  .fstep.pe{border-color:color-mix(in srgb,var(--good) 42%,var(--line))}.fstep.pe .who{color:var(--good)}
+  .fstep .star{position:absolute;top:-9px;right:-7px;background:var(--brand);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;box-shadow:var(--sh1)}
+  .farrow{flex:none;align-self:center;color:var(--faint);font-size:16px;padding:0 3px;font-weight:700}
+
+  @media(max-width:880px){
+    .app{grid-template-columns:1fr}.side{position:static;height:auto}
+    .nav{flex-direction:row;flex-wrap:wrap}.cmd{display:none}
+    .head h1{font-size:23px}.ready{grid-template-columns:1fr}.wrap{padding:22px 15px 72px}
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></symbol>
+  <symbol id="i-nodes" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M8 7.2l8 0M7.3 8.2l3.5 7.6M16.7 8.2l-3.5 7.6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.4l2.4 2.4 4.6-5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M5 5v14M12 5v14M19 5v14"/><circle cx="5" cy="9" r="2.2"/><circle cx="12" cy="15" r="2.2"/><circle cx="19" cy="8" r="2.2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 3-4.6 5.5-4.6S13.9 16 14.5 19"/><path d="M16 5.2a3 3 0 010 5.6M17.5 19c-.2-2-1-3.4-2.2-4.3"/></symbol>
+  <symbol id="i-sat" viewBox="0 0 24 24"><path d="M11 5L5 11M13 7l4 4M8 8l8 8"/><path d="M5 15a4 4 0 004 4M4 19a8 8 0 008 0"/><rect x="9.5" y="9.5" width="5" height="5" rx="1" transform="rotate(45 12 12)"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M9 15l6-6"/><path d="M10.5 6.5l1.5-1.5a4 4 0 015.6 5.6L16 12"/><path d="M13.5 17.5L12 19a4 4 0 01-5.6-5.6L8 12"/></symbol>
+  <symbol id="i-head" viewBox="0 0 24 24"><path d="M5 13v-1a7 7 0 0114 0v1"/><rect x="3.5" y="13" width="4" height="7" rx="2"/><rect x="16.5" y="13" width="4" height="7" rx="2"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 12h5M9.5 15.5h5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 004 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2.2"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="side">
+    <div class="ws"><div class="mark">EZ</div><div><b>EZ · Workspace</b><small>Tenant-Zero · shared</small></div><svg class="ic chev" style="width:16px"><use href="#i-nodes"/></svg></div>
+
+    <div class="grp"><h5>Set up</h5><div class="nav">
+      <a data-s="ob-board" class="on"><svg class="ic"><use href="#i-check"/></svg>Setup &amp; readiness</a>
+      <a data-s="ob-people-inline"><svg class="ic"><use href="#i-users"/></svg>Invite people</a>
+      <a data-s="ob-client"><svg class="ic"><use href="#i-plus"/></svg>Add a client</a>
+    </div></div>
+    <div class="grp"><h5>Superadmin · L0</h5><div class="nav">
+      <a data-s="sa-list"><svg class="ic"><use href="#i-sat"/></svg>Workspaces</a>
+      <a data-s="sa-new"><svg class="ic"><use href="#i-plus"/></svg>New workspace</a>
+    </div></div>
+    <div class="grp"><h5>Admin · L1</h5><div class="nav">
+      <a data-s="ad-home"><svg class="ic"><use href="#i-sliders"/></svg>Admin home</a>
+      <a data-s="ad-offering"><svg class="ic"><use href="#i-grid"/></svg>Offering editor</a>
+    </div></div>
+    <div class="grp"><h5>The work</h5><div class="nav">
+      <a data-s="wk-new"><svg class="ic"><use href="#i-doc"/></svg>New request</a>
+      <a data-s="wk-ratify"><svg class="ic"><use href="#i-spark"/></svg>Ratify plan<span class="badge">#1</span></a>
+      <a data-s="wk-tree"><svg class="ic"><use href="#i-nodes"/></svg>Work tree</a>
+      <a data-s="wk-verify"><svg class="ic"><use href="#i-check"/></svg>Verify<span class="badge">#2</span></a>
+    </div></div>
+    <div class="grp"><h5>Portals</h5><div class="nav">
+      <a data-s="pt-client"><svg class="ic"><use href="#i-compass"/></svg>Client portal</a>
+      <a data-s="pt-vendor"><svg class="ic"><use href="#i-link"/></svg>Vendor portal</a>
+      <a data-s="pt-expert"><svg class="ic"><use href="#i-head"/></svg>Expert home</a>
+    </div></div>
+    <div class="grp"><h5>Explain it</h5><div class="nav">
+      <a data-s="flow-life"><svg class="ic"><use href="#i-nodes"/></svg>All workflows</a>
+    </div></div>
+    <div class="sfoot"><div class="twotouch"><span class="tdot"><i></i></span><span><b>2 touchpoints</b> — ratify · verify. The rest is ambient.</span></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <span class="role"><span class="d"></span><span id="role">Admin</span></span>
+      <span class="crumb" id="crumb">Set up · readiness</span>
+      <div class="cmd"><svg class="ic" style="width:16px"><use href="#i-search"/></svg>Ask or find…<span class="k">⌘K</span></div>
+      <button class="icobtn" aria-label="Notifications"><svg class="ic"><use href="#i-bell"/></svg></button>
+      <button class="icobtn" id="tb" aria-label="Toggle theme"><svg class="ic"><use href="#i-bolt"/></svg></button>
+      <div class="me">SR</div>
+    </header>
+    <div class="wrap">
+
+      <!-- ============ SETUP BOARD ============ -->
+      <section class="screen on" id="ob-board">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-check"/></svg>Welcome, Acme</div>
+          <h1>Set up as much — or as little — as you have</h1>
+          <p>No blank forms. Start from a seeded draft, do what you can, skip the rest. We ask for the missing pieces exactly when a job needs them.</p></div>
+        </div>
+        <div class="ready">
+          <div class="card p">
+            <b style="font-size:14.5px">You can take your first request once these are set</b>
+            <div style="margin-top:10px">
+              <div class="ritem"><span class="rck done"><svg class="ic" style="width:14px;stroke-width:2.4"><use href="#i-check"/></svg></span><div class="g"><b>Operating entity</b><small>Acme Lab · India</small></div><span class="pill ok">done</span></div>
+              <div class="ritem"><span class="rck done"><svg class="ic" style="width:14px;stroke-width:2.4"><use href="#i-check"/></svg></span><div class="g"><b>Catalog</b><small>seeded from Translation archetype · ratified</small></div><span class="pill ok">done</span></div>
+              <div class="ritem"><span class="rck need">!</span><div class="g"><b>At least one skilled person</b><small>skills come from people as they self-onboard</small></div><button class="btn sm primary" data-go="ob-people-inline">Invite</button></div>
+              <div class="ritem"><span class="rck opt">○</span><div class="g"><b>A client to deliver to</b><small>add now — or when you win the work</small></div><button class="btn sm ghost" data-go="ob-client">Later</button></div>
+            </div>
+            <div class="callout" style="margin-top:14px"><svg class="ic"><use href="#i-compass"/></svg><div><b>No client yet? That's fine.</b> Go live and add one the moment you have work — or invite a requester straight into their first request.</div></div>
+          </div>
+          <div class="card p" style="text-align:center;display:flex;flex-direction:column">
+            <div class="gauge">
+              <svg viewBox="0 0 120 120" style="transform:rotate(-90deg)"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--soft)" stroke-width="12"/><circle cx="60" cy="60" r="52" fill="none" stroke="var(--good)" stroke-width="12" stroke-linecap="round" stroke-dasharray="326" stroke-dashoffset="124"/></svg>
+              <div class="lbl"><div><b class="num">62%</b><small>ready to deliver</small></div></div>
+            </div>
+            <div class="step" style="justify-content:center;margin-bottom:6px"><span class="b done">✓</span><span class="ln"></span><span class="b done">✓</span><span class="ln"></span><span class="b now">3</span><span class="ln"></span><span class="b next">4</span></div>
+            <p style="color:var(--muted);font-size:13px;margin:8px 0 auto">One skilled person is all that's left. Pricing &amp; wallet appear only if you bill through us.</p>
+            <button class="btn primary" style="margin-top:14px" data-go="ob-people-inline">Invite people</button>
+            <button class="btn ghost sm" style="margin-top:6px" data-go="ad-home">Skip — finish later</button>
+          </div>
+        </div>
+        <div class="rg g3" style="margin-top:16px">
+          <div class="card p hover"><div class="eye" style="color:var(--faint);margin-bottom:6px">Deferred · JIT</div><b style="font-size:14px">Pricing</b><p style="color:var(--muted);font-size:13px;margin:6px 0 0">Asked only if you bill through us — at the first request, not now.</p></div>
+          <div class="card p hover"><div class="eye" style="color:var(--faint);margin-bottom:6px">Deferred · JIT</div><b style="font-size:14px">Skills</b><p style="color:var(--muted);font-size:13px;margin:6px 0 0">Your people declare their own skills on join. You approve exceptions.</p></div>
+          <div class="card p hover"><div class="eye" style="color:var(--faint);margin-bottom:6px">Deferred · JIT</div><b style="font-size:14px">Wallet · invoicing · payroll</b><p style="color:var(--muted);font-size:13px;margin:6px 0 0">Turn a module on the day a job needs it. Nothing sits empty.</p></div>
+        </div>
+      </section>
+
+      <!-- invite people -->
+      <section class="screen" id="ob-people-inline">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-users"/></svg>Set up · people</div><h1>Invite people</h1>
+          <p>They finish their own profile and <b>declare their own skills</b> — you don't type skills or pricing. You only handle exceptions.</p></div></div>
+        <div class="card p">
+          <div class="field"><label>Invite by email <span class="hint">— or connect your directory (SSO)</span></label>
+            <div style="display:flex;gap:10px"><input class="inp" placeholder="name@company.com"><button class="btn primary sm">Add</button></div></div>
+          <div class="list">
+            <div class="li"><div class="av" style="background:linear-gradient(145deg,#8B5CF6,#5457F6)">SK</div><div class="g"><b>sara@acme.com</b><small>invited · will declare skills on join</small></div><span class="pill wa">pending</span></div>
+            <div class="li"><div class="av" style="background:linear-gradient(145deg,#0FA268,#0AA3A0)">OA</div><div class="g"><b>omar@acme.com</b><small>invited</small></div><span class="pill wa">pending</span></div>
+          </div>
+          <div class="ai-c" style="margin-top:16px"><div class="t"><svg class="ic" style="width:13px"><use href="#i-spark"/></svg>Why no skills form?</div>An expert knows their skills better than you do. They self-declare on join; gated skills wait for your one-tap approval. The workspace fills its own capability — not a spreadsheet you maintain.</div>
+          <div class="bar"><button class="btn ghost" data-go="ob-board">Back</button><span class="sp"></span><button class="btn primary" data-go="ob-board">Done</button></div>
+        </div>
+      </section>
+
+      <!-- client form -->
+      <section class="screen" id="ob-client">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-plus"/></svg>Set up · optional</div><h1>Add a client</h1>
+          <p>A name and one person who can request — that's the minimum. Everything commercial is asked later, only if relevant.</p></div></div>
+        <div class="card p">
+          <div class="two"><div class="field"><label>Company</label><input class="inp" placeholder="Globex Studios"></div><div class="field"><label>Code</label><input class="inp mono" placeholder="GLBX"></div></div>
+          <div class="field"><label>Requester email <span class="hint">— they get a link to submit &amp; track</span></label><input class="inp" placeholder="ravi@globex.com"></div>
+          <div class="switch"><div class="lb"><b>Bill this client through Workspace?</b><small>off = deliver only; pricing &amp; invoice code asked at first request if on</small></div><span class="knob off"></span></div>
+          <div class="bar"><button class="btn ghost" data-go="ob-board">Not yet</button><span class="sp"></span><button class="btn primary" data-go="ob-board">Save client</button></div>
+        </div>
+      </section>
+
+      <!-- ============ SUPERADMIN ============ -->
+      <section class="screen" id="sa-list">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-sat"/></svg>Superadmin · L0</div><h1>Workspaces</h1>
+          <p>Every organization is one workspace. You provision and set the tier — but never see a tenant's content.</p></div><button class="btn primary" data-go="sa-new"><svg class="ic" style="width:16px"><use href="#i-plus"/></svg>New</button></div>
+        <div class="rg g3" style="margin-bottom:15px">
+          <div class="kpi"><div class="k">Workspaces</div><div class="v num">14</div><div class="d">+2 this month</div></div>
+          <div class="kpi"><div class="k">Sovereign · BYOK</div><div class="v num">3</div><div class="d">keys customer-held</div></div>
+          <div class="kpi"><div class="k">Content visible to you</div><div class="v" style="color:var(--good);font-size:22px;margin-top:10px">None</div><div class="d">by design</div></div>
+        </div>
+        <div class="card p"><div class="list">
+          <div class="li"><div class="av" style="background:linear-gradient(145deg,#3A4DF5,#8B5CF6)">EZ</div><div class="g"><b>EZ — Tenant-Zero</b><small class="mono">ACME · in · shared</small></div><span class="pill ok">operational</span></div>
+          <div class="li"><div class="av" style="background:linear-gradient(145deg,#0FA268,#0AA3A0)">GX</div><div class="g"><b>Globex Studios</b><small class="mono">GLBX · eu · regional · BYOK</small></div><span class="pill ok">operational</span></div>
+          <div class="li"><div class="av" style="background:linear-gradient(145deg,#B9760C,#DE554D)">GP</div><div class="g"><b>GigaPetro Gov</b><small class="mono">GIGA · me · sovereign · BYOK</small></div><span class="pill wa">configuring</span></div>
+        </div></div>
+      </section>
+
+      <section class="screen" id="sa-new">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-plus"/></svg>Superadmin · form</div><h1>New workspace</h1>
+          <p>Three fields create a tenant. The admin fills the rest just-in-time.</p></div></div>
+        <div class="card p">
+          <div class="field"><label>Organization name</label><input class="inp" placeholder="Globex Studios"></div>
+          <div class="field"><label>Deployment tier</label><div class="seg"><button>Shared</button><button class="on">Regional</button><button>Sovereign</button></div></div>
+          <div class="ai-c" style="margin:2px 0 17px"><div class="t"><svg class="ic" style="width:13px"><use href="#i-lock"/></svg>Required at this tier</div>Regional &amp; sovereign set <b>customer-managed keys (BYOK)</b> before activation — you stay cryptographically unable to read their data.</div>
+          <div class="field"><label>Admin email</label><input class="inp" placeholder="admin@globex.com"></div>
+          <div class="bar"><button class="btn ghost" data-go="sa-list">Cancel</button><span class="sp"></span><button class="btn primary" data-go="ob-board">Create &amp; invite admin</button></div>
+        </div>
+      </section>
+
+      <!-- ============ ADMIN ============ -->
+      <section class="screen" id="ad-home">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-sliders"/></svg>Admin · L1</div><h1>Admin home</h1>
+          <p>The operating-model editor. Configure anything declaratively — every EZ-ism is data. Modules appear only when turned on.</p></div></div>
+        <div class="stack">
+          <div class="callout"><svg class="ic"><use href="#i-check"/></svg><div style="flex:1"><b>Operational.</b> 1 optional gap — add your first client when ready.</div><button class="btn sm ghost" data-go="ob-board">Setup</button></div>
+          <div class="rg g2">
+            <div class="card p hover" data-go="ad-offering" style="cursor:pointer"><div style="display:flex;align-items:center;gap:11px"><div class="av" style="background:var(--brand-soft);color:var(--brand-ink)"><svg class="ic"><use href="#i-grid"/></svg></div><div class="g" style="flex:1"><b>Catalog &amp; offerings</b><small style="color:var(--faint)">4 offerings · versioned</small></div></div></div>
+            <div class="card p hover" data-go="ob-people-inline" style="cursor:pointer"><div style="display:flex;align-items:center;gap:11px"><div class="av" style="background:var(--ai-soft);color:var(--ai-ink)"><svg class="ic"><use href="#i-users"/></svg></div><div class="g" style="flex:1"><b>People</b><small style="color:var(--faint)">12 members · 1 to approve</small></div></div></div>
+            <div class="card p hover" data-go="ob-client" style="cursor:pointer"><div style="display:flex;align-items:center;gap:11px"><div class="av" style="background:var(--good-soft);color:var(--good)"><svg class="ic"><use href="#i-compass"/></svg></div><div class="g" style="flex:1"><b>Clients &amp; vendors</b><small style="color:var(--faint)">3 clients · 1 vendor</small></div></div></div>
+            <div class="card p hover" style="cursor:pointer"><div style="display:flex;align-items:center;gap:11px"><div class="av" style="background:var(--soft);color:var(--muted)"><svg class="ic"><use href="#i-sliders"/></svg></div><div class="g" style="flex:1"><b>Allocation &amp; SLA</b><small style="color:var(--faint)">weights · channels · escalation</small></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="ad-offering">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-grid"/></svg>Admin · form</div><h1>Offering · Document Translation</h1>
+          <p>The template the AI instantiates for matching requests. Versioned — in-flight work keeps its snapshot.</p></div><span class="pill id mono">v3</span></div>
+        <div class="card p">
+          <div class="two"><div class="field"><label>Delivery model</label><select class="inp"><option>deliverable</option><option>retainer</option><option>outcome</option></select></div><div class="field"><label>Billing model</label><select class="inp"><option>unit × price</option><option>flat</option><option>retainer + usage</option></select></div></div>
+          <div class="field"><label>Activity template <span class="hint">— Deliver is always last</span></label></div>
+          <div class="tree">
+            <div class="tnwrap"><div class="tn hover"><span class="s">1</span><div class="g"><b>OCR</b><small>agent · auto-QA</small></div><span class="pill aip">agent</span></div></div>
+            <div class="tnwrap"><div class="tn hover"><span class="s">2</span><div class="g"><b>Translate EN→AR</b><small>human · human-QA</small></div></div></div>
+            <div class="tnwrap"><div class="tn hover"><span class="s">3</span><div class="g"><b>Review</b><small>human · human-QA</small></div></div></div>
+            <div class="tnwrap"><div class="tn hover"><span class="s">4</span><div class="g"><b>Deliver</b><small>mandatory last</small></div><span class="pill ok">deliver</span></div></div>
+          </div>
+          <div class="bar"><button class="btn ghost" data-go="ad-home">Back</button><span class="sp"></span><button class="btn">+ Add step</button><button class="btn primary">Save version</button></div>
+        </div>
+      </section>
+
+      <!-- ============ THE WORK ============ -->
+      <section class="screen" id="wk-new">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-doc"/></svg>Requester</div><h1>New request</h1>
+          <p>Describe it in plain words. We propose the right service inline — approve, and you're done.</p></div></div>
+        <div class="card p">
+          <div class="field"><label>What do you need?</label><textarea class="inp">Translate the attached 40-page market report into Arabic by Sunday.</textarea></div>
+          <div class="ai-c" style="margin-bottom:17px"><div class="t"><svg class="ic" style="width:13px"><use href="#i-spark"/></svg>Looks like</div><b>Document Translation → Arabic</b> · ~40 pages · <a href="#" style="color:var(--ai-ink);font-weight:660;text-decoration:none">use this →</a></div>
+          <div class="two"><div class="field"><label>Files</label><div class="inp" style="color:var(--faint);display:flex;align-items:center;gap:9px"><svg class="ic" style="width:16px"><use href="#i-doc"/></svg>report.pdf</div></div><div class="field"><label>Deadline</label><input class="inp" type="date" value="2026-07-20"></div></div>
+          <div class="bar"><span class="sp"></span><button class="btn primary" data-go="wk-ratify">Submit request</button></div>
+        </div>
+      </section>
+
+      <section class="screen" id="wk-ratify">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-spark"/></svg>Owner · touchpoint 1 of 2</div><h1>Ratify the plan</h1>
+          <p>AI composed the whole plan from your own config. Approve in one click, or tweak a step.</p></div></div>
+        <div class="card p">
+          <div class="rg g3" style="margin-bottom:18px">
+            <div><small style="color:var(--muted);font-size:12px">Offering</small><div style="font-weight:640;margin-top:2px">Translation · Standard</div></div>
+            <div><small style="color:var(--muted);font-size:12px">Scope</small><div style="font-weight:640;margin-top:2px" class="num">40 pages · $800</div></div>
+            <div><small style="color:var(--muted);font-size:12px">Deadline</small><div style="font-weight:640;margin-top:2px">Jul 19 · 1-day buffer</div></div>
+          </div>
+          <div class="tree">
+            <div class="tnwrap"><div class="tn"><span class="s done"><svg class="ic" style="width:14px;stroke-width:2.6"><use href="#i-check"/></svg></span><div class="g"><b>OCR</b><small>agent · Flip-OCR</small></div><span class="pill aip">agent</span></div></div>
+            <div class="tnwrap"><div class="tn"><span class="s">2</span><div class="g"><b>Translate EN→AR</b><small>Sara Khan · fit 0.91</small></div></div></div>
+            <div class="tnwrap"><div class="tn"><span class="s">3</span><div class="g"><b>Review</b><small>Omar Ali</small></div></div></div>
+            <div class="tnwrap"><div class="tn"><span class="s">4</span><div class="g"><b>Deliver</b><small>owner sign-off at boundary</small></div><span class="pill ok">deliver</span></div></div>
+          </div>
+          <div class="ai-c" style="margin-top:16px"><div class="t"><svg class="ic" style="width:13px"><use href="#i-spark"/></svg>Confidence 0.88 · no clarifying questions</div>Salaried expert used first (≈$0 marginal). Alternate: Lee (freelancer, higher cost).</div>
+          <div class="bar"><button class="btn ghost">Re-brief</button><button class="btn">Tweak</button><span class="sp"></span><button class="btn primary" data-go="wk-tree"><svg class="ic" style="width:16px"><use href="#i-check"/></svg>Approve — publish</button></div>
+        </div>
+      </section>
+
+      <section class="screen" id="wk-tree">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-nodes"/></svg>Owner</div><h1>Work tree · Globex Q3</h1>
+          <p>The request as a live graph — parallel branches, status derived in-engine (always accurate).</p></div><span class="pill wa">slightly delayed</span></div>
+        <div class="rg" style="grid-template-columns:1.5fr 1fr;gap:15px">
+          <div class="stack">
+            <div class="card p"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><b>Arabic translation</b><span class="pill ok">on track</span></div>
+              <div class="tree">
+                <div class="tnwrap"><div class="tn"><span class="s done"><svg class="ic" style="width:14px;stroke-width:2.6"><use href="#i-check"/></svg></span><div class="g"><b>OCR</b><small>done</small></div></div></div>
+                <div class="tnwrap"><div class="tn sel"><span class="s now">2</span><div class="g"><b>Translate EN→AR</b><small>Sara Khan · 60%</small></div><span class="pill ok">live</span></div></div>
+                <div class="tnwrap"><div class="tn"><span class="s">3</span><div class="g"><b>Review → Deliver</b><small>waiting on input</small></div><span class="pill id">queued</span></div></div>
+              </div></div>
+            <div class="card p"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><b>French translation</b><span class="pill cr">critical</span></div>
+              <div class="tree">
+                <div class="tnwrap"><div class="tn"><span class="s done"><svg class="ic" style="width:14px;stroke-width:2.6"><use href="#i-check"/></svg></span><div class="g"><b>OCR</b><small>done</small></div></div></div>
+                <div class="tnwrap"><div class="tn"><span class="s bad">!</span><div class="g"><b>Vendor · WS-Lingua</b><small>cross-org — opaque boundary node</small></div><span class="pill aip">opaque</span></div></div>
+              </div></div>
+          </div>
+          <div class="card p" style="align-self:start;position:sticky;top:76px">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px"><div><div class="eye" style="margin:0 0 3px">Activity</div><b style="font-size:15px">Translate EN→AR</b></div><span class="pill ok">live</span></div>
+            <dl class="kv" style="grid-template-columns:96px 1fr;font-size:13px">
+              <dt>Performer</dt><dd>Sara Khan · L4</dd><dt>Input</dt><dd class="mono">fr_ocr_out</dd><dt>Units</dt><dd class="num">40 pages</dd><dt>Deliver by</dt><dd>Jul 17</dd><dt>QA</dt><dd>human</dd></dl>
+            <div style="margin:14px 0 4px;font-size:12px;color:var(--muted)">Progress</div>
+            <div style="height:7px;border-radius:5px;background:var(--soft);overflow:hidden"><i style="display:block;height:100%;width:60%;background:var(--good);border-radius:5px"></i></div>
+            <div class="bar" style="margin-top:16px;flex-wrap:wrap"><button class="btn sm">Message</button><button class="btn sm">Share interim</button><button class="btn sm ghost">Reassign</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="wk-verify">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-check"/></svg>Verifier · touchpoint 2 of 2</div><h1>Verify &amp; confirm</h1>
+          <p>The reconciliation is pre-computed. Glance, confirm — the only billing gate.</p></div></div>
+        <div class="rg" style="grid-template-columns:1.4fr 1fr;gap:15px">
+          <div class="card p">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><b>Arabic translation · Globex Q3</b><span class="pill ok">delivered</span></div>
+            <dl class="kv"><dt>Units</dt><dd class="num">40 / 40 pages</dd><dt>Split · Sara</dt><dd class="num">40 pp → 400 coins</dd><dt>Agent · OCR</dt><dd class="num">$0 marginal</dd><dt>Client price</dt><dd class="num">$800</dd><dt>Exceptions</dt><dd><span class="pill ok">none</span></dd></dl>
+            <div class="callout" style="margin-top:14px"><svg class="ic"><use href="#i-bolt"/></svg><div>On confirm → one billable event fans out: <b>invoice Globex</b> + <b>pay Sara</b>, rolling. Performer is paid off verified work, independent of client payment.</div></div>
+            <div class="bar"><button class="btn">Send back</button><span class="sp"></span><button class="btn primary"><svg class="ic" style="width:16px"><use href="#i-check"/></svg>Confirm — bill &amp; pay</button></div>
+          </div>
+          <div class="stack"><div class="kpi"><div class="k">Human touchpoints</div><div class="v num">2</div><div class="d">ratify · verify</div></div>
+            <div class="card p"><div class="eye" style="margin-bottom:8px">Next · automatic</div>
+              <div class="list" style="font-size:13px">
+                <div class="li" style="padding:9px 0"><span class="pill ok" style="min-width:64px;justify-content:center">invoice</span><div class="g"><small style="color:var(--faint)">GLBX-01 raised</small></div></div>
+                <div class="li" style="padding:9px 0"><span class="pill aip" style="min-width:64px;justify-content:center">payout</span><div class="g"><small style="color:var(--faint)">Sara · 400 coins</small></div></div>
+                <div class="li" style="padding:9px 0"><span class="pill id" style="min-width:64px;justify-content:center">wallet</span><div class="g"><small style="color:var(--faint)">settled · ledger</small></div></div>
+              </div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CLIENT PORTAL ============ -->
+      <section class="screen" id="pt-client">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-compass"/></svg>Client · Globex Studios</div><h1>Your work with EZ</h1>
+          <p>Submit, track, collect. You see status and deliverables — never how the work is done inside.</p></div></div>
+        <div class="stack">
+          <div class="banner"><svg class="gmotif" width="150" height="120" viewBox="0 0 150 120"><g stroke="#fff" stroke-width="1.5" fill="none" opacity=".8"><circle cx="30" cy="30" r="6"/><circle cx="110" cy="24" r="6"/><circle cx="120" cy="80" r="6"/><circle cx="60" cy="90" r="6"/><path d="M36 30l68-6M114 30l4 44M104 82l-38 6M36 34l24 52"/></g></svg>
+            <h2>Need something done?</h2><p>Describe it — the right service is proposed for you, priced up front.</p>
+            <button class="btn" style="background:#fff;color:var(--brand-ink);border-color:#fff;margin-top:14px" data-go="wk-new">Start a request</button></div>
+          <div class="rg g3">
+            <div class="kpi"><div class="k">Active</div><div class="v num">3</div><div class="d">1 due this week</div></div>
+            <div class="kpi"><div class="k">Delivered · Jul</div><div class="v num">8</div><div class="d">all on time</div></div>
+            <div class="kpi"><div class="k">Wallet</div><div class="v num">1,200</div><div class="d">credits</div></div>
+          </div>
+          <div class="card p"><b style="font-size:14px">Your requests</b>
+            <div class="list" style="margin-top:4px">
+              <div class="li"><div class="g"><b>Q3 report · Arabic</b><small>40 pages · due Jul 20</small></div><span class="pill ok">on track · 60%</span></div>
+              <div class="li"><div class="g"><b>Q3 report · French</b><small>via EZ's network</small></div><span class="pill wa">delayed</span></div>
+              <div class="li"><div class="g"><b>Brand deck · AR</b><small>delivered Jul 6</small></div><span class="pill id">delivered</span></div>
+            </div></div>
+          <div class="card p"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><b>Q3 report · Arabic</b><span class="pill ok">on track</span></div>
+            <div class="step"><span class="b done">✓</span><span class="lb">Received</span><span class="ln"></span><span class="b done">✓</span><span class="lb">Planned</span><span class="ln"></span><span class="b now">3</span><span class="lb">In progress</span><span class="ln"></span><span class="b next">4</span><span class="lb">Delivered</span></div>
+            <div class="callout" style="margin-top:16px"><svg class="ic"><use href="#i-check"/></svg><div>Expected <b>Jul 19</b> — a day before your deadline. You'll get the file in your Drive plus a status ping.</div></div></div>
+        </div>
+      </section>
+
+      <!-- ============ VENDOR PORTAL ============ -->
+      <section class="screen" id="pt-vendor">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-link"/></svg>Vendor · WS-Lingua (partner of EZ)</div><h1>Incoming work</h1>
+          <p>EZ appears as your <b>client</b>. You see only the brief, files and deadline — how you deliver is yours, and invisible to them.</p></div></div>
+        <div class="stack">
+          <div class="card p"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><b>New job from EZ</b><span class="pill wa">awaiting accept</span></div>
+            <dl class="kv" style="margin:12px 0"><dt>Brief</dt><dd>Translate 40-page report EN→FR</dd><dt>Files</dt><dd class="mono">report_ocr.pdf · brokered link</dd><dt>Deadline</dt><dd>Jul 18</dd><dt>Your price</dt><dd class="num">$680</dd></dl>
+            <div class="callout"><svg class="ic"><use href="#i-lock"/></svg><div>Files open via a <b>short-lived scoped link</b> — no standing access. You deliver back into EZ's store; provenance is stripped.</div></div>
+            <div class="bar"><button class="btn">Decline</button><span class="sp"></span><button class="btn primary" data-go="pt-vendor-run">Accept job</button></div></div>
+          <div class="empty">Once accepted, you run your <b>own internal tree</b> (assign · translate · QA) — EZ never sees it. They see only your status and the delivered file.</div>
+        </div>
+      </section>
+      <section class="screen" id="pt-vendor-run">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-link"/></svg>Vendor · running internally</div><h1>EN→FR translation</h1>
+          <p>Your internal plan for EZ's job. This whole tree is <b>opaque to EZ</b> — they see one node with a status.</p></div><span style="color:var(--faint);font-size:12px">client: EZ</span></div>
+        <div class="rg" style="grid-template-columns:1.4fr 1fr;gap:15px">
+          <div class="card p"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><b>Your assignment</b><span class="pill ok">in progress</span></div>
+            <div class="tree">
+              <div class="tnwrap"><div class="tn"><span class="s done"><svg class="ic" style="width:14px;stroke-width:2.6"><use href="#i-check"/></svg></span><div class="g"><b>Split</b><small>your ops</small></div></div></div>
+              <div class="tnwrap"><div class="tn sel"><span class="s now">2</span><div class="g"><b>Translate EN→FR</b><small>your linguist · Marie</small></div><span class="pill ok">70%</span></div></div>
+              <div class="tnwrap"><div class="tn"><span class="s">3</span><div class="g"><b>Deliver to EZ's store</b><small>border-safe · provenance stripped</small></div><span class="pill id">queued</span></div></div>
+            </div>
+            <div class="bar"><span class="sp"></span><button class="btn primary" data-go="pt-vendor">Deliver to EZ</button></div></div>
+          <div class="card p" style="align-self:start"><div class="eye" style="margin-bottom:10px">What EZ can see</div>
+            <div class="callout" style="background:var(--surface)"><svg class="ic"><use href="#i-lock"/></svg><div>Right now, EZ sees only:<div style="margin-top:8px"><span class="pill ok">on track · 70%</span></div><div style="margin-top:10px;color:var(--faint);font-size:12.5px">Nothing about Marie, your method, or your cost. Chain vendors stay invisible too.</div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ EXPERT HOME ============ -->
+      <section class="screen" id="pt-expert">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-head"/></svg>Expert · Sara Khan</div><h1>Your work</h1>
+          <p>Everything here also reaches your WhatsApp — accept, hand in, get paid, without opening the app.</p></div>
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:12.5px;color:var(--muted)">Available</span><span class="knob"></span></div></div>
+        <div class="stack">
+          <!-- interactive: what happens after you accept -->
+          <div class="card p" id="ex-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">
+              <div class="av" style="background:linear-gradient(145deg,#3A4DF5,#8B5CF6)">GX</div>
+              <div style="flex:1"><b style="font-size:15px">Translate EN→AR · 40 pp</b><small style="display:block;color:var(--faint);font-size:12px">Globex · Q3 report · due Sun · 400 coins</small></div>
+              <span class="pill id" id="ex-pill">offered</span>
+            </div>
+            <div class="step" id="ex-steps" style="margin:18px 2px 4px;justify-content:space-between"></div>
+            <div class="ai-c" style="margin-top:14px"><div class="t"><svg class="ic" style="width:13px"><use href="#i-spark"/></svg><span id="ex-notet">Tap accept to walk the flow</span></div><span id="ex-note">This job also pinged your WhatsApp — accept from either, one tap. Nothing else to fill in.</span></div>
+            <div class="bar"><span style="font-size:12px;color:var(--faint)" id="ex-sub">Step through it →</span><span class="sp"></span><button class="btn primary" id="ex-btn">✓ Accept job</button></div>
+          </div>
+          <div class="rg g3">
+            <div class="kpi"><div class="k"><svg class="ic" style="width:14px"><use href="#i-bolt"/></svg>This month</div><div class="v num"><span id="ex-coins">4,200</span><span style="font-size:13px;color:var(--muted)"> coins</span></div><div class="d">paid on verified work</div></div>
+            <div class="kpi"><div class="k">Reputation</div><div class="v num">4.6</div><div class="d">portable · yours across orgs</div></div>
+            <div class="kpi"><div class="k">Accept rate</div><div class="v num">92%</div><div class="d">avg response 8 min</div></div>
+          </div>
+          <div class="rg" style="grid-template-columns:1.3fr 1fr;gap:15px;align-items:start">
+            <div class="card p"><b style="font-size:14px">Offered to you</b>
+              <div class="list" style="margin-top:4px">
+                <div class="li"><div class="av" style="background:linear-gradient(145deg,#3A4DF5,#8B5CF6)">GX</div><div class="g"><b>Translate EN→AR · 40 pp</b><small>Globex · due Sun · 400 coins</small></div><button class="btn primary sm">Accept</button></div>
+                <div class="li"><div class="av" style="background:linear-gradient(145deg,#0FA268,#0AA3A0)">IN</div><div class="g"><b>Review AR · 12 pp</b><small>Initech · due Wed · 90 coins</small></div><button class="btn sm">Accept</button></div>
+              </div>
+              <div style="margin-top:14px;padding-top:6px;border-top:1px solid var(--line-2)"><b style="font-size:14px">In progress</b>
+                <div class="li" style="border:0;padding-left:0"><div class="g"><b>Translate EN→AR · Q3</b><small>60% · hand in when ready</small></div><span class="pill ok">working</span></div></div>
+            </div>
+            <div class="phone"><div class="scr">
+              <div class="phh"><svg class="ic" style="width:14px;color:#3ad08d"><use href="#i-head"/></svg>Workspace · EZ</div>
+              <div class="bub">New job — <b>Translate 40 pp EN→AR</b><br>Due Sun · pays <b>400 coins</b></div>
+              <div class="waa"><div class="wab">✓ Accept</div><div class="wab sec">Decline</div></div>
+              <div class="bub meb">Accept ✓</div>
+              <div class="bub">File &amp; glossary sent. Reply <b>DONE</b> when ready — progress logs itself.</div>
+            </div></div>
+          </div>
+          <div class="callout"><svg class="ic"><use href="#i-bolt"/></svg><div>You're paid the moment work is <b>verified</b> — not when the client pays. No invoice to raise, no chasing.</div></div>
+        </div>
+      </section>
+
+      <!-- ============ HOW IT WORKS — ALL WORKFLOWS ============ -->
+      <section class="screen" id="flow-life">
+        <div class="head"><div class="lead"><div class="eye"><svg class="ic" style="width:14px"><use href="#i-nodes"/></svg>Explain it</div><h1>How everything works</h1>
+          <p>Every core workflow on one page — who acts, what's automatic, and where the two human touchpoints sit. Use this to walk anyone through the system.</p></div></div>
+        <div class="card p">
+          <div class="leg">
+            <span><i style="background:var(--brand)"></i>A person acts</span>
+            <span><i style="background:var(--ai)"></i>AI composes</span>
+            <span><i style="background:var(--good)"></i>Expert / performer</span>
+            <span><i style="background:var(--faint)"></i>System · automatic</span>
+            <span><b style="color:var(--brand-ink)">★</b> = one of the 2 human gates</span>
+          </div>
+
+          <div class="flabel"><span class="n">1</span>Onboarding → a workspace that can deliver</div>
+          <div class="flow">
+            <div class="fstep hu"><span class="who">Operator</span><b>Provision</b><small>3 fields · tier + keys</small></div><span class="farrow">→</span>
+            <div class="fstep hu"><span class="who">Admin</span><b>Pick archetype</b><small>seeds catalog, skills, roles</small></div><span class="farrow">→</span>
+            <div class="fstep aic"><span class="who">AI</span><b>Build starter</b><small>a draft to ratify</small></div><span class="farrow">→</span>
+            <div class="fstep hu"><span class="who">Admin</span><b>Invite people</b><small>skip client if none yet</small></div><span class="farrow">→</span>
+            <div class="fstep pe"><span class="who">People</span><b>Self-onboard</b><small>declare their own skills</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Operational</b><small>can take a request</small></div>
+          </div>
+
+          <div class="flabel"><span class="n">2</span>A request → delivered → billed &nbsp;<span style="font-size:12px;font-weight:500;color:var(--muted)">the core lifecycle · 2 human touchpoints</span></div>
+          <div class="flow">
+            <div class="fstep hu"><span class="who">Requester</span><b>Brief + files</b><small>any channel · + deadline</small></div><span class="farrow">→</span>
+            <div class="fstep aic"><span class="who">AI</span><b>Compose plan</b><small>offering · tree · people · price</small></div><span class="farrow">→</span>
+            <div class="fstep hu"><span class="star">★1</span><span class="who">Owner</span><b>Ratify plan</b><small>one click, or tweak</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Allocate + mobilize</b><small>one-tap to the performer</small></div><span class="farrow">→</span>
+            <div class="fstep pe"><span class="who">Expert</span><b>Accept + do work</b><small>progress auto-logs</small></div><span class="farrow">→</span>
+            <div class="fstep hu"><span class="who">Reviewer</span><b>QA</b><small>only if policy needs it</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Assemble + deliver</b><small>to the client's store</small></div><span class="farrow">→</span>
+            <div class="fstep hu"><span class="star">★2</span><span class="who">Verifier</span><b>Confirm</b><small>~10-sec check</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Invoice + payout</b><small>rolling, on verify</small></div>
+          </div>
+
+          <div class="flabel"><span class="n">3</span>The expert's journey &nbsp;<span style="font-size:12px;font-weight:500;color:var(--muted)">what "Accept" sets in motion — try it live on Expert home</span></div>
+          <div class="flow">
+            <div class="fstep"><span class="who">System</span><b>Pinged</b><small>chat / WhatsApp</small></div><span class="farrow">→</span>
+            <div class="fstep pe"><span class="who">Expert</span><b>Accept</b><small>one tap · file auto-sent</small></div><span class="farrow">→</span>
+            <div class="fstep pe"><span class="who">Expert</span><b>Do the work</b><small>progress logs itself</small></div><span class="farrow">→</span>
+            <div class="fstep pe"><span class="who">Expert</span><b>Hand in</b><small>done — nothing else</small></div><span class="farrow">→</span>
+            <div class="fstep hu"><span class="who">Reviewer</span><b>QA passes</b><small>automatic if agent-safe</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Delivered + verified</b><small>client side</small></div><span class="farrow">→</span>
+            <div class="fstep pe"><span class="who">Expert</span><b>Paid</b><small>coins, instantly, on verify</small></div>
+          </div>
+
+          <div class="flabel"><span class="n">4</span>Cross-org: EZ dispatches to a partner (vendor)</div>
+          <div class="flow">
+            <div class="fstep hu"><span class="who">Client · EZ</span><b>Dispatch</b><small>to vendor workspace</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Opaque node</b><small>brokered, scoped file link</small></div><span class="farrow">→</span>
+            <div class="fstep pe"><span class="who">Vendor</span><b>Accept</b><small>EZ is their client</small></div><span class="farrow">→</span>
+            <div class="fstep pe"><span class="who">Vendor</span><b>Runs own tree</b><small>invisible to EZ</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Deliver back</b><small>provenance stripped</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">EZ sees</span><b>Status + file</b><small>never the internals</small></div>
+          </div>
+
+          <div class="flabel"><span class="n">5</span>Money: one confirm → two independent sides</div>
+          <div class="flow">
+            <div class="fstep hu"><span class="star">★</span><span class="who">Verifier</span><b>Confirm</b><small>the only billing gate</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>1 billable event</b><small>emitted at verify</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Invoice client</b><small>money in · if billing on</small></div>
+            <div class="farrow" style="align-self:center">＋</div>
+            <div class="fstep pe"><span class="who">System</span><b>Pay performer</b><small>off verified work</small></div><span class="farrow">→</span>
+            <div class="fstep"><span class="who">System</span><b>Wallet settle</b><small>ledger = truth</small></div>
+          </div>
+
+          <div class="callout" style="margin-top:20px"><svg class="ic"><use href="#i-spark"/></svg><div>Count the <b style="color:var(--brand-ink)">★</b> in flow 2: just <b>two</b> human touchpoints in the whole delivery. Everything grey is automatic; everything violet is AI proposing, not deciding.</div></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  (function(){
+    var meta={
+      "ob-board":["Admin","Set up · readiness"],"ob-people-inline":["Admin","Set up · people"],
+      "ob-client":["Admin","Set up · client (optional)"],
+      "sa-list":["Superadmin","Platform · L0"],"sa-new":["Superadmin","Platform · form"],
+      "ad-home":["Admin","Workspace · L1"],"ad-offering":["Admin","Config · form"],
+      "wk-new":["Requester","The work"],"wk-ratify":["Owner","The work · touchpoint 1"],
+      "wk-tree":["Owner","The work · live graph"],"wk-verify":["Verifier","The work · touchpoint 2"],
+      "pt-client":["Client","Portal · external org"],"pt-vendor":["Vendor","Portal · cross-org"],
+      "pt-vendor-run":["Vendor","Portal · internal (opaque)"],"pt-expert":["Expert","Portal · channel-native"],
+      "flow-life":["Guide","How it works · all workflows"]
+    };
+    var nav=document.querySelectorAll('.nav a');
+    var role=document.getElementById('role'), crumb=document.getElementById('crumb');
+    function show(id){
+      var el=document.getElementById(id); if(!el)return;
+      document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===id)});
+      nav.forEach(function(b){b.classList.toggle('on',b.dataset.s===id)});
+      if(meta[id]){role.textContent=meta[id][0];crumb.textContent=meta[id][1];}
+      window.scrollTo({top:0});
+    }
+    nav.forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();show(b.dataset.s)})});
+    document.addEventListener('click',function(e){
+      var k=e.target.closest('.knob'); if(k){k.classList.toggle('off');return;}
+      var seg=e.target.closest('.seg button'); if(seg){seg.parentNode.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});seg.classList.add('on');return;}
+      var g=e.target.closest('[data-go]'); if(g){show(g.getAttribute('data-go'));}
+    });
+    /* ---- Expert home: what happens after Accept (live) ---- */
+    var EXLABELS=["Accept","Work","QA","Deliver","Paid"];
+    var EX=[
+      {pill:["offered","id"],cur:0,btn:"✓ Accept job",kind:"primary",
+        head:"Tap accept to walk the flow",note:"This job also pinged your WhatsApp — accept from either, one tap. Nothing else to fill in.",sub:"Step through it →",coins:"4,200"},
+      {pill:["in progress","ok"],cur:1,btn:"Hand in output",kind:"primary",
+        head:"Accepted — now you work",note:"The system auto-sent you the file + glossary. Your progress logs itself as you work — no status updates to file, no chasing.",sub:"You're doing the actual work · everything else is automatic",coins:"4,200"},
+      {pill:["in QA","id"],cur:2,btn:"▶ Reviewer passes (auto)",kind:"",
+        head:"Handed in — you're done",note:"A reviewer checks it — only because this activity's QA policy needs a human. You do nothing here; agent-safe work skips this automatically.",sub:"System step · not your action",coins:"4,200"},
+      {pill:["delivered","aip"],cur:3,btn:"▶ Verifier confirms (auto)",kind:"",
+        head:"Assembled & delivered",note:"The system assembled the deliverable and wrote it to the client's store. Now the client-side verifier does a one-tap confirm.",sub:"System step · client side",coins:"4,200"},
+      {pill:["paid · +400 coins","ok"],cur:4,btn:"↺ Replay the flow",kind:"ghost",
+        head:"Paid — instantly",note:"Verified → you're paid 400 coins right away, off verified work — not when the client pays. No invoice to raise, no follow-up. It's already in your month total.",sub:"Done · start over to replay",coins:"4,600"}
+    ];
+    var exst=0;
+    function exRender(){
+      var s=EX[exst];
+      var pill=document.getElementById('ex-pill'); pill.textContent=s.pill[0]; pill.className='pill '+s.pill[1];
+      document.getElementById('ex-notet').textContent=s.head;
+      document.getElementById('ex-note').textContent=s.note;
+      document.getElementById('ex-sub').textContent=s.sub;
+      var b=document.getElementById('ex-btn'); b.textContent=s.btn; b.className='btn '+(s.kind||'');
+      document.getElementById('ex-coins').textContent=s.coins;
+      var box=document.getElementById('ex-steps'), h='';
+      for(var i=0;i<EXLABELS.length;i++){
+        var cls=(exst===4||i<s.cur)?'done':(i===s.cur?'now':'next');
+        h+='<span class="step" style="display:flex;align-items:center"><span class="b '+cls+'">'+(cls==='done'?'✓':(i+1))+'</span><span class="lb">'+EXLABELS[i]+'</span></span>';
+        if(i<EXLABELS.length-1)h+='<span class="ln" style="flex:1;min-width:10px"></span>';
+      }
+      box.innerHTML=h;
+    }
+    var exb=document.getElementById('ex-btn');
+    if(exb){exb.addEventListener('click',function(){exst=(exst>=EX.length-1)?0:exst+1;exRender();});exRender();}
+
+    var root=document.documentElement, tb=document.getElementById('tb');
+    function cur(){var d=root.getAttribute('data-theme');return d?d:(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');}
+    tb.addEventListener('click',function(){root.setAttribute('data-theme',cur()==='dark'?'light':'dark');});
+  })();
+</script>
