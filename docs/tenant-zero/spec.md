@@ -149,6 +149,23 @@ Fifteen epics. Each: **base-case flow → business rules → edge cases → Data
 **FRs** — FR-1.1 3-field provisioning · FR-1.2 tier drives isolation · FR-1.3 BYOK required before a sovereign workspace activates · FR-1.4 module availability set here, tunable later · FR-1.5 **no back-door** (EZ included).
 **AC** — a workspace is created with ≤3 inputs; a sovereign workspace can't reach `active` without BYOK; the operator can never open a tenant's briefs/deliverables.
 
+#### E1b · Operator console (L0) — oversight & controls
+
+**The operator is a landlord, not a tenant.** The console lists every workspace (from the tenant registry, `architecture.md` §8.1) and lets the operator run the *platform* — never reach *inside* a workspace.
+
+**Sees (operational metadata only):** the full **workspace list + count** (by status/tier/region), and per workspace: `status · tier · region · keys(platform/BYOK) · created · L1 admin · health/uptime · aggregate usage` (requests, storage — for SLA/billing).
+
+**Never sees:** tenant **content** (briefs/deliverables/files) — ever; tenant **business metadata** (the work graph, client list, who they deliver to). On BYOK tenants this is **cryptographically impossible**, not a permission.
+
+**Can change (platform controls):** create/provision · **entitlements** (module availability, plan/limits) · **lifecycle** (suspend/resume/decommission) · **admin transfer/re-invite** · **BYOK key reference** (register/rotate the pointer, not the key) · **abuse/rate-limit tier** · **time-boxed, audited support access**. **Tier/region change = a migration** (data-move + re-key), an orchestrated request, not a toggle.
+
+**Cannot change:** a tenant's **operating model** (entities, catalog, skills, teams, pricing, SLAs, terminology) — that's the **L1 admin's** surface (E2). **No back-door, including into EZ** — EZ configures itself as an L1 admin.
+
+**Governance:** every operator action (suspend, entitlement change, admin transfer, support-access grant) is written to the **tamper-evident, tenant-inspectable audit** (SEC-9 / IS-33); support access is expiring + logged, and still unreadable on BYOK.
+
+**FRs** — FR-1.6 operator console lists all workspaces with aggregate counts from the registry · FR-1.7 operator visibility limited to operational metadata (never content/business metadata; BYOK = cryptographically sealed) · FR-1.8 operator controls = entitlements/lifecycle/admin/keys-ref/abuse/support-access only · FR-1.9 operator cannot edit any tenant's operating model (no back-door) · FR-1.10 every operator action is tenant-inspectable in the audit.
+**AC** — the operator can count and place every workspace but cannot open any tenant's work; suspending a workspace appears in that tenant's own audit; no operator action can mutate a tenant's catalog/pricing/config.
+
 ---
 
 ### E2 · Configuration & readiness (L1)
