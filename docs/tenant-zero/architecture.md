@@ -517,6 +517,50 @@ Human touchpoints across all of this: **two** (step 3, step 9). Cross-org (Phase
 - *(EZ resells these as its Standard/Compliant/Private tiers — a mapping, not a product distinction.)*
 - Entity→separate-workspace migration (Layer 5) is a **data-separation operation** (re-key + move into a new keyed store) — supported, but heavier than a config toggle. Flagged honestly.
 
+### 8.1 Provisioning & tier resolution (backend)
+
+**The tier is a provisioning profile, not a label.** Choosing it at creation selects a recipe of *storage + keys + compute + network*, and it governs how **every** later request is routed. The isolation ladder itself is committed in `security.md` §2.2; this is the mechanism that runs it.
+
+**The linchpin — a global tenant registry.** One small control-plane directory maps each workspace to its *placement*. It holds **no tenant content** — only routing metadata — and is consulted once per request.
+
+```jsonc
+tenant_registry = {
+  "workspace_id":   "ws_ez",
+  "org_code":       "EZ",
+  "tier":           "shared",              // shared | regional | sovereign
+  "region":         "in",
+  "db_endpoint":    "pg-shared-in",        // which cluster/instance
+  "schema_or_db":   "public",              // shared tables | tenant schema | dedicated db
+  "key_ref":        "kms:platform/ez",     // platform KEK  OR  customer KMS ARN (BYOK)
+  "store_endpoint": "s3://ws-in/ez/",      // WS store | tenant cloud | tenant infra
+  "enclave_endpoint":"enclave-in",         // regional enclave | in-environment runtime
+  "status":         "provisioning"         // provisioning → active → suspended
+}
+```
+
+**Per-request resolution — the tier drives exactly three things: which DB · which key · which enclave.**
+```
+1. authN            → (workspace_id, operating_entity_id)
+2. reg = registry[workspace_id]                       // one lookup
+3. conn = connect(reg.db_endpoint, reg.schema_or_db)  // shared cluster | tenant schema | dedicated DB
+4. SET app.workspace_id, app.operating_entity_id      // RLS session scope (shared/regional)
+5. dek = KMS.unwrap(reg.key_ref, wrapped_data_key)    // envelope decrypt (BYOK ⇒ customer KMS)
+6. content ops      → route to reg.enclave_endpoint   // regional | in-environment
+```
+
+**Keys — envelope encryption is why "operator can't read" is a fact.** Each record/field is encrypted with a **data key (DEK)**; the DEK is wrapped by the tenant's **master key (KEK)** in KMS/HSM. Shared → KEK platform-managed (custodial). Regional/Sovereign → KEK in the **customer's KMS**; to read anything the platform must call *their* KMS to unwrap. **Revoke the key → the platform physically cannot decrypt** — the crypto-erase / off-switch.
+
+**What each tier provisions & requires at creation:**
+| Tier | Backend provisioning | Extra inputs required at creation |
+|---|---|---|
+| **Shared** | insert registry row + RLS scope; content → shared store, per-tenant prefix + DEK | none beyond the 3 fields (region defaulted) |
+| **Regional** | create tenant **schema** (or region cluster); register **BYOK** key; store → tenant cloud / WS-region | **residency region** · **BYOK key ref** · optional connected-cloud config |
+| **Sovereign** | provision **dedicated DB/instance** (their infra allowed) + wire **HSM**; deploy **in-environment enclave**; lock egress | **target environment** · **HSM/KMS details** · **network/VPC + no-egress** · compliance attestations |
+
+**Provisioning state machine.** `provisioning → active`. Shared reaches `active` in seconds (row insert). **Regional/Sovereign cannot reach `active` without their BYOK key** (FR-1.3); sovereign involves IaC/ops orchestration. *Region and BYOK cannot be deferred* — you can't retrofit where bytes physically live or whose key encrypts them.
+
+**Components this implies (to build):** the **tenant registry** service · a **provisioning orchestrator** (per-tier recipe; IaC for regional/sovereign) · a **data-source resolver** (routes the connection by tier) · **KMS integration with BYOK** (envelope encryption, per-tenant KEK, revoke) · **RLS session-scoping middleware** · an **enclave-endpoint resolver**. **Tier migration** (e.g. shared→sovereign) is a data-move + re-key operation, not a toggle. *(Bhavya QAs the RLS/KMS implementation; the mechanism is the committed §11.4 call.)*
+
 ---
 
 ## 9. Reliability & the ERP failure classes we design out
