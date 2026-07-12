@@ -482,7 +482,7 @@ Human touchpoints across all of this: **two** (step 3, step 9). Cross-org (Phase
 
 ## 7. Security & isolation architecture
 
-**The defensibility principle (vision §8):** *the operator cannot read a BYOK tenant's data — cryptographically, not by promise.* Every mechanism below serves it. This maps to the PRD's SEC-1…SEC-14.
+**The defensibility principle (vision §8):** *the operator cannot read a BYOK tenant's data — cryptographically, not by promise.* Every mechanism below serves it. This maps to the PRD's SEC-1…SEC-14. **The full security program** (data residency, threat model, bot/DDoS, AI-injection, monitoring, IR, compliance) is in **[`security.md`](./security.md)**.
 
 | Control | Mechanism | PRD |
 |---|---|---|
@@ -615,7 +615,7 @@ ledger.append(WalletEntry(op="deduct", delta=Money("-800", "USD"),
 1. **Core shape** — modular-monolith core (recommended, tenet #1) vs full microservices.
 2. **Engine model** — transactional + outbox (recommended) vs event-sourced.
 3. **API** — GraphQL + persisted queries (assumed) vs REST.
-4. **Isolation mechanism** — RLS-pooled vs schema-per-tenant vs db-per-tenant, per tier.
+4. **Isolation mechanism** — **decided** (`security.md` §2.2): **RLS-pooled for Shared; dedicated DB + BYOK for Regional/Sovereign** (never table-per-tenant). Bhavya to QA the RLS/KMS implementation.
 5. **Async infra** — task runner (Celery / RQ / Temporal) and broker (Redis Streams / Kafka / NATS).
 6. **Stack confirmation** — FastAPI (proposed) vs staying on Django; Postgres version; deployment substrate.
 7. **Repository layout** — how many repos we build. Recommendation: **~2** — one **product monorepo** (core + frontend + File Broker/Channel Gateway/Reporting/Task Runtime as internal services) plus a **separate AI Composer / enclave repo**. The enclave is proposed as its own repo because it deploys into the sealed, zero-retention, sometimes in-tenant / no-egress environment and should stay minimal and independently auditable — **this specific split is for Bhavya to confirm.** The fork: if Bhavya prefers a classic backend/frontend split, it becomes **3** (backend + frontend + enclave). Everything else stays a module, not a repo, to avoid cross-repo sync.

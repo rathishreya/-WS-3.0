@@ -827,7 +827,7 @@ Everything the workspace admin configures — **declarative, defaulted, versione
 
 ## 8. Data security, privacy & trust  (SEC-x)
 
-**The trust model, straight from the vision (§2.1, §2.2, §8).** The whole platform's defensibility rests on this: *the operator can't read a tenant's data — cryptographically, not by promise.* These are hard product requirements, not aspirations. `[V§n]` cites the vision section.
+**The trust model, straight from the vision (§2.1, §2.2, §8).** The whole platform's defensibility rests on this: *the operator can't read a tenant's data — cryptographically, not by promise.* These are hard product requirements, not aspirations. `[V§n]` cites the vision section. **The full information-security program** — data residency/storage, threat model, bot/DDoS defense, AI/prompt-injection controls, monitoring, IR, and the certification-readiness map — is in **[`security.md`](./security.md)**.
 
 ### 8.1 Data handling — control plane, tiers, sealed enclave
 
