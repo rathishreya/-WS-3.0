@@ -1,0 +1,68 @@
+{
+  "$source": "EZ Brand Guidelines 2.0 (design/brand/EZ_Brand_Guidelines_2.0.pptx)",
+  "$authority": "This file is the single source of truth for EZ brand colour and type. Do not deviate.",
+
+  "brand": {
+    "primary": {
+      "orange":     { "value": "#EA7B2C", "rgb": "234, 123, 44",  "type": "color", "note": "EZ primary — the brand colour. Primary actions, brand marks, key accents." },
+      "charcoal":   { "value": "#3D3D3D", "rgb": "61, 61, 61",    "type": "color", "note": "Primary neutral — body text, UI ink." },
+      "sky":        { "value": "#3CC3F2", "rgb": "60, 195, 242",  "type": "color", "note": "Primary accent — information, links, secondary emphasis." },
+      "gold":       { "value": "#F1B715", "rgb": "241, 183, 21",  "type": "color", "note": "Primary accent — attention, warning, highlights." }
+    },
+    "secondary": {
+      "maroon":     { "value": "#901918", "rgb": "144, 25, 24",   "type": "color", "note": "Secondary — critical, error, at-risk." },
+      "navy":       { "value": "#112949", "rgb": "14, 41, 73",    "type": "color", "note": "Secondary — deep ground, headers, dark surfaces. Theme dk1 = #0E2949." },
+      "forest":     { "value": "#0A351F", "rgb": "10, 53, 31",    "type": "color", "note": "Secondary — success, verified, positive." },
+      "peach":      { "value": "#EDA27C", "rgb": "237, 162, 124", "type": "color", "note": "Secondary — soft orange support, tints." }
+    }
+  },
+
+  "themeScheme": {
+    "$note": "Exact OOXML theme scheme from the guideline deck.",
+    "dk1": "#0E2949", "lt1": "#FFFFFF", "dk2": "#3D3D3D", "lt2": "#FFFFFF",
+    "accent1": "#EA7B2C", "accent2": "#EDA27C", "accent3": "#3CC3F2",
+    "accent4": "#901918", "accent5": "#F1B715", "accent6": "#0A351F"
+  },
+
+  "typography": {
+    "display": {
+      "family": "Exo 2.0",
+      "stack": "'Exo 2.0', 'Exo 2', 'Exo', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      "type": "fontFamilies",
+      "note": "The EZ typeface. Headings, UI, and body throughout — theme major AND minor font."
+    },
+    "serif": {
+      "family": "Cambria",
+      "stack": "Cambria, Georgia, 'Times New Roman', serif",
+      "type": "fontFamilies",
+      "note": "Secondary typeface. Editorial / long-form / quotations."
+    }
+  },
+
+  "brandImage": ["Consistently High-Quality", "Round the Clock Availability", "Faster than the Fastest"],
+  "brandValues": ["Innovating with AI", "People First"],
+
+  "uiMapping": {
+    "$note": "How the brand palette maps onto product UI roles for WS 3.0 surfaces.",
+    "brand":      "#EA7B2C",
+    "brand-ink":  "#C05F17",
+    "brand-soft": "#FDEEE2",
+    "brand-line": "#F7CFB0",
+    "ink":        "#112949",
+    "muted":      "#5A6472",
+    "faint":      "#94A0AE",
+    "info":       "#3CC3F2",
+    "info-ink":   "#1189B6",
+    "info-soft":  "#E4F6FD",
+    "good":       "#0A351F",
+    "good-ink":   "#0A351F",
+    "good-soft":  "#E2EEE7",
+    "warn":       "#F1B715",
+    "warn-ink":   "#9A7205",
+    "warn-soft":  "#FEF5DC",
+    "crit":       "#901918",
+    "crit-ink":   "#901918",
+    "crit-soft":  "#F7E4E3",
+    "accent-soft":"#FBEDE4"
+  }
+}
