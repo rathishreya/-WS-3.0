@@ -401,6 +401,40 @@ button.aimc:hover{border-color:#B9C2CE;background:var(--surface)}
 .mtot{margin:2px 8px 6px;padding:13px 14px;border-radius:12px;background:linear-gradient(160deg,#16325A,var(--ink));color:#fff;box-shadow:0 8px 22px -12px rgba(17,41,73,.7)}
 .mtot b{display:block;font-size:23px;font-weight:680;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .mtot small{display:block;font-size:10.5px;color:#A9BBD2;margin-top:3px;line-height:1.4}
+/* ---- Verify: a table, not a room ---- */
+body.tableview .pane{display:none}
+body.tableview .comp{display:none}
+body.tableview #strip{display:none!important}
+body.tableview .tbody{padding:0;overflow:hidden;display:flex}
+body.tableview .tin{max-width:none;margin:0;flex:1;min-width:0;display:flex;gap:0}
+body.tableview .tin>*{animation:none}
+.vview{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--surface)}
+.vbar{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);
+ background:linear-gradient(180deg,var(--sunk),var(--surface))}
+.vseg{display:flex;gap:3px;background:var(--soft);padding:3px;border-radius:10px}
+.vseg button{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:620;color:var(--muted);
+ padding:6px 12px;border-radius:8px;cursor:pointer;transition:background .14s,color .14s,box-shadow .16s}
+.vseg button:hover{color:var(--ink)}
+.vseg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(17,41,73,.08),0 4px 10px -6px rgba(17,41,73,.3)}
+.vseg button i{font-style:normal;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--soft);color:var(--faint)}
+.vseg button.on i{background:var(--ink);color:#fff}
+.vact{margin-left:auto;display:flex;gap:8px}
+.vscroll{flex:1;overflow:auto;min-height:0}
+.vtbl{font-size:12px}
+.vtbl th{position:sticky;top:0;z-index:2;padding:10px 18px;background:var(--sunk);box-shadow:inset 0 -1px 0 var(--line)}
+.vtbl td{padding:13px 18px;border-bottom:1px solid var(--line2)}
+.vtbl tbody tr.rdy{background:linear-gradient(90deg,rgba(241,183,21,.055),transparent 42%)}
+.vtbl tbody tr.rdy td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+.vtbl .wk{font-size:12.5px}
+.vtbl .num{font-size:11.5px}
+.cpill{font-size:10.5px;font-weight:620;padding:3px 9px;border-radius:99px;background:var(--sunk);
+ border:1px solid var(--line2);color:var(--muted);white-space:nowrap}
+.vempty{padding:34px 18px;text-align:center;color:var(--faint);font-size:12px}
+.vfoot{flex:0 0 auto;display:flex;align-items:center;gap:16px;padding:12px 20px;border-top:1px solid var(--line);
+ background:var(--sunk);font-size:11px;color:var(--faint)}
+.vfoot b{font-size:15px;font-weight:680;color:var(--ink);font-variant-numeric:tabular-nums;margin-right:5px}
+.vfoot .vf2{color:var(--muted);font-weight:600}
+.vfoot .vf3{margin-left:auto;text-align:right;max-width:46%}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -789,7 +823,7 @@ function vstate(l){
 }
 function vReady(){ return VLINES().filter(l=>l.ready&&!VST[l.id]) }
 function vVerified(){ return VLINES().filter(l=>l.done||VST[l.id]) }
-function verifyCard(){
+function verifyView(){
  var L=VLINES().filter(function(l){
   if(VFILT==='ready')  return l.ready&&!VST[l.id];
   if(VFILT==='done')   return l.done||VST[l.id];
@@ -798,28 +832,39 @@ function verifyCard(){
  });
  var rows=L.map(function(l){
   var st=vstate(l), can=(l.ready&&!VST[l.id]);
-  return '<tr><td><span class="wk">'+l.node+'</span><span class="sc">'+l.req+' · '+l.cli+'</span>'+
-   (l.note?'<span class="sc" style="color:var(--warn-ink)">'+l.note+'</span>':'')+
-   (l.block?'<span class="sc" style="color:var(--faint)">'+l.block+'</span>':'')+'</td>'+
-   '<td><span class="wk" style="font-weight:520">'+l.who+'</span></td>'+
+  return '<tr'+(can?' class="rdy"':'')+'><td><span class="wk">'+l.node+'</span><span class="sc">'+l.req+'</span></td>'+
+   '<td><span class="cpill">'+l.cli+'</span></td>'+
+   '<td><span class="wk" style="font-weight:520">'+l.who+'</span>'+
+     (l.note?'<span class="sc" style="color:var(--warn-ink)">'+l.note+'</span>':'')+
+     (l.block?'<span class="sc">'+l.block+'</span>':'')+'</td>'+
    '<td class="r num">'+l.units+'</td><td class="r num">'+l.rate+'</td>'+
-   '<td class="r num">¤'+l.amt.toLocaleString('en-US')+'</td>'+
+   '<td class="r num" style="font-weight:660">¤'+l.amt.toLocaleString('en-US')+'</td>'+
    '<td class="r"><span class="bdg '+st[0]+'">'+st[1]+'</span></td>'+
    '<td class="r">'+(can?'<button class="vbtn on" data-vrow="'+l.id+'">Verify</button>'
-     :l.block?'<button class="vbtn" disabled>Blocked</button>':'<button class="vbtn" disabled>Done</button>')+'</td></tr>';
+     :l.block?'<button class="vbtn" disabled>Blocked</button>':'<button class="vbtn" disabled>—</button>')+'</td></tr>';
  }).join('');
  var rdy=vReady(), ver=vVerified();
  var rt=rdy.reduce((t,l)=>t+l.amt,0), vt=ver.reduce((t,l)=>t+l.amt,0);
- return card({id:'card-verify',wide:1,tone:rdy.length?'decide':'okc',dot:rdy.length?'w':'ok',
-  who:'Verify · the exit gate',sub:rdy.length?rdy.length+' waiting on your tap':'everything verified',subCls:rdy.length?'':'ok',time:'12:15',
-  body:'<b>Nothing bills before the tap.</b> Verifying emits one billable event per line, which fans out to the invoice and the performer payout at the same instant — the reconciliation below is pre-computed, so this is a check, not a calculation.',
-  extra:'<div class="tw"><table class="wtbl"><thead><tr><th>Billable work</th><th>Performed by</th>'+
-   '<th class="r">Units</th><th class="r">Rate</th><th class="r">Amount</th><th class="r">State</th><th class="r">Gate</th></tr></thead><tbody>'+
-   (rows||'<tr><td colspan="7" style="color:var(--faint);padding:14px 9px">Nothing in this filter.</td></tr>')+
-   '</tbody><tfoot><tr><td colspan="4">'+rdy.length+' awaiting · '+ver.length+' verified'+(VINV?' · invoiced':'')+'</td>'+
-   '<td class="r num">¤'+(rt+vt).toLocaleString('en-US')+'</td><td class="r" colspan="2">on the floor</td></tr></tfoot></table></div>',
-  acts:(rdy.length?[['Verify all '+rdy.length+' · ¤'+rt.toLocaleString('en-US'),'pri','vall'],['Open the reconciliation','','vrec']]
-        :VINV?null:[['Send '+ver.length+' lines to invoice · ¤'+vt.toLocaleString('en-US'),'pri','vinv']])});
+ var shown=L.reduce((t,l)=>t+l.amt,0);
+ var seg=[['ready','Awaiting you',rdy.length],['done','Verified',ver.length],['block','Blocked',VLINES().filter(l=>l.block).length],['all','Everything',VLINES().length]];
+ return '<div class="vview">'+
+  '<div class="vbar">'+
+   '<div class="vseg">'+seg.map(function(x){
+     return '<button class="'+(VFILT===x[0]?'on':'')+'" data-vfilt="'+x[0]+'">'+x[1]+(x[2]?'<i>'+x[2]+'</i>':'')+'</button>'}).join('')+'</div>'+
+   '<div class="vact">'+
+    (rdy.length?'<button class="btn pri" data-do="vall">Verify all '+rdy.length+' · ¤'+rt.toLocaleString('en-US')+'</button>':'')+
+    (!rdy.length&&ver.length&&!VINV?'<button class="btn pri" data-do="vinv">Send '+ver.length+' to invoice · ¤'+vt.toLocaleString('en-US')+'</button>':'')+
+    '<button class="btn" data-do="vrec">Reconciliation</button>'+
+   '</div>'+
+  '</div>'+
+  '<div class="vscroll"><table class="wtbl vtbl"><thead><tr>'+
+   '<th>Billable work</th><th>Client</th><th>Performed by</th>'+
+   '<th class="r">Units</th><th class="r">Rate</th><th class="r">Amount</th><th class="r">State</th><th class="r">Gate</th>'+
+   '</tr></thead><tbody>'+(rows||'<tr><td colspan="8" class="vempty">Nothing in this filter.</td></tr>')+'</tbody></table></div>'+
+  '<div class="vfoot"><span><b>¤'+shown.toLocaleString('en-US')+'</b> shown</span>'+
+   '<span class="vf2">'+rdy.length+' awaiting your tap · '+ver.length+' verified'+(VINV?' · invoiced':'')+'</span>'+
+   '<span class="vf3">Nothing bills before the tap. Verifying emits one billable event per line — invoice and payout fire together.</span></div>'+
+ '</div>';
 }
 function filesCard(id){
  var t=th(id)||{name:'this room'};
@@ -950,20 +995,7 @@ function msgs(id){
   out.push(floorCard());
   out.push(chips(['Who’s overloaded?','What breaches next?','Draft the Friday update for Acme']));
  }
-  if(id==='verify'){
-  out.push(day('Wed 22 Jul'));
-  out.push(card({dot:'',who:'Verify',sub:'the exit gate',time:'09:00',
-   body:'<b>This is where work becomes money.</b> Everything delivered and signed off at the boundary lands here with its reconciliation already computed — units, rate, splits, fees. Your tap emits the billable event; the invoice and the performer payout fire off it at the same instant.<br><small>Nothing on this floor bills before that tap. No auto-invoice on complete, no repair job later.</small>'}));
-  out.push(verifyCard());
-  out.push(vnudgeCard());
-  out.push(card({dot:'w',who:'Boundary sign-off',sub:'before anything crosses',time:'—',
-   body:'<b>Q3 · Friday.</b> Omar signs the boundary before delivery — nothing reaches Acme without it, and nothing reaches this table without that.',
-   acts:[['Open the room','','goto:q3:card-tree']]}));
-  if(VINV) out.push(evt('ok','Invoiced','3 lines pushed to invoicing · payouts released to Flip, Dev and the Tariq/Priya split','now'));
-  out.push(chips(['What is blocking the subtitle pack?','Why is the JD line split?','Show me last week’s gate']));
-  (EXTRA[id]||[]).forEach(h=>out.push(h));
-  return out.join('');
- }
+  if(id==='verify') return verifyView();
  if(id==='money'){
   out.push(day('Wed 22 Jul'));
   out.push(card({dot:'',who:'Money',sub:'both books, one glance',time:'09:00',
@@ -1224,36 +1256,8 @@ function renderPanel(){
 }
 function renderScrim(){ $('scrim').className='scrim'+(NOV?' on':'') }
 
-var VTABS=[['ready','Awaiting you'],['done','Verified'],['all','Everything']];
 var MTABS=[['all','Both books'],['in','Money in'],['out','Money out']];
-function verifyList(){
- var rdy=vReady(), ver=vVerified();
- var t=(VFILT==='done'?ver:VFILT==='all'?VLINES():VFILT==='block'?VLINES().filter(l=>l.block):rdy);
- var tot=t.reduce(function(a,l){return a+l.amt},0);
- var h='<div class="lgroup">The gate · today</div>';
- h+='<div class="mtot"><b>¤'+tot.toLocaleString('en-US')+'</b><small>'+t.length+' line'+(t.length===1?'':'s')+' · '+
-   (VFILT==='ready'?'nothing bills until you tap':VFILT==='done'?(VINV?'invoiced and paid out':'verified — ready to invoice'):'everything on the floor')+'</small></div>';
- var by={};
- t.forEach(function(l){ (by[l.cli]=by[l.cli]||[]).push(l) });
- Object.keys(by).forEach(function(c){
-  h+='<div class="lgroup">'+c+'</div>';
-  by[c].forEach(function(l){
-   var st=vstate(l);
-   h+='<button class="mrow" data-mgo="card-verify"><span class="mt2" style="font-size:9px;font-weight:700">'+
-    l.cli.slice(0,2).toUpperCase()+'</span><span class="mn2"><b>'+l.node+'</b><small>'+l.req+' · '+l.who+'</small></span>'+
-    '<span class="mvv">¤'+l.amt.toLocaleString('en-US')+'<small><span class="bdg '+st[0]+'">'+st[1]+'</span></small></span></button>';
-  });
- });
- if(!t.length) h+='<div class="lempty" style="padding:14px 10px;font-size:11.5px;color:var(--faint)">Nothing in this filter.</div>';
- return h;
-}
 function renderTabs(){
- if(CUR==='verify'){
-  $('tabs').innerHTML=VTABS.map(t=>'<button class="tab'+(VFILT===t[0]?' on':'')+'" data-vfilt="'+t[0]+'">'+t[1]+
-   (t[0]==='ready'&&vReady().length?'<span class="tb">'+vReady().length+'</span>':'')+'</button>').join('');
-  $('tabnote').textContent='Every billable line on the floor. Verify emits the billable event — invoice and payout at the same instant.';
-  return;
- }
  if(CUR==='money'){
   $('tabs').innerHTML=MTABS.map(t=>'<button class="tab'+(MFILT===t[0]?' on':'')+'" data-mfilt="'+t[0]+'">'+t[1]+'</button>').join('');
   $('tabnote').textContent='Money only — what is owed to EZ, what EZ owes out, and what each client can still spend.';
@@ -1301,7 +1305,6 @@ function rowHtml(t,pinned){
  return row;
 }
 function renderList(){
- if(CUR==='verify'&&!SQ){$('clist').innerHTML=verifyList();return}
  if(CUR==='money'&&!SQ){renderMoneyPane();return}
  var items=threads().filter(t=>t.tab===TAB&&!t.pin);
  if(SQ){var q=SQ.toLowerCase();items=threads().filter(t=>(t.name+' '+(t.org||'')+' '+t.sub).toLowerCase().includes(q))}
@@ -1428,7 +1431,10 @@ function renderThread(keepScroll){
   if(el){el.scrollIntoView({block:'center'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1700)}
   PENDING_FLASH=null}
 }
-function renderAll(){renderRails();renderStrip();renderNov();renderPanel();renderTabs();renderList();renderThread()}
+function renderAll(){
+ document.body.classList.toggle('tableview',CUR==='verify');
+ renderRails();renderStrip();renderNov();renderPanel();renderTabs();renderList();renderThread();
+}
 
 var TT=null, UNDOFN=null;
 function toast(t,undo){
