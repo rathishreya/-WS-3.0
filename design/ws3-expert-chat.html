@@ -28,7 +28,27 @@ b{font-weight:620}
 /* ========== left & right icon rails — unchanged shell ========== */
 .rail,.rrail{width:64px;flex:none;background:var(--surface);display:flex;flex-direction:column;align-items:center;padding:11px 0 12px;gap:2px}
 .rail{border-right:1px solid var(--line)}
-.rrail{border-left:1px solid var(--line)}
+.rrail{flex:0 0 46px;background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;
+ align-items:center;gap:3px;padding:9px 0;z-index:30}
+.rr{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:var(--faint);cursor:pointer;
+ transition:background .15s,color .15s,transform .18s var(--ease);position:relative}
+.rr:hover{background:var(--sunk);color:var(--ink)}
+.rr.on{background:var(--ink);color:#fff}
+.rr .ic{width:15px}
+.rr .rrb{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:99px;background:var(--crit)}
+.rrsep{width:18px;height:1px;background:var(--line2);margin:5px 0}
+.rrtip{position:absolute;right:38px;top:50%;transform:translateY(-50%) translateX(4px);background:var(--ink);color:#fff;
+ font-size:10.5px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;
+ transition:opacity .15s,transform .15s;z-index:40}
+.rr:hover .rrtip{opacity:1;transform:translateY(-50%)}
+/* the drawer: sits beside the chat, never over it, so the room stays live while it is open */
+.spgrip{position:absolute;left:-3px;top:0;bottom:0;width:7px;cursor:col-resize;z-index:12}
+.spgrip:hover::after,.spgrip.drag::after{content:'';position:absolute;left:2px;top:0;bottom:0;width:2px;background:var(--ai)}
+.spb .msg{max-width:none!important}
+.spb .card{border-radius:10px}
+.spb .bgrid{grid-template-columns:1fr}
+.spb .bf:nth-child(odd){padding-right:0}
+.sph .spx{margin-left:auto}
 .rlogo{width:33px;height:33px;border-radius:9px;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:740;margin-bottom:9px}
 .rb{width:53px;padding:7px 0 5px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--faint);position:relative}
 .rb:hover{background:var(--sunk);color:var(--muted)}
@@ -115,6 +135,9 @@ b{font-weight:620}
 .strip b{font-weight:660;color:inherit}
 .strip .sic{flex:none;display:grid;place-items:center}
 .strip .stx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip .sright{flex:none;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.strip .go{white-space:nowrap}
+.strip .stx b{font-weight:660}
 .strip .scount{flex:none;font-size:10px;font-weight:740;padding:2px 8px;border-radius:99px;background:var(--crit);color:#fff}
 .strip.warn .scount{background:var(--crit)}
 .strip .go{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 11px;font-size:11px;font-weight:660;color:var(--muted)}
@@ -392,9 +415,10 @@ button.aimc:hover{border-color:#B9C2CE;background:var(--surface)}
 @keyframes novin{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 
 /* tools panel — docks inside the chat; the thread narrows, nothing is covered */
-.spanel{flex:0 0 0px;width:0;background:var(--surface);border-left:0 solid var(--line);display:flex;flex-direction:column;overflow:hidden;transition:flex-basis .34s var(--ease),width .34s var(--ease)}
-.spanel.on{flex:0 0 300px;width:300px;border-left:1px solid var(--line)}
-.spanel>*{min-width:300px}
+.spanel{flex:0 0 0px;width:0;background:var(--surface);border-left:0 solid var(--line);display:flex;flex-direction:column;overflow:hidden;position:relative;transition:flex-basis .34s var(--ease),width .34s var(--ease)}
+.spanel.rz{transition:none}
+.spanel.on{flex:0 0 var(--spw,340px);width:var(--spw,340px);border-left:1px solid var(--line)}
+.spanel>*{min-width:240px}
 .sph{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line2)}
 .sph h4{font-size:13.5px;font-weight:700;letter-spacing:-.01em}
 .spb{flex:1;overflow-y:auto;padding:6px 8px 14px}
@@ -541,6 +565,10 @@ button.aimc:hover{border-color:#B9C2CE;background:var(--surface)}
 <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
 <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11l-8.5 8.5a5 5 0 01-7-7L14 4a3.5 3.5 0 015 5l-8.5 8.5a2 2 0 01-3-3L15 6"/></symbol>
 <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 3h6l-.8 7 3.3 3.5H6.5L9.8 10z"/><path d="M12 13.5V21"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V18a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13h5l1.5 2.5h5L16 13h5"/><path d="M5.5 5h13l2.5 8v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.4 2"/></symbol>
 <symbol id="i-warn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></symbol>
 </defs></svg>
 
@@ -555,10 +583,10 @@ button.aimc:hover{border-color:#B9C2CE;background:var(--surface)}
 </div>
 
 <div class="hero">
-  <button class="strip" id="strip"></button>
   <div class="hwrap">
     <div class="hmain">
       <div class="thead" id="thead"></div>
+      <button class="strip" id="strip"></button>
       <div class="pinbar" id="pinbar"></div>
       <div class="mbar" id="mbar" style="display:none"></div>
       <div class="tbody" id="tbody"><div class="tin" id="tin"></div></div>
@@ -568,10 +596,9 @@ button.aimc:hover{border-color:#B9C2CE;background:var(--surface)}
       <button class="jlat" id="jlat" aria-label="Jump to latest"><svg class="ic" style="width:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
     </div>
     <div class="spanel" id="spanel"></div>
+    <div class="rrail" id="rrail"></div>
   </div>
 </div>
-
-<div class="rrail" id="rrail"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1399,6 +1426,28 @@ var REF={
    ['Linguistic QA','AR/FR/ES/DE · L2','¤25/min'],
    ['Terminology','EN↔AR · L3','¤1.875/term']]}
 };
+/* every room carries its own set — icon only, in the rail on the right */
+var SPACE={
+ brief :{t:'The brief',    ic:'i-file'},
+ plan  :{t:'The plan',     ic:'i-cal'},
+ files :{t:'Files',        ic:'i-folder'},
+ deliv :{t:'Deliveries',   ic:'i-inbox'},
+ log   :{t:'What changed', ic:'i-clock'},
+ mywork:{t:'My work',      ic:'i-grid2'},
+ util  :{t:'Utilisation',  ic:'i-chart'},
+ rate  :{t:'Rate card',    ic:'i-money'},
+ sop   :{t:'SOP Library',  ic:'i-book'},
+ tools :{t:'Tools & licences',ic:'i-grid2'},
+ skills:{t:'Your skills',  ic:'i-file'}
+};
+function spacesFor(id){
+ var own=[];
+ if(act(id))           own=['brief','plan','files','deliv','log'];
+ else if(th(id)&&th(id).tab==='req') own=['plan','mywork','files'];
+ else if(id==='ws')    own=['plan','mywork','util'];
+ else if(id==='money') own=['rate','mywork'];
+ return {own:own, ref:['sop','tools','skills']};
+}
 function spaceCard(k,ctx){
  if(k==='files')  return filesCard(ctx||'a2');
  if(k==='log')    return logCard(ctx||'a2');
@@ -1407,7 +1456,11 @@ function spaceCard(k,ctx){
  if(k==='mywork') return myWorkCard();
  if(k==='util')   return utilCard();
  if(k==='rate')   return rateCard();
- if(k==='plan')   return planCard(act(CUR)?CUR:(CUR==='ws'?'all':CUR));
+ if(k==='plan')   return planCard(act(CUR)?CUR:(CUR==='ws'||CUR==='money'?'all':CUR));
+ if(REF[k]){var d=REF[k];
+  return card({id:'card-'+k,wide:1,dot:'',who:d.t,sub:'reference',time:'',
+   extra:d.rows.map(r=>'<div class="spr"><span class="si"><svg class="ic" style="width:13px"><use href="#'+d.ic+'"/></svg></span>'+
+    '<span class="st"><b>'+r[0]+'</b><small>'+r[1]+'</small></span>'+(r[2]?'<span class="sptag">'+r[2]+'</span>':'')+'</div>').join('')});}
  return '';
 }
 
@@ -1417,7 +1470,7 @@ function renderRails(){
   '<button class="rb'+(CUR==='ws'?' on':'')+'" data-nav="home"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-home"/></svg></span><span>Home</span>'+
    (p?'<span class="rbadge">'+p+'</span>':'')+'</button>'+
   '<button class="rb'+(CUR==='money'?' on':'')+'" data-nav="money"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-money"/></svg></span><span>Money</span></button>'+
-  '<button class="rb'+(SP?' on':'')+'" data-tool="sop"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-book"/></svg></span><span>Library</span></button>'+
+  '<button class="rb" data-space="sop"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-book"/></svg></span><span>Library</span></button>'+
   '<div style="flex:1"></div>'+
   '<button class="rb'+(NOV?' on':'')+'" data-nav="alerts"><span class="sq" style="position:relative"><svg class="ic" style="width:14px"><use href="#i-bell"/></svg>'+(p?'<span class="rdot"></span>':'')+'</span><span>Alerts</span></button>'+
   '<button class="rb" data-nav="profile"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-cog"/></svg></span><span>Profile</span></button>'+
@@ -1431,9 +1484,9 @@ function renderStrip(){
  if(!p.length){
   if(sc.where!=='all'){el.style.display='none';return}
   el.style.display='';el.className='strip ok';
-  el.innerHTML='<svg class="ic" style="width:13px;color:var(--good-mid)"><use href="#i-check"/></svg>'+
-   '<span style="color:var(--good-mid);font-weight:620">Nothing waits on you.</span>'+
-   '<span style="margin-left:auto;color:var(--faint);font-size:11px">'+ME.name+' · '+ME.role+'</span>';
+  el.innerHTML='<span class="sic"><svg class="ic" style="width:13px;color:var(--good-mid)"><use href="#i-check"/></svg></span>'+
+   '<span class="stx" style="color:var(--good-mid);font-weight:620">Nothing waits on you.</span>'+
+   '<span class="sright" style="color:var(--faint);font-size:11px;font-weight:480">'+ME.name+'</span>';
   return}
  el.style.display='';
  var top=p.slice().sort((a,b)=>({crit:0,warn:1,ai:2,cli:3}[a.sev]-{crit:0,warn:1,ai:2,cli:3}[b.sev]))[0];
@@ -1443,11 +1496,11 @@ function renderStrip(){
  if(wn&&det.indexOf(wn)===0) det=det.slice(wn.length).replace(/^\s*·\s*/,'');
  var where=wn?wn+' · ':'';
  el.className='strip'+(top.sev==='crit'?' crit':'');
- el.innerHTML='<svg class="ic" style="width:13px;color:'+SEVC[top.sev]+'"><use href="#i-warn"/></svg>'+
-  '<b style="font-weight:640">'+top.t+'</b><span style="color:var(--faint)">· '+where+det+'</span>'+
-  '<span style="margin-left:auto;display:flex;gap:8px;align-items:center">'+
-  (p.length>1?'<span class="scount">'+p.length+' waiting</span>':'')+
-  (act?'<span class="sopen" data-do="'+act[1]+'">'+act[0]+'</span>':'<span class="sopen">'+(NOV?'Close':'Open')+'</span>')+
+ el.innerHTML='<span class="sic"><svg class="ic" style="width:13px;color:'+SEVC[top.sev]+'"><use href="#i-warn"/></svg></span>'+
+  '<span class="stx"><b>'+top.t+'</b> <span style="color:var(--faint);font-weight:480">· '+where+det+'</span></span>'+
+  '<span class="sright">'+
+  (p.length>1?'<span class="scount">'+p.length+'</span>':'')+
+  (act?'<span class="go" data-do="'+act[1]+'">'+act[0]+'</span>':'<span class="go">'+(NOV?'Close':'Open')+'</span>')+
   '</span>';
 }
 function renderNov(){
@@ -1471,16 +1524,23 @@ function renderNov(){
   (done.length?'<div class="ngrp">Handled</div>'+done.map(row).join(''):'');
  renderScrim();
 }
+function renderRRail(){
+ var S=spacesFor(CUR), el=$('rrail');
+ var btn=function(k){
+  var d=SPACE[k];
+  return '<button class="rr'+(SP===k?' on':'')+'" data-space="'+k+'"><svg class="ic"><use href="#'+d.ic+'"/></svg>'+
+   '<span class="rrtip">'+d.t+'</span></button>';
+ };
+ el.innerHTML=S.own.map(btn).join('')+(S.own.length?'<div class="rrsep"></div>':'')+S.ref.map(btn).join('');
+}
 function renderPanel(){
- var el=$('spanel'); el.className='spanel'+(SP?' on':'');
- if(SP){
-  var d=REF[SP];
-  el.innerHTML='<div class="sph"><h4>'+d.t+'</h4><button class="ox" data-tool="'+SP+'"><svg class="ic" style="width:13px"><use href="#i-x"/></svg></button></div>'+
-   '<div class="spb">'+Object.keys(REF).map(function(k){
-     return '<button class="dopt'+(SP===k?' on':'')+'" data-tool2="'+k+'" style="margin:0 4px 8px 0">'+REF[k].t+'</button>'}).join('')+
-   d.rows.map(r=>'<div class="spr"><span class="si"><svg class="ic" style="width:13px"><use href="#'+d.ic+'"/></svg></span>'+
-    '<span class="st"><b>'+r[0]+'</b><small>'+r[1]+'</small></span>'+(r[2]?'<span class="sptag">'+r[2]+'</span>':'')+'</div>').join('')+'</div>';
- }
+ var el=$('spanel');
+ el.className='spanel'+(SP?' on':'');
+ if(!SP){el.innerHTML='';renderScrim();return}
+ var d=SPACE[SP]||{t:'Space'};
+ el.innerHTML='<div class="spgrip" id="spgrip"></div>'+
+  '<div class="sph"><h4>'+d.t+'</h4><button class="ox spx" data-space="'+SP+'"><svg class="ic" style="width:13px"><use href="#i-x"/></svg></button></div>'+
+  '<div class="spb">'+spaceCard(SP,act(CUR)?CUR:null)+'</div>';
  renderScrim();
 }
 function renderScrim(){ $('scrim').className='scrim'+(NOV?' on':'') }
@@ -1525,12 +1585,6 @@ function renderHead(){
   dev:'localization QA · reviews your output',sana:'RTL · works after your file',grp:'6 people · your pool'};
  var sub = a ? (a.skill+' · '+a.uc+' '+a.ut.toLowerCase()+' · due '+a.due) : (subs[CUR]||'');
  var btns='';
- if(a) btns='<button class="hbtn" data-do="space:brief">Brief</button><button class="hbtn" data-do="space:plan">Plan</button>'+
-   '<button class="hbtn" data-do="space:files">Files</button>'+
-   '<button class="hbtn" data-do="space:deliv">Deliveries</button><button class="hbtn" data-do="space:log">Log</button>';
- else if(t.tab==='req') btns='<button class="hbtn" data-do="space:plan">Plan</button><button class="hbtn" data-do="space:mywork">My work</button>';
- else if(CUR==='ws') btns='<button class="hbtn" data-do="space:plan">Plan</button><button class="hbtn" data-do="space:mywork">My work</button><button class="hbtn" data-do="space:util">Utilisation</button>';
- else if(CUR==='money') btns='<button class="hbtn" data-do="space:rate">Rate card</button>';
  $('thead').innerHTML=(COL?'<button class="colbtn" data-do="pcol" title="Show the list · [" style="margin-right:2px"><svg class="ic" style="width:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
   '<span class="cav'+(t.round?' round':'')+'" style="background:'+t.av+'">'+t.ini+'</span>'+
   '<div class="tht"><b>'+t.name+(t.bdg?'<span class="bdg '+t.bdg[0]+'">'+t.bdg[1]+'</span>':'')+'</b><small>'+sub+'</small></div>'+
@@ -1679,7 +1733,7 @@ function renderThread(keepScroll){
   PENDING_FLASH=null;
  }
 }
-function renderAll(){renderRails();renderStrip();renderNov();renderPanel();renderTabs();renderList();renderThread()}
+function renderAll(){renderRails();renderStrip();renderNov();renderRRail();renderPanel();renderTabs();renderList();renderThread()}
 
 var TT=null, UNDOFN=null;
 function toast(t,undo){
@@ -1693,6 +1747,7 @@ function open(id,cardId){
  if(t&&t.tab!==TAB&&!SQ&&['ai','req','ppl'].indexOf(t.tab)>-1) TAB=t.tab;
  if(t&&t.parent) TREE[t.parent]=1;
  if(cardId) PENDING_FLASH=cardId;
+ if(SP){var S=spacesFor(id); if(S.own.indexOf(SP)<0&&S.ref.indexOf(SP)<0) SP=null}
  NOV=0;NSEL=null;POP=0;FOCUSC=1;REPLY=null;
  renderAll();
 }
@@ -1701,15 +1756,7 @@ function resolve(id,msg,fn,undofn){
  toast(msg,function(){DONE[id]=0; if(undofn)undofn(); renderAll()});
  renderAll();
 }
-var SPID={plan:'card-plan',files:'card-files',log:'card-log',deliv:'card-deliv',brief:'card-brief',mywork:'card-mywork',util:'card-util',rate:'card-rate'};
-function pushSpace(k){
- /* a space already on the ground is scrolled to, not stacked again */
- var ex=$(SPID[k]);
- if(ex){ex.scrollIntoView({block:'center'});ex.classList.add('flash');setTimeout(()=>ex.classList.remove('flash'),1400);return}
- var ctx=act(CUR)?CUR:(k==='deliv'?'a3':'a2');
- EXTRA[CUR]=EXTRA[CUR]||[]; EXTRA[CUR].push(spaceCard(k,ctx));
- renderThread();
-}
+function pushSpace(k){ SP=(SP===k)?null:k; renderRRail(); renderPanel(); }
 var REPLIES={
  'What changed on my 40pp?':'Your unit count went <b>40 → 46 pages</b> at 12:44, raised by Rahul after he re-split the source. <b>Your committed hours did not move</b> — that is the part worth pushing on. The full log is on the activity.',
  'Am I over-committed?':'Not yet — <b>16 of 40 hours</b> committed this week, 24 free. Accepting the website copy takes you to 21. You have room, which is exactly why the allocator offered it to you.',
@@ -1868,7 +1915,7 @@ document.addEventListener('click',function(e){
  if(POP&&!e.target.closest('.aimpop,[data-aimtoggle]')){
   var kp=$('ci')?$('ci').value:'';POP=0;renderComp();if($('ci'))$('ci').value=kp;
  }
- var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-notif],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
+ var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-space],[data-notif],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
  if(!el)return;
  if(el.dataset&&el.dataset.aimtoggle!==undefined){
   var kv=$('ci')?$('ci').value:'';POP=POP?0:1;renderComp();if($('ci'))$('ci').value=kv;return}
@@ -1879,12 +1926,11 @@ document.addEventListener('click',function(e){
   if(n2==='home'){open('ws');return}
   if(n2==='money'){open('money');return}
   if(n2==='alerts'){NOV=!NOV;NSEL=null;renderRails();renderStrip();renderNov();return}
-  if(n2==='profile'){SP='skills';renderRails();renderPanel();return}
-  if(n2==='help'){SP='sop';renderRails();renderPanel();return}
+  if(n2==='profile'){pushSpace('skills');return}
+  if(n2==='help'){pushSpace('sop');return}
  }
  if(el.id==='strip'&&!e.target.closest('[data-do]')){NOV=!NOV;NSEL=null;renderRails();renderStrip();renderNov();return}
- if(el.dataset&&el.dataset.tool2){SP=el.dataset.tool2;renderPanel();return}
- if(el.dataset&&el.dataset.tool){SP=(SP===el.dataset.tool)?null:el.dataset.tool;renderRails();renderPanel();return}
+ if(el.dataset&&el.dataset.space){pushSpace(el.dataset.space);return}
  if(el.dataset&&el.dataset.notif){NSEL=(NSEL===el.dataset.notif)?null:el.dataset.notif;renderNov();return}
  if(el.dataset&&el.dataset.aud){AUD[CUR]=el.dataset.aud;POP=0;renderComp();$('ci').focus();return}
  if(el.dataset&&el.dataset.tab){
@@ -1947,6 +1993,27 @@ document.addEventListener('keydown',function(e){
   else if(SP){SP=null;renderRails();renderPanel()}
  }
 });
+
+/* the drawer is resizable — the width you need depends on what you opened in it */
+var SPW=340;
+document.addEventListener('pointerdown',function(e){
+ var g=e.target.closest('#spgrip'); if(!g)return;
+ e.preventDefault();
+ var el=$('spanel'), x0=e.clientX, w0=el.getBoundingClientRect().width;
+ el.classList.add('rz'); g.classList.add('drag');
+ document.body.style.cursor='col-resize'; document.body.style.userSelect='none';
+ var mv=function(ev){
+  SPW=Math.max(260,Math.min(760,Math.round(w0+(x0-ev.clientX))));
+  el.style.setProperty('--spw',SPW+'px');
+ };
+ var up=function(){
+  el.classList.remove('rz'); g.classList.remove('drag');
+  document.body.style.cursor=''; document.body.style.userSelect='';
+  window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up);
+ };
+ window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up);
+});
+$('spanel').style.setProperty('--spw','340px');
 
 renderAll();
 </script>
