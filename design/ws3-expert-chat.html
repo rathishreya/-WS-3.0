@@ -728,6 +728,11 @@ body{background:var(--bg)}
 .pk small{font-size:10px;color:var(--faint)}
 .cbox2.priv{border-color:#C9BCE4}
 .cbox2.priv:focus-within{border-color:#7A5AA8;box-shadow:0 0 0 3px rgba(122,90,168,.14),0 12px 34px -14px rgba(17,41,73,.2)}
+.clockrow{display:flex;align-items:center;gap:8px;margin-top:9px;padding:7px 10px;border-radius:9px;
+ background:var(--warn-soft);border:1px solid #EDD9A4;color:var(--warn-ink);font-size:11px}
+.clockrow .ic{flex:none}
+.clockrow b{font-weight:700;font-variant-numeric:tabular-nums}
+.clockrow span{flex:1;min-width:0;color:#8A6A12}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -811,8 +816,14 @@ var W={
   units:40,           /* the unit count on the contract (SWAT wants 46) */
   delivered:0,        /* a3 re-delivered after QA fail */
   ver:1,              /* delivery version on a3 */
-  interim:0, blocked:0, tool:0, verified:0
+  interim:0, blocked:0, tool:0, verified:0,
+  partial:0,          /* units delivered on a partial hand-off */
+  landed:0            /* the re-cut source came back from SWAT */
 };
+/* the offer is not open forever — E8 escalates if nobody answers */
+var T0=Date.now(), OFFER_MS=2*3600e3+40*60e3;
+function offerLeft(){ return Math.max(0, OFFER_MS-(Date.now()-T0)) }
+function hms(ms){ var m=Math.floor(ms/60000); return Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m' }
 var FORM=null;        /* the open inline form: {kind, ...} */
 /* An expert can also own an assignment (your 3 Aug note). When she does she sees the
    request level too — the people on it, and the activities she did not perform herself. */
@@ -882,8 +893,8 @@ function notifs(){
    act:['Open the change','opendispute'], open:['a2','c-units']},
   {id:'offer', sev:'ai', time:'11:20', done:DONE.offer,
    t: DONE.offer?'Website copy accepted — starts Monday':'New activity offered — Copy translation, 6 pages',
-   s:'Marketing translation · EN→AR · Mon 27 → Wed 29 · ¤270',
-   body:'You were proposed because of <b>skill fit</b> and <b>committed capacity</b> — you are salaried to quota, so you are chosen before a freelancer. It fits your week: 5 hours against 11 free.',
+   s:'Marketing translation · EN→AR · '+hms(offerLeft())+' left to answer',
+   body:'You were proposed because of <b>skill fit</b> and <b>committed capacity</b> — you are salaried to quota, so you are chosen before a freelancer. It fits your week: 5 hours against 11 free.<br><b>The offer is on a clock.</b> If nobody answers it re-proposes to Priya N. and you are not asked again — declining now is better than letting it lapse.',
    act:['Accept','accept'], open:['a4','c-offer']},
   {id:'qafail', sev:'crit', time:'10:55', done:DONE.qafail,
    t: DONE.qafail?'Subtitle pack re-delivered — v2 with QA':'QA returned your final review — 2 notes',
@@ -910,6 +921,11 @@ function notifs(){
    s:'Q3 source uses the retired FY24 term set',
    body:'Working on it would bake the wrong terms into 46 pages. <b>Handing back is not refusing the work</b> — it returns the input, not the activity, and your clock pauses while SWAT re-cuts it.',
    act:['Hand it back','openhb'], open:['a2','c-hb']},
+  {id:'landed', sev:'ai', time:'now', done:!DONE.hb||W.landed, hide:!DONE.hb,
+   t: W.landed?'Re-cut source picked up — you are running again':'Your input has landed — the re-cut source is in',
+   s:'SWAT rebuilt the split against the current FY26 term set',
+   body:'You handed the source back at 09:55 and SWAT re-cut it. <b>Your clock starts again when you pick it up</b>, not when they delivered it — the wait was not yours.',
+   act:['Pick it up and resume','resume'], open:['a2','c-landed']},
   {id:'omar', sev:'cli', time:'12:12', info:1,
    t:'Omar asked how the 40pp is going',
    s:'“Is Wednesday still realistic? Acme is asking about Friday.”',
@@ -921,17 +937,17 @@ function notifs(){
    Home is the only place that sees everything. (Your 7 Aug note, same as the client.) */
 var NODEIDS=['r2','r4','r5','a1','a2','a3','a4'];
 function nodeOf(n){ return (n.open&&NODEIDS.indexOf(n.open[0])>-1)?n.open[0]:null }
-function nodeNotifs(){ return notifs().filter(nodeOf) }
+function nodeNotifs(){ return notifs().filter(function(n){return nodeOf(n)&&!n.hide}) }
 function stripScope(){
  if(CUR==='ws') return {list:nodeNotifs(), where:'all'};
  if(NODEIDS.indexOf(CUR)>-1){
   /* an activity's alerts show on the activity AND on the request above it */
   var t=th(CUR), kids=(t&&t.node==='req')?myActs().filter(a=>a.req===CUR).map(a=>a.id).concat([CUR]):[CUR];
-  return {list:notifs().filter(n=>kids.indexOf(nodeOf(n))>-1), where:'this'};
+  return {list:notifs().filter(n=>!n.hide&&kids.indexOf(nodeOf(n))>-1), where:'this'};
  }
  return null;
 }
-function pendingN(){return nodeNotifs().filter(n=>!n.done&&!n.info)}
+function pendingN(){return nodeNotifs().filter(n=>!n.done&&!n.info&&!n.hide)}
 var SEVC={crit:'var(--crit)',warn:'var(--warn)',ai:'var(--ai)',cli:'var(--brand)'};
 
 /* ---------------- threads: the tree, each node a room ---------------- */
@@ -1230,7 +1246,10 @@ function offerCard(){
  if(DONE.offer) return card({id:'c-offer',tone:'okc',dot:'ok',who:'Offer',sub:'accepted',subCls:'ok',time:'now',
   body:'<b>Copy translation is yours.</b> It starts Mon 27 Jul and it is on your week — 5 hours against the 11 you had free. The room is in your list.'});
  return card({id:'c-offer',wide:1,tone:'decide',dot:'w',who:'You have been offered an activity',sub:'accept or decline · SWAT waits',time:'11:20',
-  body:'<b>'+a.name+'</b> on '+REQS.r5.name+'.<br><small>You were picked on <b>skill fit</b> and <b>committed capacity</b> — the allocator fills salaried people before it pays a freelancer. Declining is free and re-proposes to the next best.</small>',
+  body:'<b>'+a.name+'</b> on '+REQS.r5.name+'.<br><small>You were picked on <b>skill fit</b> and <b>committed capacity</b> — the allocator fills salaried people before it pays a freelancer. Declining is free and re-proposes to the next best.</small>'+
+   '<div class="clockrow"><svg class="ic" style="width:13px"><use href="#i-clock"/></svg>'+
+   '<b><span id="offerclock">'+hms(offerLeft())+'</span> to answer</b>'+
+   '<span>then it re-proposes to <b>Priya N.</b> automatically — you will not be asked again</span></div>',
   extra:'<div class="bgrid">'+bf('Skill',a.skill)+bf('Language',a.lang)+bf('Units',a.uc+' '+a.ut.toLowerCase())+
    bf('Committed',a.com+' hours')+bf('Window',a.start+' → '+a.due)+bf('This line','<b>¤'+a.line+'</b>')+'</div>'+
    '<div class="dhint" style="padding:0 13px 11px">Your week after accepting: <b>'+(util().committed+(DONE.offer?0:5))+'h of 40</b> committed.</div>',
@@ -1332,6 +1351,16 @@ function planCard(scope){
    (scope!=='a1'&&scope!=='a3'&&scope!=='a4'?'<div class="dhint" style="padding:0 13px 12px">Sana cannot start the reflow until <b>'+a2.name+'</b> lands, and the Acme delivery is behind her. That is why the 18:00 today matters beyond your own line.</div>':'')});
 }
 
+function landedCard(){
+ if(!DONE.hb) return '';
+ if(W.landed) return card({id:'c-landed',tone:'okc',dot:'ok',who:'Input picked up',sub:'you are running again',subCls:'ok',time:'now',
+  body:'<b>Back on it against the FY26 term set.</b> The 1h 24m the file spent with SWAT does not count against your committed hours — the log shows it as waiting, not working.'});
+ return card({id:'c-landed',wide:1,tone:'decide',dot:'',who:'Your input has landed',sub:'the re-cut source is in',time:'now',
+  body:'<b>SWAT rebuilt the split against the current FY26 term set.</b> You handed it back at 09:55; it came back at 11:19.<br><small>Your clock restarts when <b>you</b> pick it up, not when they dropped it. The 1h 24m in between is logged as waiting.</small>',
+  extra:'<div class="dvf" style="padding:2px 13px 11px"><span class="fext done">DOCX</span><span class="fn">Q3-report-source-v2.docx</span><span class="sptag">FY26 terms</span><span class="sptag">46 pages</span></div>',
+  acts:[['Pick it up and resume','pri','resume'],['Check it first','','space:files']]});
+}
+
 /* recommend a timeline — she has read the files, SWAT accepts or rejects in one click */
 function recCard(){
  if(DONE.rec) return card({id:'c-rec',tone:'okc',dot:'ok',who:'Timeline recommended',sub:'with SWAT',subCls:'ok',time:'now',
@@ -1429,16 +1458,29 @@ function formCard(){
   acts:[['Save','pri','prog'],['Cancel','','closeform']]});
 
  if(F.kind==='deliver'){
-  var re=(W.ver>=1&&act('a3').state==='qa_failed'||W.delivered);
-  return card({id:'c-form',wide:1,tone:'decide',dot:'',who:re?'Re-deliver as v2':'Deliver your output',sub:re?'after QA':'this ends the activity',time:'now',
-  body:re?'The QA notes are attached to this version automatically, so Dev can see what you changed.':'<b>Delivering hands it to QA.</b> Your line is released when the verifier signs off, not when you deliver.',
-  extra:'<div class="dform"><div class="dfl">Files</div>'+
-   '<div class="dvf"><span class="fext done">SRT</span><span class="fn">subtitles-AR-v'+(re?2:1)+'.srt</span><span class="sptag">mandatory · matched</span></div>'+
-   '<div class="dvf"><span class="fext done">SRT</span><span class="fn">subtitles-FR-v'+(re?2:1)+'.srt</span><span class="sptag">mandatory · matched</span></div>'+
-   '<div class="dfl" style="margin-top:9px">Delivery note</div>'+
-   '<textarea class="dnote" id="fnote" placeholder="'+(re?'What you changed':'Anything QA should know')+'">'+esc(F.note||'')+'</textarea>'+
-   '<div class="dhint">Required outputs are matched against the brief — both mandatory files are present.</div></div>',
-  acts:[[re?'Re-deliver as v2':'Deliver','pri','deliver'],['Cancel','','closeform']]});
+  var isA3=(F.act==='a3'), re=isA3&&act('a3').state==='qa_failed';
+  var A=act(F.act), part=(F.mode==='part'), n=(F.n!=null?F.n:Math.round(W.prog*A.uc));
+  var rest=A.uc-n;
+  return card({id:'c-form',wide:1,tone:'decide',dot:'',who:re?'Re-deliver as v2':'Deliver your output',
+   sub:re?'after QA':part?'part of it — the activity stays open':'this ends the activity',time:'now',
+   body:re?'The QA notes are attached to this version automatically, so Dev can see what you changed.'
+          :'<b>Delivering hands it to QA.</b> Your line is released when the verifier signs off, not when you deliver.',
+   extra:(isA3?'':'<div class="dform"><div class="dfl">How much</div><div class="dopts">'+
+     '<button class="dopt'+(part?'':' on')+'" data-dmode="all">All of it · '+A.uc+' '+A.ut.toLowerCase()+'</button>'+
+     '<button class="dopt'+(part?' on':'')+'" data-dmode="part">Part of it now</button></div>'+
+     (part?'<div class="stepper"><input id="fnum" type="number" min="1" max="'+(A.uc-1)+'" value="'+n+'">'+
+       '<span class="su">of '+A.uc+' '+A.ut.toLowerCase()+' ready now</span></div>'+
+       '<div class="dhint"><b>The activity stays open</b> at '+rest+' '+A.ut.toLowerCase()+' remaining, and your line stays whole — partial work is not part payment. '+
+       'Sana still waits: her reflow needs the finished file, so a partial hand-off does not release her.</div>':'')+
+    '</div>')+
+    '<div class="dform"><div class="dfl">Files</div>'+
+    (isA3?'<div class="dvf"><span class="fext done">SRT</span><span class="fn">subtitles-AR-v'+(re?2:1)+'.srt</span><span class="sptag">mandatory · matched</span></div>'+
+          '<div class="dvf"><span class="fext done">SRT</span><span class="fn">subtitles-FR-v'+(re?2:1)+'.srt</span><span class="sptag">mandatory · matched</span></div>'
+         :'<div class="dvf"><span class="fext done">DOCX</span><span class="fn">Q3-report-AR'+(part?'-pp1-'+n:'')+'.docx</span><span class="sptag">'+(part?'partial':'mandatory · matched')+'</span></div>')+
+    '<div class="dfl" style="margin-top:9px">Delivery note</div>'+
+    '<textarea class="dnote" id="fnote" placeholder="'+(re?'What you changed':part?'What is in this hand-off, and what is still coming':'Anything QA should know')+'">'+esc(F.note||'')+'</textarea>'+
+    (isA3?'<div class="dhint">Required outputs are matched against the brief — both mandatory files are present.</div>':'')+'</div>',
+   acts:[[re?'Re-deliver as v2':part?'Hand over '+n+' '+A.ut.toLowerCase():'Deliver','pri','deliver'],['Cancel','','closeform']]});
  }
  return '';
 }
@@ -1545,11 +1587,13 @@ function threadHtml(id){
   if(id==='a2'){
    out.push(unitsCard());
    out.push(licenseCard());
+   out.push(landedCard());
    out.push(hbCard());
    out.push(workCard());
    out.push(riskCard());
    if(W.blocked) out.push(evt('warn','Blocked','Your clock is paused — SWAT sees this as waiting, not late','now'));
    if(W.interim) out.push(evt('ok','Interim shared','Draft sent border-safe · watermarked · work continues','now'));
+   out.push(evt('ok','Input landed','Glossary apply verified Tue 12:04 — the Acme term base is live in your TR42 session','Tue 12:04'));
    out.push(human('Sana R.','RTL specialist','09:40','SR',AV.sana,'Whenever your file lands I can start the reflow — I only need the final AR.'));
   }
   if(id==='a3'){
@@ -1709,7 +1753,7 @@ function renderStrip(){
 function renderNov(){
  var el=$('nov'); el.className='nov'+(NOV?' on':'');
  if(!NOV){el.innerHTML='';return}
- var N=notifs(), pend=N.filter(n=>!n.done&&!n.info), info=N.filter(n=>n.info&&!n.done), done=N.filter(n=>n.done);
+ var N=notifs().filter(n=>!n.hide), pend=N.filter(n=>!n.done&&!n.info), info=N.filter(n=>n.info&&!n.done), done=N.filter(n=>n.done);
  var row=function(n){
   var open=(NSEL===n.id);
   return '<div class="nr'+(open?' on':'')+(n.done?' dn':'')+'"><button class="nrh" data-notif="'+n.id+'">'+
@@ -2047,7 +2091,7 @@ function doAct(a){
  if(a==='openprog'){FORM={kind:'prog',act:'a2'};open('a2','c-form');return 1}
  if(a==='openrec'){FORM={kind:'rec',act:'a4'};open('a4','c-form');return 1}
  if(a==='openhb'){FORM={kind:'hb',act:'a2'};open('a2','c-form');return 1}
- if(a==='opendeliver'){FORM={kind:'deliver',act:(CUR==='a3'||act('a3').state==='qa_failed')?'a3':'a2'};open(FORM.act,'c-form');return 1}
+ if(a==='opendeliver'){FORM={kind:'deliver',act:act(CUR)?CUR:'a3'};open(FORM.act,'c-form');return 1}
  if(a==='openqa'){open('a3','c-qafail');return 1}
  if(a==='closeform'){FORM=null;renderThread();return 1}
 
@@ -2076,10 +2120,25 @@ function doAct(a){
  /* QA rework */
  if(a==='deliver'){
   var n4=$('fnote'); if(n4)FORM.note=n4.value;
+  if(FORM.act==='a2'){
+   var A2=act('a2'), pn=$('fnum');
+   if(FORM.mode==='part'){
+    var got=pn?Math.max(1,Math.min(A2.uc-1,parseInt(pn.value||'0',10))):Math.round(W.prog*A2.uc);
+    var op=W.partial, opr=W.prog; W.partial=got; W.prog=Math.max(W.prog,got/A2.uc); FORM=null;
+    EXTRA.a2=EXTRA.a2||[];
+    EXTRA.a2.push(evt('int','Partial hand-off',got+' of '+A2.uc+' pages delivered · the activity stays open · Sana still waits on the finished file · your ¤'+A2.line.toLocaleString('en-US')+' line is untouched','now'));
+    toast('Handed over '+got+' pages — the activity stays open.',function(){W.partial=op;W.prog=opr;EXTRA.a2.pop();renderAll()});
+    renderAll();return 1}
+   var op2=W.prog; W.prog=1; W.partial=0; FORM=null;
+   EXTRA.a2=EXTRA.a2||[];
+   EXTRA.a2.push(evt('ok','Delivered','All '+A2.uc+' pages handed to QA · Sana can start the reflow · your line releases on verify','now'));
+   toast('Delivered — with QA now.',function(){W.prog=op2;EXTRA.a2.pop();renderAll()});
+   renderAll();return 1}
   var was=W.delivered; FORM=null;
   W.delivered=1; W.ver=2;
   resolve('qafail','Re-delivered as v2 — both notes closed.',null,function(){W.delivered=was;W.ver=1});
   return 1}
+ if(a==='resume'){W.landed=1;W.blocked=0;toast('Picked up — the waiting time is logged, not charged to you.',function(){W.landed=0;renderAll()});renderAll();return 1}
  if(a==='pushback'){AUD.a3='swat';DRAFT.a3='On the currency note — ';open('dev');return 1}
 
  /* licence */
@@ -2136,6 +2195,8 @@ document.addEventListener('click',function(e){
  if(MENT!==null&&!e.target.closest('.mentpop,#ci')){MENT=null;renderMent()}
  var mrow=e.target.closest('[data-ment]');
  if(mrow){selectMention(mrow.dataset.ment);return}
+ var dm=e.target.closest('[data-dmode]');
+ if(dm&&FORM){var nt=$('fnote');if(nt)FORM.note=nt.value;FORM.mode=dm.dataset.dmode;renderThread(1);return}
  var pk=e.target.closest('[data-pick]');
  if(pk&&FORM){var n=$('fnote');if(n)FORM.note=n.value;FORM.pick=+pk.dataset.pick;renderThread(1);return}
  var pb=e.target.closest('[data-pin]');
@@ -2181,7 +2242,7 @@ document.addEventListener('click',function(e){
  if(POP&&!e.target.closest('.aimpop,[data-aimtoggle]')){
   var kp=$('ci')?$('ci').value:'';POP=0;renderComp();if($('ci'))$('ci').value=kp;
  }
- var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-space],[data-mfilt],[data-mgo],[data-notif],[data-aud],[data-peer],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
+ var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-dmode],[data-space],[data-mfilt],[data-mgo],[data-notif],[data-aud],[data-peer],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
  if(!el)return;
  if(el.dataset&&el.dataset.aimtoggle!==undefined){
   var kv=$('ci')?$('ci').value:'';POP=POP?0:1;renderComp();if($('ci'))$('ci').value=kv;return}
@@ -2253,6 +2314,13 @@ $('tbody').addEventListener('scroll',function(){
 });
 $('jlat').addEventListener('click',function(){var b=$('tbody');b.scrollTo({top:b.scrollHeight,behavior:'smooth'})});
 document.addEventListener('input',function(e){
+ if(e.target.id==='fnum'&&FORM&&FORM.kind==='deliver'&&FORM.mode==='part'){
+  var A=act(FORM.act), v=Math.max(1,Math.min(A.uc-1,parseInt(e.target.value||'0',10)||1));
+  FORM.n=v;
+  var pb=document.querySelector('#c-form .btn.pri'); if(pb) pb.textContent='Hand over '+v+' '+A.ut.toLowerCase();
+  var hn=document.querySelector('#c-form .dhint b'); if(hn) hn.nextSibling.textContent=' at '+(A.uc-v)+' '+A.ut.toLowerCase()+' remaining, and your line stays whole — partial work is not part payment. ';
+  var fn=document.querySelector('#c-form .dvf .fn'); if(fn) fn.textContent='Q3-report-AR-pp1-'+v+'.docx';
+  return}
  if(e.target.id!=='ci')return;
  DRAFT[CUR]=e.target.value;
  e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,130)+'px';
@@ -2295,6 +2363,8 @@ document.addEventListener('pointerdown',function(e){
  };
  window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up);
 });
+
+setInterval(function(){var c=$('offerclock'); if(c) c.textContent=hms(offerLeft())},30000);
 
 renderAll();
 </script>
