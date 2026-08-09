@@ -568,7 +568,7 @@ var TYPING=null, DRAFT={}, FOCUSC=0, MENT=null, MIDX=0, REPLY=null, COL=0, TREE=
 var DYN=[], DYNN=0, EXTRA={}, PENDING_FLASH=null, REACT={};
 var UNREAD={a2:2,swat:1,a3:1};
 /* every decision this app can resolve */
-var DONE={offer:0,units:0,risk:0,qafail:0,license:0};
+var DONE={offer:0,units:0,risk:0,qafail:0,license:0,rec:0,hb:0};
 /* work state the decisions move */
 var W={
   prog:0.40,          /* Translate 40pp — units done / units total */
@@ -578,6 +578,10 @@ var W={
   interim:0, blocked:0, tool:0, verified:0
 };
 var FORM=null;        /* the open inline form: {kind, ...} */
+/* An expert can also own an assignment (your 3 Aug note). When she does she sees the
+   request level too — the people on it, and the activities she did not perform herself. */
+var OWNS='r4';        /* Mara owns the Localization QA assignment on the subtitle pack */
+var REC=0, HB=0;      /* timeline recommendation raised · handback raised */
 
 var AV={
   ws:'linear-gradient(150deg,#1189B6,#3CC3F2)', money:'linear-gradient(150deg,#1189B6,#3CC3F2)',
@@ -616,7 +620,9 @@ var MOVES=[
  {id:'units',   th:'a2', card:'c-units'},
  {id:'risk',    th:'a2', card:'c-risk'},
  {id:'qafail',  th:'a3', card:'c-qafail'},
- {id:'license', th:'a2', card:'c-license'}
+ {id:'license', th:'a2', card:'c-license'},
+ {id:'rec',     th:'a4', card:'c-rec'},
+ {id:'hb',      th:'a2', card:'c-hb'}
 ];
 function movesLeft(){return MOVES.filter(m=>!DONE[m.id]).length}
 
@@ -649,6 +655,16 @@ function notifs(){
    s:'Pooled licence · 4 of 4 in use · you are next',
    body:'The licence broker assigns a seat to your activity session when one frees. <b>The activity waits, it does not fail.</b> You can ask to be held at the front of the queue.',
    act:['Hold my seat','license'], open:['a2','c-license']},
+  {id:'rec', sev:'ai', time:'11:25', done:DONE.rec,
+   t: DONE.rec?'Your timeline is with SWAT — one click for Rahul':'The website copy dates do not fit the files',
+   s:'6 pages briefed as 5h · the source has 3 embedded tables',
+   body:'You have seen the input files and they are heavier than the brief assumed. <b>Recommend the timeline you can actually hold</b> — SWAT accepts or rejects it in one click. This is how a date gets fixed before it slips, not after.',
+   act:['Recommend a timeline','openrec'], open:['a4','c-rec']},
+  {id:'hb', sev:'warn', time:'09:55', done:DONE.hb,
+   t: DONE.hb?'Handed back — SWAT is re-cutting the source':'The source file clashes with the glossary',
+   s:'Q3 source uses the retired FY24 term set',
+   body:'Working on it would bake the wrong terms into 46 pages. <b>Handing back is not refusing the work</b> — it returns the input, not the activity, and your clock pauses while SWAT re-cuts it.',
+   act:['Hand it back','openhb'], open:['a2','c-hb']},
   {id:'omar', sev:'cli', time:'12:12', info:1,
    t:'Omar asked how the 40pp is going',
    s:'“Is Wednesday still realistic? Acme is asking about Friday.”',
@@ -684,7 +700,7 @@ function threads(){
   else if(rid==='r2') badge=DONE.risk?['warn','Flagged']:['prog','Live'];
   out.push({id:rid, tab:'req', name:R.name, org:R.org, ini:R.name.slice(0,2).toUpperCase(), av:AV.req,
    time:'12:40', node:'req',
-   sub:'your assignment: '+R.asg+' · '+mine.length+' activit'+(mine.length>1?'ies':'y'), bdg:badge});
+   sub:(OWNS===rid?'you own this assignment · '+R.asg:'your assignment: '+R.asg)+' · '+mine.length+' activit'+(mine.length>1?'ies':'y'), bdg:badge});
   if(TREE[rid]) mine.forEach(function(a){
    out.push({id:a.id, tab:'req', name:a.name, ini:'·', av:AV.act, node:'act', parent:rid, time:'',
     sub:a.uc+' '+a.ut.toLowerCase()+' · due '+a.due, bdg:st(a)});
@@ -987,6 +1003,24 @@ function licenseCard(){
   acts:[['Hold my seat','pri','license'],['Work outside the tool','','notool']]});
 }
 
+/* recommend a timeline — she has read the files, SWAT accepts or rejects in one click */
+function recCard(){
+ if(DONE.rec) return card({id:'c-rec',tone:'okc',dot:'ok',who:'Timeline recommended',sub:'with SWAT',subCls:'ok',time:'now',
+  body:'<b>8 hours, delivered Thursday.</b> Rahul sees it as an accept/reject — one click, no thread. Until he answers, the briefed dates still stand.'});
+ return card({id:'c-rec',wide:1,tone:'decide',dot:'w',who:'Recommend a timeline',sub:'you have seen the files · SWAT decides',time:'11:25',
+  body:'<b>The brief says 5 hours. The source has three embedded tables it did not account for.</b><br><small>You are the one who opened the file, so you are the one who knows. Recommending is not renegotiating — SWAT accepts or rejects, and the briefed dates hold until they do.</small>',
+  extra:'<div class="bgrid">'+bf('Briefed','5 hours · Wed 29 Jul')+bf('What you have seen','3 embedded tables, unbriefed')+'</div>',
+  acts:[['Recommend a timeline','pri','openrec'],['The brief is fine','','dismissrec']]});
+}
+/* hand back — the input is wrong, so return the input, not the activity */
+function hbCard(){
+ if(DONE.hb) return card({id:'c-hb',tone:'okc',dot:'ok',who:'Handed back',sub:'input returned to SWAT',subCls:'ok',time:'now',
+  body:'<b>The source is back with SWAT and your clock is paused.</b> You did not refuse the activity — it stays yours, waiting on a clean file. Nothing counts against you while it waits.'});
+ return card({id:'c-hb',wide:1,tone:'decide',dot:'w',who:'The source clashes with the glossary',sub:'hand it back?',time:'09:55',
+  body:'<b>The Q3 source still uses the retired FY24 term set.</b> Translating on it would bake the wrong terms into all 46 pages, and QA would send every one of them back.<br><small>Handing back returns the <b>input</b>, not the activity. The work stays yours; your clock pauses until SWAT re-cuts the file.</small>',
+  acts:[['Hand back the source','pri','openhb'],['Work around it','','dismisshb']]});
+}
+
 /* progress / interim / blocked — the three things she does while working */
 function workCard(){
  var pct=Math.round(W.prog*100), a=act('a2');
@@ -1037,6 +1071,26 @@ function formCard(){
     return '<button class="dopt'+(F.pick===i?' on':'')+'" data-pick="'+i+'">'+o+'</button>'}).join('')+'</div>'+
    '<textarea class="dnote" id="fnote" placeholder="What exactly">'+esc(F.note||'')+'</textarea></div>',
   acts:[['Mark blocked','pri','blocked'],['Cancel','','closeform']]});
+
+ if(F.kind==='rec') return card({id:'c-form',wide:1,tone:'decide',dot:'w',who:'Your recommended timeline',sub:'goes to SWAT as one click',time:'now',
+  body:'Give them the number you can hold. They accept or reject it — they do not negotiate it in a thread.',
+  extra:'<div class="dform"><div class="dfl">Hours you actually need</div>'+
+   '<div class="stepper"><input id="fnum" type="number" min="1" max="40" value="'+(F.n!=null?F.n:8)+'"><span class="su">hours · briefed as 5</span></div>'+
+   '<div class="dfl" style="margin-top:10px">And the date that buys</div><div class="dopts">'+
+   ['Same date, more hours','Thursday instead of Wednesday','Split it with a second linguist'].map(function(o,i){
+    return '<button class="dopt'+(F.pick===i?' on':'')+'" data-pick="'+i+'">'+o+'</button>'}).join('')+'</div>'+
+   '<textarea class="dnote" id="fnote" placeholder="What you saw in the files">'+esc(F.note||'')+'</textarea>'+
+   '<div class="dhint">Rahul gets accept / reject. The briefed dates hold until he answers.</div></div>',
+  acts:[['Send the recommendation','pri','rec'],['Cancel','','closeform']]});
+
+ if(F.kind==='hb') return card({id:'c-form',wide:1,tone:'decide',dot:'w',who:'Hand back the input',sub:'the activity stays yours',time:'now',
+  body:'Say what is wrong with the file so SWAT can re-cut it once instead of twice.',
+  extra:'<div class="dform"><div class="dfl">What is wrong with it</div><div class="dopts">'+
+   ['Wrong glossary / term set','Wrong source version','Unreadable or corrupt','Missing pages'].map(function(o,i){
+    return '<button class="dopt'+(F.pick===i?' on':'')+'" data-pick="'+i+'">'+o+'</button>'}).join('')+'</div>'+
+   '<textarea class="dnote" id="fnote" placeholder="Which terms, which pages">'+esc(F.note||'')+'</textarea>'+
+   '<div class="dhint">Your clock pauses while it is with them. The activity is not reassigned.</div></div>',
+  acts:[['Hand it back','pri','hb'],['Cancel','','closeform']]});
 
  if(F.kind==='prog') return card({id:'c-form',wide:1,dot:'',who:'Update progress',sub:act('a2').name,time:'now',
   body:'Say it in units, not percentages — the percentage is derived.',
@@ -1128,13 +1182,25 @@ function threadHtml(id){
  if(id==='r2'||id==='r4'||id==='r5'){
   var R=REQS[id], mine=myActs().filter(a=>a.req===id);
   out.push(day('Wed 22 Jul'));
-  out.push(card({dot:'',who:R.name,sub:'your assignment · '+R.asg,time:'live',
-   body:'<b>You hold '+mine.length+' activit'+(mine.length>1?'ies':'y')+' here.</b> '+R.owner+' owns the request and talks to Acme — you never have to.',
+  var owned=(OWNS===id);
+  out.push(card({dot:'',who:R.name,sub:owned?'your assignment · you own it':'your assignment · '+R.asg,subCls:owned?'ok':'',time:'live',
+   body: owned
+    ? '<b>You own this assignment, so you see the request too.</b> Priya performed the subtitling; you hold the QA close-out and you sign the assignment off before it leaves for SWAT’s verify. Owning it does not change how you are paid — you are still billed on your own activities.'
+    : '<b>You hold '+mine.length+' activit'+(mine.length>1?'ies':'y')+' here.</b> '+R.owner+' owns the request and talks to Acme — you never have to.',
    extra:mine.map(function(a){
     var s=a.state==='verified'?'done':a.state==='qa_failed'?'risk':a.state==='offered'?'warn':'now';
     return '<div class="actr" style="padding-left:13px"><span class="d '+s+'"></span><span class="an">'+a.name+'</span><span class="aw">'+(a.state==='offered'?'offered':'¤'+a.line.toLocaleString('en-US'))+'</span></div>';
    }).join(''),
    acts:[['Open my work','','space:mywork']]}));
+  if(owned) out.push(card({id:'card-own',wide:1,dot:'',who:'The assignment you own',sub:'both activities, not just yours',time:'live',
+   body:'<b>As owner you see the whole assignment.</b> Priya’s line is hers — you can see its state, not its money.',
+   extra:'<div class="asgh"><span class="aav">PN</span><b>Subtitle pack</b><small>· Priya N. · not your line</small><span class="ap">3/3</span></div>'+
+    '<div class="actr"><span class="d done"></span><span class="an">Subtitle &amp; sync</span><span class="aw">delivered Mon</span></div>'+
+    '<div class="actr"><span class="d done"></span><span class="an">Final sync check</span><span class="aw">delivered Tue</span></div>'+
+    '<div class="asgh"><span class="aav">ML</span><b>QA close-out</b><small>· you · ¤1,200</small><span class="ap">'+(W.delivered?'2/2':'1/2')+'</span></div>'+
+    '<div class="actr"><span class="d '+(W.delivered?'done':'risk')+'"></span><span class="an">Final review</span><span class="aw">'+(W.delivered?'v2 with QA':'returned by QA')+'</span></div>'+
+    '<div class="actr"><span class="d '+(W.delivered?'now':'idle')+'"></span><span class="an">Sign off the assignment</span><span class="aw">yours to give</span></div>',
+   acts:[[W.delivered?'Sign off — send to SWAT verify':'Sign-off waits on your v2','pri','signoff']]}));
   if(id==='r2'){
    out.push(human('Omar K.','your assignment owner','12:12','OK',AV.omar,'Is Wednesday still realistic? Acme is asking about Friday.'));
    if(DONE.risk) out.push(me('Flagged it properly — I’m at 40% and the tables are heavier than the split assumed. Rahul has it.','12:46',0,1));
@@ -1149,6 +1215,7 @@ function threadHtml(id){
   if(id==='a2'){
    out.push(unitsCard());
    out.push(licenseCard());
+   out.push(hbCard());
    out.push(workCard());
    out.push(riskCard());
    if(W.blocked) out.push(evt('warn','Blocked','Your clock is paused — SWAT sees this as waiting, not late','now'));
@@ -1165,7 +1232,7 @@ function threadHtml(id){
    out.push(evt('ok','Verified','Glossary apply signed off · ¤600 released','Tue 12:04'));
    out.push(delivCard(id));
   }
-  if(id==='a4') out.push(offerCard());
+  if(id==='a4'){out.push(offerCard());out.push(recCard());}
   if(FORM&&FORM.act===id) out.push(formCard());
  }
  /* ---- people ---- */
@@ -1331,7 +1398,7 @@ function renderList(){
 function renderHead(){
  var t=th(CUR), a=act(CUR);
  var subs={ws:'sees every activity, hour and number you have',money:'your earnings agent · never the client’s',
-  r2:'Omar owns it · you hold 2 activities',r4:'Omar owns it · you hold 1 activity',r5:'offered to you · nothing committed yet',
+  r2:'Omar owns it · you hold 2 activities',r4:'you own this assignment · 2 activities, 1 yours',r5:'offered to you · nothing committed yet',
   swat:'Rahul S. · the desk that owns your dates',omar:'your assignment owner',
   dev:'localization QA · reviews your output',sana:'RTL · works after your file',grp:'6 people · your pool'};
  var sub = a ? (a.skill+' · '+a.uc+' '+a.ut.toLowerCase()+' · due '+a.due) : (subs[CUR]||'');
@@ -1511,6 +1578,8 @@ function doAct(a){
  if(a==='openflag'){FORM={kind:'flag',act:'a2'};open('a2','c-form');return 1}
  if(a==='openblock'){FORM={kind:'blocked',act:'a2'};open('a2','c-form');return 1}
  if(a==='openprog'){FORM={kind:'prog',act:'a2'};open('a2','c-form');return 1}
+ if(a==='openrec'){FORM={kind:'rec',act:'a4'};open('a4','c-form');return 1}
+ if(a==='openhb'){FORM={kind:'hb',act:'a2'};open('a2','c-form');return 1}
  if(a==='opendeliver'){FORM={kind:'deliver',act:(CUR==='a3'||act('a3').state==='qa_failed')?'a3':'a2'};open(FORM.act,'c-form');return 1}
  if(a==='openqa'){open('a3','c-qafail');return 1}
  if(a==='closeform'){FORM=null;renderThread();return 1}
@@ -1547,6 +1616,16 @@ function doAct(a){
  if(a==='pushback'){AUD.a3='swat';DRAFT.a3='On the currency note — ';open('dev');return 1}
 
  /* licence */
+ if(a==='rec'){
+  var nr=$('fnote'); if(nr)FORM.note=nr.value;
+  var hv=$('fnum'); REC=hv?parseInt(hv.value||'8',10):8; FORM=null;
+  resolve('rec','Recommended '+REC+'h — Rahul gets accept or reject.',null,function(){REC=0});return 1}
+ if(a==='dismissrec'){resolve('rec','Noted — the briefed 5 hours stand.');return 1}
+ if(a==='hb'){
+  var nh=$('fnote'); if(nh)FORM.note=nh.value;
+  FORM=null; HB=1;
+  resolve('hb','Handed back — your clock is paused.',null,function(){HB=0});return 1}
+ if(a==='dismisshb'){resolve('hb','Noted — working around the term set. Flag it if QA bites.');return 1}
  if(a==='license'){resolve('license','Seat held for you until 18:00.');return 1}
  if(a==='notool'){resolve('license','Noted — working outside TR42. Progress won’t auto-log.');return 1}
 
@@ -1568,6 +1647,9 @@ function doAct(a){
  if(a==='unblock'){W.blocked=0;toast('Unblocked — the clock is running again.');renderAll();return 1}
 
  /* misc */
+ if(a==='signoff'){
+  if(!W.delivered){toast('Re-deliver the final review first — then you can sign the assignment off.');return 1}
+  toast('Assignment signed off — it goes to SWAT for verify.');return 1}
  if(a==='dl'){toast('In the real build this downloads the file.');return 1}
  if(a==='attach'){toast('In the real build this attaches to this room’s Files.');return 1}
  if(a==='pcol'){COL=!COL;$('pane').classList.toggle('col',COL);renderHead();return 1}
