@@ -90,7 +90,7 @@ blk("What this is", [
 ])
 blk("How to read it", [
  ("1 · Use cases", "THE MAIN SHEET. All 112 use cases across the whole project. For each: the actor, the PRD stage it belongs to, why it exists at all, the surface and component that serves it in our build, how it opens, the WS 2.0 equivalent, a verdict, and whether it is built in the prototype."),
- ("2 · Component comparison", "30 UI components side by side. WS 2.0's treatment, ours, which surface ours sits on, WHY it sits there, why it is better — and a column that names where WS 2.0 still wins. Every row has that last column filled in honestly, and 8 of them concede."),
+ ("2 · Component comparison", "30 UI components side by side. WS 2.0's treatment, ours, which surface ours sits on, WHY it sits there, why it is better — and a column that names where WS 2.0 still wins. Every row has that last column filled in honestly, and 10 of the 30 concede a point."),
  ("3 · Screens × surfaces", "19 screens mapped onto Framework B's six surfaces (B1–B6) in the vision doc's own format, so the mapping can be checked against the source rather than taken on trust."),
  ("4 · Rules that bind", "The 18 invariants any UI here must honour, each traced to the PRD clause or SOP it comes from. If a design decision on tab 1 or 2 looks arbitrary, it is usually one of these."),
  ("5 · Honest gaps", "15 places where we are behind, where both products are behind, or where our own build has a known bug. Includes a live tension between chat-first and the PRD's own 'ambient AI, not a chatbot' rule."),
@@ -165,7 +165,7 @@ for rr in range(3, last + 1):
 r = last + 2
 ws.cell(r, 1, "Reading the colours").font = bodyb
 ws.cell(r, 2, "Grey = WS 2.0.  Blue = ours.  Amber in the last column = a point they still win. "
-              "8 of the 30 rows carry one; the rest read '-' because we could not find one, not because we did not look.").font = mut
+              "10 of the 30 rows carry one; the rest read '-' because we could not find one, not because we did not look.").font = mut
 ws.cell(r, 2).alignment = wrap
 
 # ============================================================ 3 · SCREENS
