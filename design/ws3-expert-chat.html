@@ -143,6 +143,27 @@ b{font-weight:620}
 .tin{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .daypill{align-self:center;font-size:10px;font-weight:640;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);background:var(--soft);padding:4px 12px;border-radius:99px}
 
+/* pin any message */
+.msg{position:relative}
+.pinb{position:absolute;top:-7px;right:-7px;width:25px;height:25px;border-radius:99px;background:var(--surface);
+ border:1px solid var(--line);display:grid;place-items:center;opacity:0;transition:opacity .15s,transform .15s,border-color .15s;z-index:6;
+ box-shadow:0 4px 12px -6px rgba(17,41,73,.35)}
+.msg:hover .pinb{opacity:1}
+.pinb:hover{border-color:#B9C2CE;transform:scale(1.08)}
+.pinb.on{opacity:1;background:var(--warn-soft);border-color:#EDD9A4;color:var(--warn-ink)}
+.pinb .ic{width:12px}
+.msg.pinned>.card,.msg.pinned .bub{box-shadow:inset 3px 0 0 var(--warn)}
+.pinbar{flex:0 0 auto;background:var(--sunk);border-bottom:1px solid var(--line)}
+.pinhd{display:flex;align-items:center;gap:9px;padding:7px 16px;width:100%;text-align:left;font-size:11px;color:var(--muted)}
+.pinhd .ic{width:12px;color:var(--warn-ink);flex:none}
+.pinhd b{font-weight:660;color:var(--ink)}
+.pinhd .pl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--faint)}
+.pinhd .ch2{font-size:9px;color:var(--faint)}
+.pinrow{display:flex;align-items:center;gap:9px;padding:7px 16px 7px 37px;border-top:1px solid var(--line2);font-size:11px}
+.pinrow .pt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);text-align:left}
+.pinrow:hover{background:var(--surface)}
+.pinrow .px{font-size:14px;line-height:1;color:var(--faint);padding:0 4px}
+.pinrow .px:hover{color:var(--crit-ink)}
 .msg{max-width:590px}
 .msg.me{align-self:flex-end;text-align:right}
 .mlab{font-size:10px;color:var(--faint);margin-bottom:3px;padding:0 4px}
@@ -533,6 +554,7 @@ button.aimc:hover{border-color:#B9C2CE;background:var(--surface)}
   <div class="hwrap">
     <div class="hmain">
       <div class="thead" id="thead"></div>
+      <div class="pinbar" id="pinbar"></div>
       <div class="mbar" id="mbar" style="display:none"></div>
       <div class="tbody" id="tbody"><div class="tin" id="tin"></div></div>
       <div class="comp" id="comp"></div>
@@ -565,7 +587,7 @@ var ME={name:'Mara L.',ini:'ML',role:'financial translation · EZ expert pool'};
 /* ---------------- state ---------------- */
 var TAB='ai', CUR='ws', SQ='', AUD={}, POP=0, NOV=0, NSEL=null, SP=null;
 var TYPING=null, DRAFT={}, FOCUSC=0, MENT=null, MIDX=0, REPLY=null, COL=0, TREE={r2:1,r4:1,r5:1};
-var DYN=[], DYNN=0, EXTRA={}, PENDING_FLASH=null, REACT={};
+var DYN=[], DYNN=0, EXTRA={}, PENDING_FLASH=null, REACT={}, PINS={}, PINOPEN=0;
 var UNREAD={a2:2,swat:1,a3:1};
 /* every decision this app can resolve */
 var DONE={offer:0,units:0,risk:0,qafail:0,license:0,rec:0,hb:0};
@@ -1535,9 +1557,47 @@ function renderComp(){
  MENT=null;
 }
 
+/* pin any message — a room's own scratchpad of things worth keeping in view */
+function pinsOf(){return PINS[CUR]||[]}
+function pinLabel(el){
+ if(!el)return 'Message';
+ var cl=el.querySelector('.cl'), cb=el.querySelector('.cb');
+ var hm=el.querySelector('.hm b'), bub=el.querySelector('.bub');
+ var t;
+ if(cl) t=(cl.childNodes[0].textContent||'').trim()+(cb?' — '+cb.innerText.replace(/\s+/g,' ').trim():'');
+ else if(hm) t=hm.textContent.trim()+': '+(bub?bub.innerText.replace(/\s+/g,' ').trim():'');
+ else if(bub) t='You: '+bub.innerText.replace(/\s+/g,' ').trim();
+ else t=el.innerText.replace(/\s+/g,' ').trim();
+ return t.length>84?t.slice(0,84)+'…':t;
+}
+function renderPins(){
+ var el=$('pinbar'), P=pinsOf();
+ if(!P.length){el.style.display='none';el.innerHTML='';return}
+ el.style.display='';
+ var last=P[P.length-1];
+ el.innerHTML='<button class="pinhd" data-do="pintog"><svg class="ic"><use href="#i-pin"/></svg>'+
+   '<b>'+P.length+' pinned</b><span class="pl">'+(PINOPEN?'':'· '+esc(last.txt))+'</span>'+
+   '<span class="ch2">'+(PINOPEN?'▲':'▼')+'</span></button>'+
+  (PINOPEN?P.map(function(p){
+   return '<div class="pinrow"><button class="pt" data-pingo="'+p.mid+'">'+esc(p.txt)+'</button>'+
+    '<button class="px" data-punpin="'+p.mid+'" aria-label="Unpin">×</button></div>';
+  }).join(''):'');
+}
 function renderThread(keepScroll){
  var b=$('tbody'), prev=b.scrollTop;
  $('tin').innerHTML=threadHtml(CUR);
+ var P=pinsOf();
+ Array.prototype.forEach.call($('tin').children,function(m,i){
+  if(!m.classList||!m.classList.contains('msg'))return;
+  var mid=CUR+':'+i; m.dataset.mid=mid;
+  var on=P.some(function(p){return p.mid===mid});
+  if(on)m.classList.add('pinned');
+  var bt=document.createElement('button');
+  bt.className='pinb'+(on?' on':''); bt.dataset.pin=mid; bt.title=on?'Unpin':'Pin this';
+  bt.innerHTML='<svg class="ic"><use href="#i-pin"/></svg>';
+  m.appendChild(bt);
+ });
+ renderPins();
  renderHead(); renderComp();
  if(keepScroll) b.scrollTop=prev; else b.scrollTop=b.scrollHeight;
  if(PENDING_FLASH){
@@ -1678,6 +1738,7 @@ function doAct(a){
  if(a==='signoff'){
   if(!W.delivered){toast('Re-deliver the final review first — then you can sign the assignment off.');return 1}
   toast('Assignment signed off — it goes to SWAT for verify.');return 1}
+ if(a==='pintog'){PINOPEN=!PINOPEN;renderPins();return 1}
  if(a==='dl'){toast('In the real build this downloads the file.');return 1}
  if(a==='attach'){toast('In the real build this attaches to this room’s Files.');return 1}
  if(a==='pcol'){COL=!COL;$('pane').classList.toggle('col',COL);renderHead();return 1}
@@ -1691,6 +1752,23 @@ document.addEventListener('click',function(e){
  if(mrow){selectMention(mrow.dataset.ment);return}
  var pk=e.target.closest('[data-pick]');
  if(pk&&FORM){var n=$('fnote');if(n)FORM.note=n.value;FORM.pick=+pk.dataset.pick;renderThread(1);return}
+ var pb=e.target.closest('[data-pin]');
+ if(pb){
+  var mid=pb.dataset.pin; PINS[CUR]=PINS[CUR]||[];
+  var ix=PINS[CUR].findIndex(function(x){return x.mid===mid});
+  if(ix>-1){PINS[CUR].splice(ix,1);toast('Unpinned.')}
+  else{
+   PINS[CUR].push({mid:mid,txt:pinLabel(document.querySelector('[data-mid="'+mid+'"]'))});
+   toast('Pinned to the top of this room.');
+  }
+  renderThread(1);return}
+ var pg=e.target.closest('[data-pingo]');
+ if(pg){
+  var t2=document.querySelector('[data-mid="'+pg.dataset.pingo+'"]');
+  if(t2){t2.scrollIntoView({block:'center'});t2.classList.add('flash');setTimeout(function(){t2.classList.remove('flash')},1700)}
+  return}
+ var pu=e.target.closest('[data-punpin]');
+ if(pu){PINS[CUR]=(PINS[CUR]||[]).filter(function(x){return x.mid!==pu.dataset.punpin});renderThread(1);return}
  var rem=e.target.closest('[data-remoji]');
  if(rem){
   var hu2=rem.closest('.human'); if(!hu2||!hu2.dataset.rk)return;
@@ -1717,7 +1795,7 @@ document.addEventListener('click',function(e){
  if(POP&&!e.target.closest('.aimpop,[data-aimtoggle]')){
   var kp=$('ci')?$('ci').value:'';POP=0;renderComp();if($('ci'))$('ci').value=kp;
  }
- var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-notif],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],#strip,#scrim');
+ var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-notif],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
  if(!el)return;
  if(el.dataset&&el.dataset.aimtoggle!==undefined){
   var kv=$('ci')?$('ci').value:'';POP=POP?0:1;renderComp();if($('ci'))$('ci').value=kv;return}
