@@ -514,6 +514,67 @@ body.tableview .tin>*{animation:none}
 .ci.kid.on .cn b{color:var(--ink)}
 .lvtag{font-size:8px;letter-spacing:.6px;text-transform:uppercase;font-weight:700;color:var(--faint);
  background:var(--sunk);border:1px solid var(--line2);border-radius:4px;padding:1px 4px;margin-right:6px;vertical-align:1px}
+/* raise-a-request */
+.nqmeta{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-size:10.5px;color:var(--faint)}
+.nqmeta b{color:var(--ink);font-weight:640}
+.nqmeta b.bad{color:var(--crit)}
+/* edit form */
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;padding:4px 14px 12px}
+.ef{padding:8px 0;border-bottom:1px solid var(--line2);min-width:0}
+.ef.w{grid-column:1/-1}
+.efl{display:block;font-size:8.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:4px}
+.efv{display:block}
+.efrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.esel,.einp{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 9px;font:600 11.5px var(--ui);
+ color:var(--ink);outline:none;max-width:100%}
+.esel{cursor:pointer}
+.esel:focus,.einp:focus{border-color:#B9C2CE}
+.echk{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-weight:600}
+/* collaborators */
+.cstack{display:flex;align-items:center;gap:0;cursor:pointer;padding:3px 9px 3px 3px;border-radius:99px;
+ border:1px solid var(--line);background:var(--surface);transition:border-color .14s,box-shadow .16s,transform .16s}
+.cstack:hover{border-color:#B9C2CE;transform:translateY(-1px);box-shadow:0 4px 12px -8px rgba(17,41,73,.4)}
+.cav2{width:24px;height:24px;border-radius:99px;display:grid;place-items:center;font-size:9px;font-weight:700;color:#fff;
+ background:var(--ink);border:2px solid var(--surface);margin-right:-8px;position:relative}
+.cav2.cli{background:linear-gradient(150deg,#D96C1F,#EA7B2C)}
+.cav2.big{width:32px;height:32px;font-size:11px;margin:0}
+.cmore{font-size:10.5px;font-weight:620;color:var(--muted);margin-left:14px;white-space:nowrap}
+.collwrap{position:fixed;inset:0;pointer-events:none;z-index:60}
+.csheet{position:absolute;right:66px;top:64px;width:326px;max-height:72vh;overflow:auto;pointer-events:auto;
+ background:var(--surface);border:1px solid var(--line);border-radius:15px;
+ box-shadow:0 28px 60px -28px rgba(17,41,73,.5);animation:rise .24s var(--ease) both}
+.csh{display:flex;align-items:center;gap:9px;padding:14px 16px 10px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--surface)}
+.csh b{font-size:13px;font-weight:700;flex:1;min-width:0}
+.csh span{font-size:10.5px;color:var(--faint)}
+.csb{padding:6px 8px 12px}
+.cgrp{font-size:8.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);font-weight:700;padding:10px 8px 4px}
+.crow2{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px}
+.crow2:hover{background:var(--sunk)}
+.crow2 .pd{position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;border-radius:99px;border:2px solid var(--surface)}
+.crow2 .pd.onl{background:var(--good-mid)}.crow2 .pd.busy{background:var(--warn)}.crow2 .pd.off{background:#B7BFCB}
+.cnm{flex:1;min-width:0}
+.cnm b{display:block;font-size:12px;font-weight:620}
+.cnm small{display:block;font-size:10.5px;color:var(--faint)}
+.cmsg{font-size:10px;font-weight:660;padding:4px 10px;border-radius:99px;border:1px solid var(--line);
+ background:var(--surface);color:var(--muted);cursor:pointer}
+.cmsg:hover{border-color:#B9C2CE;color:var(--ink)}
+/* rating */
+.rateb{display:flex;align-items:center;gap:11px;padding:6px 14px 4px}
+.stars2{font-size:17px;color:var(--warn);letter-spacing:1px}
+.stars2 i{color:var(--line);font-style:normal}
+.rnum{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.rwho{font-size:10.5px;color:var(--faint);margin-left:auto;text-align:right}
+.rquote{margin:2px 14px 10px;padding:11px 13px;border-radius:11px;background:var(--sunk);border-left:3px solid var(--warn);
+ font-size:12px;line-height:1.55;color:var(--muted);font-style:italic}
+.dopts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+.dopt{font-size:11px;font-weight:600;padding:6px 11px;border-radius:9px;border:1px solid var(--line);
+ background:var(--surface);color:var(--muted);cursor:pointer;transition:transform .15s var(--ease),border-color .14s,background .14s}
+.dopt:hover{transform:translateY(-1px);border-color:#B9C2CE;color:var(--ink)}
+.dopt.on{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 4px 12px -6px rgba(17,41,73,.45)}
+.dnote{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:12.5px var(--ui);color:var(--ink);
+ outline:none;resize:vertical;min-height:58px;background:var(--surface)}
+.dnote:focus{border-color:#B9C2CE}
+.dhint{font-size:10.5px;color:var(--faint);margin-top:7px;line-height:1.5}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -565,6 +626,7 @@ body.tableview .tin>*{animation:none}
 </div>
 
 <div class="rrail" id="rrail"></div>
+<div class="collwrap" id="collwrap"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -911,6 +973,20 @@ var TG={
  ]}
 };
 var TPAUSE={}, TCANCEL={}, TMENU=null, TADDN=0, SX={};
+var NEWQ=null, SPLIT=null, EDITF=null, COLL=null, LOG=[], LOGN=0;
+/* the audit trail is written by the app, not decorated onto it — every
+   change SWAT makes in this session lands here with who and from where */
+function logit(what,detail){
+ LOG.unshift({t:'now',n:++LOGN,who:'Rahul S. · SWAT',what:what,detail:detail,dev:'Chrome 131 · 72.72.72.72'});
+}
+var LOGSEED=[
+ {t:'12:44',who:'Rahul S. · SWAT',what:'Unit count 40 → 46 pages',detail:'Q3 · Translate 40pp · after re-splitting the source',dev:'Chrome 131 · 72.72.72.72'},
+ {t:'12:41',who:'Rahul S. · SWAT',what:'Performer changed Mara L. → Omar K.',detail:'Q3 · Translate 40pp · SLA recovery, fee-split logged at the cut',dev:'Chrome 131 · 72.72.72.72'},
+ {t:'11:20',who:'AI composer',what:'Plan proposed · 5 activities · confidence .92',detail:'Investor deck · awaiting ratify',dev:'enclave · zero-retention'},
+ {t:'10:41',who:'System',what:'Unmapped intake held',detail:'priya@nimbus-labs.com · 91% Nimbus',dev:'email adapter'},
+ {t:'09:15',who:'Globex finance',what:'Wallet balance ¤1,200 — below floor',detail:'new intake blocks until funded',dev:'payment gateway'}
+];
+function logRows(){ return LOG.concat(LOGSEED) }
 /* the tree lives in the list, two taps deep — a request opens to its
    assignments, an assignment opens to its activities. Nothing is shown
    until it is asked for, so the list stays a list. */
@@ -973,8 +1049,201 @@ function nodeRoom(id){
      '<div class="stat"><b>'+(TCANCEL[x.id]?'cancelled':TPAUSE[x.id]?'paused':x.st==='done'?'done':x.st==='warn'?'at risk':x.st==='now'?'running':'not started')+'</b><small>STATE</small></div></div>',
    acts:[['Re-allocate','','tallo'],[TPAUSE[x.id]?'Resume':'Pause','tpause:'+x.id],['Open the tree','','tree']]}));
  }
+ if(EDITF) out.push(editCard());
  (EXTRA[id]||[]).forEach(h=>out.push(typeof h==='function'?h():h));
  return out.join('');
+}
+
+/* ============================================================
+   9 · RAISE A REQUEST FOR A CLIENT — SWAT takes briefs by phone,
+   by email, in a corridor. The request has to be creatable here, and
+   it has to run the same road as any other: compose → ratify → live.
+   ============================================================ */
+var CLIENTS={acme:{n:'Acme',ent:'Acme MENA',cc:'CC-4420',ic:'TRANS-STD',wal:'¤42,500 · funded'},
+ globex:{n:'Globex',ent:'Globex EU',cc:'CC-1180',ic:'DESIGN-HE',wal:'¤1,200 · below floor'},
+ nimbus:{n:'Nimbus',ent:'Nimbus Labs',cc:'CC-3301',ic:'COPY-STD',wal:'retainer · no wallet'}};
+function newReqCard(){
+ var F=NEWQ; if(!F) return '';
+ if(F.step==='plan'){
+  var C=CLIENTS[F.cli];
+  return card({id:'c-newreq',wide:1,tone:'decide',dot:'w',who:'The composer drafted a plan',sub:'your ratify publishes it',time:'now',
+   body:'<b>'+F.brief+'</b><br><small>Mapped to <b>'+F.off+'</b> for '+C.n+' · '+F.units+' · confidence .88. Nothing is real until you ratify.</small>',
+   extra:'<div class="ttree2">'+
+     '<div class="tn2 asg"><span class="d idle"></span><span class="t2n"><b>'+F.off.split(' · ')[0]+'</b><small>'+F.off+' · unallocated</small></span><span class="t2r">0 of 2</span><span class="t2m">¤'+Math.round(F.price*0.6).toLocaleString('en-US')+'</span><span></span></div>'+
+     '<div class="tn2 act"><span class="d idle"></span><span class="t2n"><b>Produce</b><small>'+F.units+' · proposed: '+F.who+'</small></span><span class="t2r"><span class="pbar2"><i class="idle" style="width:0%"></i></span></span><span class="t2m">¤'+Math.round(F.price*0.6).toLocaleString('en-US')+'</span><span></span></div>'+
+     '<div class="tn2 act"><span class="d idle"></span><span class="t2n"><b>Deliver</b><small>1 handover · mandatory</small></span><span class="t2r"><span class="pbar2"><i class="idle" style="width:0%"></i></span></span><span class="t2m">—</span><span></span></div>'+
+    '</div>'+
+    '<div class="statrow" style="padding-top:8px"><div class="stat"><b>¤'+F.price.toLocaleString('en-US')+'</b><small>CLIENT PRICE</small></div>'+
+    '<div class="stat"><b>'+F.due+'</b><small>DEADLINE</small></div>'+
+    '<div class="stat"><b class="'+(F.cli==='globex'?'c':'g')+'">'+C.wal+'</b><small>WALLET</small></div></div>'+
+    (F.cli==='globex'?'<div class="dhint" style="padding:0 14px 12px;color:var(--crit)">Globex is below the floor — publishing will block until finance funds it. You can ratify now; it goes live on funding.</div>':''),
+   acts:[['Ratify & publish','pri','nqpub'],['Edit the plan','','nqedit'],['Discard','','nqx']]});
+ }
+ var C2=F.cli?CLIENTS[F.cli]:null;
+ return card({id:'c-newreq',wide:1,tone:'decide',dot:'w',who:'Raise a request',sub:'on behalf of a client',time:'now',
+  body:'Briefs arrive by phone and in corridors. Take it here and it runs the same road as any other — compose, ratify, publish.',
+  extra:'<div class="dform"><div class="dfl">Which client</div><div class="dopts">'+
+    Object.keys(CLIENTS).map(k=>'<button class="dopt'+(F.cli===k?' on':'')+'" data-nqc="'+k+'">'+CLIENTS[k].n+'</button>').join('')+'</div>'+
+    (C2?'<div class="nqmeta"><span>Entity <b>'+C2.ent+'</b></span><span>Charge code <b>'+C2.cc+'</b></span><span>Invoice code <b>'+C2.ic+'</b></span><span>Wallet <b class="'+(F.cli==='globex'?'bad':'')+'">'+C2.wal+'</b></span></div>':'')+
+   '<div class="dfl" style="margin-top:10px">The brief</div>'+
+   '<textarea class="dnote" id="nqb" placeholder="What did they ask for, in their words">'+esc(F.brief||'')+'</textarea>'+
+   '<div class="dfl" style="margin-top:10px">When they need it</div><div class="dopts">'+
+    ['End of today','Friday','Next Wednesday'].map((d,i)=>'<button class="dopt'+(F.due===d?' on':'')+'" data-nqd="'+d+'">'+d+'</button>').join('')+'</div>'+
+   '<div class="dhint">Files can be attached now or chased after — the composer will say if it cannot scope without them.</div></div>',
+  acts:[['Compose a plan','pri','nqcompose'],['Cancel','','nqx']]});
+}
+
+/* ============================================================
+   1 · THE SPLITTER — file → parts → activities. Everything numeric
+   downstream comes from here: the units, the price, the payout.
+   ============================================================ */
+var SRCF={q3:{f:'Q3-report-source.docx',u:40,ut:'pages',skill:'Financial translation',rate:45},
+ deck:{f:'globex-brief.pptx',u:30,ut:'slides',skill:'Presentation design',rate:60},
+ jd:{f:'nimbus-jd-pack.docx',u:6,ut:'JDs',skill:'Copywriting',rate:180},
+ ocr:{f:'statements-2026.pdf',u:1240,ut:'pages',skill:'OCR',rate:0.35},
+ sub:{f:'master-cut.mp4',u:48,ut:'minutes',skill:'Subtitling',rate:25}};
+function splitParts(n,total){
+ var base=Math.floor(total/n), rem=total%n, out=[], at=1;
+ for(var i=0;i<n;i++){ var c=base+(i===0?rem:0); out.push({i:i+1,from:at,to:at+c-1,c:c}); at+=c; }
+ return out;
+}
+function splitCard(id){
+ var src=SRCF[id]; if(!src) return '';
+ var S=SPLIT&&SPLIT.req===id?SPLIT:{req:id,n:3,who:['unallocated','unallocated','unallocated']};
+ var parts=splitParts(S.n,src.u);
+ return card({id:'card-split',wide:1,tone:'decide',dot:'',who:'The splitter',sub:src.f+' · '+src.u+' '+src.ut,time:'live',
+  body:'<b>One file becomes parts, and each part becomes an activity.</b> The unit count on every activity comes from here — and so does its price and its payout, which is why the remainder goes to the first part rather than being rounded away.',
+  extra:'<div class="dform"><div class="dfl">Cut it into</div><div class="dopts">'+
+    [2,3,4,6].map(n=>'<button class="dopt'+(S.n===n?' on':'')+'" data-spn="'+n+'">'+n+' parts</button>').join('')+
+    '<button class="dopt" data-spn="1">Don’t split</button></div></div>'+
+   '<div class="tw"><table class="wtbl"><thead><tr><th>Part</th><th class="r">'+src.ut+'</th><th>Becomes</th><th>Performer</th><th class="r">Cost</th></tr></thead><tbody>'+
+   parts.map(function(pt,i){
+    return '<tr><td><span class="wk">Part '+pt.i+'</span><span class="sc">'+src.ut+' '+pt.from+'–'+pt.to+(i===0&&src.u%S.n?' · carries the remainder':'')+'</span></td>'+
+     '<td class="r num">'+pt.c+'</td>'+
+     '<td><span class="wk" style="font-weight:520">'+src.skill+' '+pt.i+'</span><span class="sc">new activity</span></td>'+
+     '<td><span class="cpill">'+(S.who[i]||'unallocated')+'</span></td>'+
+     '<td class="r num">¤'+Math.round(pt.c*src.rate).toLocaleString('en-US')+'</td></tr>';
+   }).join('')+
+   '</tbody><tfoot><tr><td>'+S.n+' activities</td><td class="r num">'+src.u+'</td><td colspan="2">nothing is lost in the cut</td>'+
+   '<td class="r num">¤'+Math.round(src.u*src.rate).toLocaleString('en-US')+'</td></tr></tfoot></table></div>',
+  acts:[['Apply the split · '+S.n+' activities','pri','spapply'],['Allocate after splitting','','spallo']]});
+}
+
+/* 2 · the edit form behind the menu — the fields WS 2.0 actually carried */
+function editCard(){
+ var E=EDITF; if(!E) return '';
+ var N=findNode(E.kind==='asg'?'n-'+E.id:'x-'+E.id); if(!N) return '';
+ var fld=function(l,v,w){return '<div class="ef'+(w?' w':'')+'"><span class="efl">'+l+'</span><span class="efv">'+v+'</span></div>'};
+ var sel=function(k,opts,cur){return '<select class="esel" data-ef="'+k+'">'+opts.map(o=>'<option'+(o===cur?' selected':'')+'>'+o+'</option>').join('')+'</select>'};
+ if(E.kind==='asg'){
+  var A=N.a;
+  return card({id:'c-edit',wide:1,tone:'decide',dot:'',who:'Edit assignment',sub:A.n,time:'now',
+   body:'What the client is quoted for, and what the graph derives from. Changing the offering re-derives the rate; changing the unit count re-derives the price.',
+   extra:'<div class="egrid">'+
+     fld('Offering &amp; level',sel('off',['Translation · EZ Assured','Presentation design · High-end','Copywriting · Long-form','QA · Human','Subtitling · 4 languages'],A.off))+
+     fld('Language',sel('lang',['EN→AR','EN→FR','AR→EN','multi'],'EN→AR'))+
+     fld('Unit type',sel('ut',['Pages','Slides','Minutes','Words','Hours','JDs'],'Pages'))+
+     fld('Unit count','<input class="einp" value="'+(A.acts.reduce((t,x)=>t+parseInt(x.u)||0,0)||40)+'">')+
+     fld('Urgency',sel('urg',['Standard','Priority','Rush · +25%'],'Standard'))+
+     fld('Template',sel('tpl',['— none —','Financial report translation','Deck refresh','Subtitle pack'],'— none —'))+
+     fld('Owner',sel('own',['Omar K.','Rahul S.','Dev P.','Sana R.'],A.own))+
+     fld('Deadline','<input class="einp" value="Fri 24 Jul 18:00">')+
+     fld('Entity',sel('ent',['Acme MENA','Globex EU','Nimbus Labs'],'Acme MENA'))+
+     fld('Charge code',sel('cc',['CC-4420','CC-1180','CC-3301'],'CC-4420'))+
+     fld('Invoice code',sel('ic',['TRANS-STD','DESIGN-HE','COPY-STD'],'TRANS-STD'))+
+     fld('Payment type',sel('pt',['Prepaid · wallet','Postpaid · 14-day terms'],'Prepaid · wallet'))+
+    '</div>',
+   acts:[['Save — re-derive the plan','pri','esave'],['Cancel','','ex']]});
+ }
+ var x=N.t;
+ return card({id:'c-edit',wide:1,tone:'decide',dot:'',who:'Edit activity',sub:x.n,time:'now',
+  body:'The contract the performer works to. <b>Estimated is the planner’s guess; committed is what they signed for</b> — the gap is the thing that gets flagged, so it is two fields, not one.',
+  extra:'<div class="egrid">'+
+    fld('Skill',sel('sk',['Financial translation','Terminology','Linguistic QA','Layout · RTL','Copywriting','OCR'],'Financial translation'))+
+    fld('Language',sel('lang',['EN→AR','EN→FR','AR→EN','multi'],'EN→AR'))+
+    fld('Unit type',sel('ut',['Pages','Slides','Minutes','Terms','JDs'],'Pages'))+
+    fld('Unit count','<input class="einp" value="'+(parseInt(x.u)||0)+'">')+
+    fld('Start by','<input class="einp" value="Tue 21 Jul 09:00">')+
+    fld('Deadline','<input class="einp" value="'+x.due+'">')+
+    fld('Estimated','<input class="einp" value="14 hours">')+
+    fld('Committed','<input class="einp" value="12 hours">')+
+    fld('Performer',sel('who',['Mara L.','Omar K.','Dev P.','Sana R.','Priya N.','Flip · MT agent','— unallocated —'],x.own))+
+    fld('Rate',' <input class="einp" value="¤45 / page">')+
+    '<div class="ef w"><span class="efl">Input file · tool · access</span><span class="efv efrow">'+
+      sel('inf',['Q3-report-source.docx','acme-glossary-v4.tbx'],'Q3-report-source.docx')+
+      sel('tool',['TR42','Phrase TMS','— none —'],'TR42')+
+      sel('acc',['read + write','read only'],'read + write')+'</span></div>'+
+    '<div class="ef w"><span class="efl">Required output</span><span class="efv efrow">'+
+      '<input class="einp" value="Translated file, AR">'+sel('ft',['DOCX','PDF','SRT','PPTX'],'DOCX')+
+      sel('map',['maps to Q3-report-source.docx','maps to nothing'],'maps to Q3-report-source.docx')+
+      '<label class="echk"><input type="checkbox" checked> mandatory</label></span></div>'+
+   '</div>'+
+   '<div class="dhint" style="padding:0 14px 12px">Allocation shows what the picker sees: <b>'+x.own+' · 4.8 rating · 24h free this week</b>. Changing the performer here re-proposes rather than reassigning silently.</div>',
+  acts:[['Save — re-derive the plan','pri','esave'],['Cancel','','ex']]});
+}
+
+/* 5 · the edit log */
+function logCard(id){
+ return card({id:'card-log',wide:1,dot:'',who:'Edit log',sub:'every change, who made it, where from',time:'live',
+  body:'<b>The record the disputes are argued from.</b> When an expert says the unit count moved without the hours moving, this is what settles it.',
+  extra:'<div class="tw"><table class="wtbl"><thead><tr><th>When</th><th>Change</th><th>Who</th><th>Where from</th></tr></thead><tbody>'+
+   logRows().map(r=>'<tr><td class="dt">'+r.t+'</td><td><span class="wk">'+r.what+'</span><span class="sc">'+r.detail+'</span></td>'+
+     '<td class="dt">'+r.who+'</td><td class="dt">'+r.dev+'</td></tr>').join('')+
+   '</tbody></table></div>'});
+}
+
+/* 6 · collaborators — tap the faces, the team opens */
+var TEAMS={
+ q3:{req:'Q3 report translation',rows:[
+  ['Requester','Dana W.','Acme · raised it 20 Jul','cli','onl'],
+  ['Owner','Omar K.','EZ · expert lead · holds the 40pp','ez','onl'],
+  ['SWAT','Rahul S.','desk · dates and splits','ez','onl'],
+  ['Performer','Mara L.','glossary · verified','ez','busy'],
+  ['Performer','Dev P.','QA tonight · 112% loaded','ez','busy'],
+  ['Performer','Sana R.','RTL reflow Thursday','ez','onl']]},
+ deck:{req:'Investor deck',rows:[
+  ['Requester','Marcus T.','Globex finance','cli','onl'],
+  ['SWAT','Rahul S.','desk','ez','onl'],
+  ['Performer','Sana R.','copy','ez','onl'],
+  ['Performer','Priya N.','design ×2','ez','busy']]},
+ jd:{req:'JD rewrite · 6 roles',rows:[
+  ['Requester','Priya R.','Nimbus','cli','onl'],
+  ['SWAT','Rahul S.','desk · escalating','ez','onl'],
+  ['Performer','Tariq M.','silent 4 hours','ez','off'],
+  ['Reviewer','Omar K.','review Thursday','ez','onl']]}
+};
+function collFor(id){ return TEAMS[id]||TEAMS[(findNode(id)||{}).root]||null }
+function collStack(id){
+ var T=collFor(id); if(!T) return '';
+ return '<button class="cstack" data-coll="'+id+'">'+T.rows.slice(0,4).map(function(r,i){
+   return '<span class="cav2 '+r[3]+'" style="z-index:'+(9-i)+'">'+r[1].split(' ')[0][0]+(r[1].split(' ')[1]||'')[0]+'</span>';
+  }).join('')+'<span class="cmore">'+T.rows.length+' on this</span></button>';
+}
+function collSheet(){
+ if(!COLL) return '';
+ var T=collFor(COLL); if(!T) return '';
+ var grp={};
+ T.rows.forEach(function(r){ (grp[r[0]]=grp[r[0]]||[]).push(r) });
+ return '<div class="csheet" id="csheet"><div class="csh"><b>Who is on '+T.req+'</b>'+
+  '<span>'+T.rows.length+' people</span><button class="ox" data-collx><svg class="ic" style="width:13px"><use href="#i-x"/></svg></button></div>'+
+  '<div class="csb">'+Object.keys(grp).map(function(k){
+   return '<div class="cgrp">'+k+'</div>'+grp[k].map(function(r){
+    return '<div class="crow2"><span class="cav2 '+r[3]+' big">'+r[1].split(' ')[0][0]+(r[1].split(' ')[1]||'')[0]+
+     '<i class="pd '+r[4]+'"></i></span>'+
+     '<span class="cnm"><b>'+r[1]+'</b><small>'+r[2]+'</small></span>'+
+     '<button class="cmsg" data-collmsg="'+r[1]+'">Message</button></div>';
+   }).join('');
+  }).join('')+'</div></div>';
+}
+
+/* 8 · what the client said about the delivery */
+function ratingCard(){
+ return card({id:'card-rating',wide:1,tone:'okc',dot:'ok',who:'Client feedback',sub:'Subtitle & sync pack · Dana W.',subCls:'ok',time:'Tue 16:40',
+  body:'<b>4.5 of 5.</b> Left when she verified — feedback and the verify are one action for her, so it arrives or it does not arrive at all.',
+  extra:'<div class="rateb"><span class="stars2">★★★★<i>★</i></span><span class="rnum">4.5</span>'+
+    '<span class="rwho">Dana W. · Acme · on delivery v2</span></div>'+
+   '<div class="rquote">“Fast turnaround and the currency fix was exactly right. The first pass had two issues we had to flag — would rather they had been caught before it reached us.”</div>'+
+   '<div class="dhint" style="padding:0 14px 12px">Goes to the people who did the work — Priya and Dev see it on their own record. <b>It never changes the invoice.</b></div>'});
 }
 function treeFor(id){
  var t=TG[id]; if(!t) return '';
@@ -1045,6 +1314,13 @@ function filesFor2(id){
  return card({id:'card-files',wide:1,dot:'',who:'Files',sub:'progress per file · both sides of the boundary',time:'live',
   body:'<b>Source comes in, working stays yours, deliverables cross only on sign-off.</b> Progress is per file, so you can see which one is actually holding the request up.',
   extra:'<div class="tw"><table class="wtbl"><thead><tr><th></th><th>File</th><th>Progress</th><th>Shelf</th><th class="r">Due</th><th class="r"></th></tr></thead><tbody>'+rows+'</tbody></table></div>'});
+}
+function gantt(title,rows){
+ return '<div class="msg" style="max-width:640px"><div class="card" id="card-gantt"><div class="ch"><span class="cdot"></span><span class="cl">'+title+' <span class="sub">· today marked</span></span><span class="ctime">live</span></div><div class="plan">'+
+  rows.map(r=>'<div class="prow"><span class="pn">'+r[0]+'</span><div class="ptrack"><span class="ptoday"></span><span class="pbar '+r[1]+'" style="left:'+r[2]+'%;width:'+r[3]+'%">'+r[4]+'</span></div></div>').join('')+
+  '</div><div class="plegend"><span><i style="background:var(--good-soft);border:1px solid #C6DFCE"></i>Done</span>'+
+  '<span><i style="background:#E08A3C"></i>At risk</span><span><i style="background:var(--good-mid)"></i>Running</span>'+
+  '<span><i style="background:var(--soft);border:1px solid var(--line)"></i>Planned</span><span><i style="background:var(--warn);width:3px"></i>Now</span></div></div></div>';
 }
 function ganttFor(id){
  if(id==='q3')return gantt('Q3 · the plan',[['Glossary apply','done',2,16,'done'],['Translate 40pp','warn',20,36,'Omar · 52%'],['QA pass · Dev','idle',56,22,'tonight'],['RTL reflow · Sana','idle',66,18,'Thu'],['Deliver','idle',88,10,'Fri']]);
@@ -1269,10 +1545,14 @@ function msgs(id){
   out.push(chips(['Why is margin steady?','What blocks billing today?']));
  }
  if(id==='intake'){
+  if(NEWQ) EXTRA.intake=EXTRA.intake;
   out.push(day('Intake · everything lands here first'));
   out.push(evt('int','Phrase','Job #881 → request auto-created under Globex · investor deck','11:19'));
   out.push(ratifyCard());
   out.push(evt('int','Merged','Duplicate — Acme FAQ email matched R-1041 · no second request','10:52'));
+  out.push(NEWQ?newReqCard():card({id:'c-raise',tone:'decide',dot:'',who:'Raise a request',sub:'on behalf of a client',time:'now',
+   body:'A brief arrived by phone or in a corridor. <b>Take it here and it runs the same road as any other</b> — the composer drafts a plan, you ratify, it publishes.',
+   acts:[['Raise a request','pri','nqnew']]}));
   out.push(mapCard());
   if(DONE.mapin) out.push(evt('ok','Created','R-1052 · JD rewrite · Nimbus — composer drafting','now'));
  }
@@ -1281,6 +1561,7 @@ function msgs(id){
   out.push(evt('int','Pipeline','Deliver → boundary sign-off → verify → invoice + payout · in that order, always','—'));
   out.push(tlvCard());
   out.push(vnudgeCard());
+  out.push(ratingCard());
   out.push(card({dot:'w',who:'V&S',sub:'boundary sign-off · scheduled',time:'—',
    body:'<b>Q3 · Friday.</b> Omar signs the boundary before delivery — nothing crosses to Acme without it.',
    acts:[['Open the room','','goto:q3:card-tree']]}));
@@ -1303,6 +1584,7 @@ function msgs(id){
   out.push(day('Subtitle & sync pack · Acme · delivered Tue'));
   out.push(evt('cli','Delivered','4-language pack → Acme’s store · boundary signed by Omar','Tue 16:12'));
   out.push(vnudgeCard());
+  out.push(ratingCard());
   if(DONE.vnudge) out.push(evt('cli','Nudged','Client-visible · Dana usually replies within the hour','now'));
  }
  if(id==='deck'){
@@ -1393,6 +1675,7 @@ function msgs(id){
   out.push(human('Sana R.','','08:45','SR',AV.sana,'Glossary v4 pinned — financial work uses it from today.'));
   out.push(me('Reminder: escalations at T-4h, never after. If it smells late at lunch, it is.','08:50',0,1,'the floor · 11'));
  }
+ if(EDITF) out.push(editCard());
  (EXTRA[id]||[]).forEach(h=>out.push(typeof h==='function'?h():h));
  if(TYPING===id) out.push(typingHtml(id));
  return out.join('');
@@ -1425,7 +1708,7 @@ function renderRails(){
    opens in the drawer beside it. */
 var SPACE={
  gantt:{t:'The plan',ic:'i-chart',work:1}, tree:{t:'The tree',ic:'i-grid2',work:1},
- files:{t:'Files',ic:'i-file',work:1},
+ files:{t:'Files',ic:'i-file',work:1}, split:{t:'The splitter',ic:'i-grid2',work:1}, log:{t:'Edit log',ic:'i-clock',work:1},
  upcoming:{t:'Upcoming',ic:'i-clock'}, cap:{t:'Capacity',ic:'i-ppl'},
  instr:{t:'Client instructions',ic:'i-star'}, sop:{t:'SOPs',ic:'i-book'}, play:{t:'Playbooks',ic:'i-grid2'}
 };
@@ -1434,8 +1717,8 @@ var CLIIDS=['acme','globex','nimbus'];
 function spacesFor(id){
  var own=[];
  var N=findNode(id);
- if(REQIDS.indexOf(id)>-1)      own=['gantt','tree','files'];
- else if(N)                     own=['tree','files'];
+ if(REQIDS.indexOf(id)>-1)      own=['gantt','tree','split','files','log'];
+ else if(N)                     own=['tree','files','log'];
  else if(CLIIDS.indexOf(id)>-1) own=['instr'];
  else if(id==='ws')             own=['upcoming','cap'];
  else if(id==='intake')         own=['upcoming'];
@@ -1610,7 +1893,7 @@ function renderHead(){
  $('thead').innerHTML=(COL?'<button class="colbtn" data-do="pcol" title="Show the list  ·  [" aria-label="Show the list" style="margin-right:2px"><svg class="ic" style="width:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
   '<span class="cav'+(t.round?' round':'')+'" style="background:'+t.av+'">'+t.ini+'</span>'+
   '<div class="tht"><b>'+t.name+(t.bdg?'<span class="bdg '+t.bdg[0]+'">'+t.bdg[1]+'</span>':'')+'</b><small>'+(subs[CUR]||'')+'</small></div>'+
-  '<div class="thr"></div>';
+  '<div class="thr">'+collStack(CUR)+'</div>';
 }
 var DOTS={room:'#77849A',team:'var(--ink)',ai:'var(--ai-ink)',cli:'var(--brand)',int:'#77849A'};
 function aimChip(cur,label,opts){
@@ -1709,7 +1992,7 @@ function renderThread(keepScroll){
 }
 function renderAll(){
  document.body.classList.toggle('tableview',CUR==='verify');
- renderRails();renderStrip();renderNov();renderPanel();renderTabs();renderList();renderThread();
+ renderRails();renderStrip();renderNov();renderPanel();renderTabs();renderList();renderThread();$('collwrap').innerHTML=collSheet();
 }
 
 var TT=null, UNDOFN=null;
@@ -1763,6 +2046,17 @@ document.addEventListener('click',function(e){
  if(sx){SX[sx.dataset.sx]=!SX[sx.dataset.sx];renderList();return}
  var mrow=e.target.closest('[data-ment]');
  if(mrow){selectMention(mrow.dataset.ment);return}
+ var nc=e.target.closest('[data-nqc]');
+ if(nc&&NEWQ){var bb=$('nqb');if(bb)NEWQ.brief=bb.value;NEWQ.cli=nc.dataset.nqc;renderThread(1);return}
+ var nd=e.target.closest('[data-nqd]');
+ if(nd&&NEWQ){var bb2=$('nqb');if(bb2)NEWQ.brief=bb2.value;NEWQ.due=nd.dataset.nqd;renderThread(1);return}
+ var sp=e.target.closest('[data-spn]');
+ if(sp){var rr=SRCF[CUR]?CUR:(findNode(CUR)||{}).root;SPLIT={req:rr,n:+sp.dataset.spn,who:[]};renderThread(1);return}
+ var cs=e.target.closest('[data-coll]');
+ if(cs){COLL=cs.dataset.coll;$('collwrap').innerHTML=collSheet();return}
+ if(e.target.closest('[data-collx]')||(COLL&&!e.target.closest('#csheet,[data-coll]'))){COLL=null;$('collwrap').innerHTML='';}
+ var cm=e.target.closest('[data-collmsg]');
+ if(cm){COLL=null;$('collwrap').innerHTML='';toast('Opening a room with '+cm.dataset.collmsg+'.');return}
  var tm=e.target.closest('[data-tmenu]');
  if(tm){TMENU=(TMENU===tm.dataset.tmenu)?null:tm.dataset.tmenu;renderThread(1);return}
  if(TMENU&&!e.target.closest('.tmenu')){TMENU=null;renderThread(1)}
@@ -1824,11 +2118,11 @@ document.addEventListener('click',function(e){
  if(el.dataset&&el.dataset.space){
   var k=el.dataset.space;
   if(SPACE[k]&&SPACE[k].work){
-   var tid={gantt:'card-gantt',tree:'card-tree',files:'card-files'}[k], ex=$(tid);
+   var tid={gantt:'card-gantt',tree:'card-tree',files:'card-files',split:'card-split',log:'card-log'}[k], ex=$(tid);
    if(ex){ex.scrollIntoView({block:'center'});ex.classList.add('flash');setTimeout(()=>ex.classList.remove('flash'),1400);return}
    EXTRA[CUR]=EXTRA[CUR]||[];
    var rid=CUR;
-   EXTRA[CUR].push(k==='gantt'?function(){return ganttFor(rid)}:k==='tree'?function(){return treeFor(rid)}:function(){return filesFor2(rid)||filesCard(rid)});
+   EXTRA[CUR].push(k==='gantt'?function(){return ganttFor(rid)}:k==='tree'?function(){return treeFor(rid)}:k==='split'?function(){return splitCard(rid)||splitCard((findNode(rid)||{}).root)}:k==='log'?function(){return logCard(rid)}:function(){return filesFor2(rid)||filesCard(rid)});
    renderThread();return}
   SP=(SP===k)?null:k; renderRails(); renderPanel(); return}
  if(el.dataset&&el.dataset.tool){SP=(SP===el.dataset.tool)?null:el.dataset.tool;renderRails();renderPanel();return}
@@ -1873,6 +2167,60 @@ document.addEventListener('click',function(e){
   if(a==='gantt'){var gr=CUR;
    if($('card-gantt')){var xg=$('card-gantt');xg.scrollIntoView({block:'center'});xg.classList.add('flash');setTimeout(()=>xg.classList.remove('flash'),1400);return}
    EXTRA[gr]=EXTRA[gr]||[];EXTRA[gr].push(function(){return ganttFor(gr)||''});renderThread();return}
+  /* --- raise a request --- */
+  if(a==='nqnew'){NEWQ={step:'brief',cli:null,brief:'',due:''};open('intake');return}
+  if(a==='nqx'){NEWQ=null;renderThread();return}
+  if(a==='nqcompose'){
+   var bv=$('nqb'); if(bv)NEWQ.brief=bv.value.trim();
+   if(!NEWQ.cli||!NEWQ.brief){toast('Pick the client and paste the brief — the composer needs both.');return}
+   var b=NEWQ.brief.toLowerCase();
+   NEWQ.off = /translat|arabic|urdu/.test(b)?'Translation · EZ Assured':/deck|slide|present/.test(b)?'Presentation design · High-end':
+              /subtitl|caption|video/.test(b)?'Subtitling · 4 languages':'Copywriting · Long-form';
+   NEWQ.units = /translat/.test(b)?'24 pages':/deck|slide/.test(b)?'18 slides':/subtitl/.test(b)?'32 minutes':'6 pieces';
+   NEWQ.who = /translat/.test(b)?'Mara L. · .91':/deck|slide/.test(b)?'Priya N. · .88':'Sana R. · .84';
+   NEWQ.price = /translat/.test(b)?2160:/deck|slide/.test(b)?3240:1400;
+   NEWQ.due = NEWQ.due||'Friday';
+   NEWQ.step='plan'; TYPING='intake'; renderThread();
+   setTimeout(function(){TYPING=null;renderThread()},1100);
+   return}
+  if(a==='nqedit'){toast('In the real build this drops you into the tree with the plan editable, before it publishes.');return}
+  if(a==='nqpub'){
+   var C=NEWQ.cli, nm=NEWQ.off.split(' · ')[0]+' · '+CLIENTS[C].n;
+   logit('Request raised on behalf of '+CLIENTS[C].n, NEWQ.brief.slice(0,60)+' · '+NEWQ.units+' · ¤'+NEWQ.price.toLocaleString('en-US'));
+   var wasBlocked=(C==='globex');
+   NEWQ=null;
+   toast(wasBlocked?'Ratified — it publishes the moment Globex funds the wallet.':'Published — offers are going out now.');
+   renderThread();return}
+
+  /* --- the splitter --- */
+  if(a.indexOf('spn:')===0){
+   var rq=SPLIT?SPLIT.req:CUR, n=+a.slice(4);
+   SPLIT={req:SRCF[CUR]?CUR:(findNode(CUR)||{}).root||rq,n:n,who:['unallocated','unallocated','unallocated','unallocated','unallocated','unallocated']};
+   renderThread(1);return}
+  if(a==='spapply'){
+   var S=SPLIT||{req:CUR,n:3}, rid2=S.req||CUR, src=SRCF[rid2], T=TG[rid2];
+   if(!src||!T){toast('No source file on this request to split.');return}
+   var parts=splitParts(S.n,src.u), A=T.asg[0], before=A.acts.slice();
+   var mand=A.acts.filter(x=>x.must);
+   A.acts=A.acts.filter(x=>!x.must&&x.st!=='idle').concat(parts.map(function(pt,i){
+     return {id:'sp'+(++TADDN),n:src.skill+' '+pt.i,u:pt.c+' '+src.ut,own:'unallocated',st:'idle',p:0,
+             c:Math.round(pt.c*src.rate),due:'set a date'};
+   })).concat(mand);
+   logit('File split · '+src.f+' → '+S.n+' parts', rid2+' · '+src.u+' '+src.ut+' · remainder to part 1');
+   SPLIT=null;
+   toast('Split applied — '+S.n+' activities created, '+src.u+' '+src.ut+' accounted for.',
+     function(){A.acts=before;LOG.shift();renderThread(1)});
+   renderThread(1);return}
+  if(a==='spallo'){toast('In the real build this runs allocation on all parts at once and proposes a performer per part.');return}
+
+  /* --- editing a node --- */
+  if(a==='esave'){
+   var E=EDITF; EDITF=null;
+   logit((E.kind==='asg'?'Assignment edited':'Activity edited'),'plan re-derived from the changed fields');
+   toast('Saved — the plan re-derived. Pricing and dates recomputed from the change.');
+   renderThread(1);return}
+  if(a==='ex'){EDITF=null;renderThread(1);return}
+
   if(a.indexOf('tadd:')===0){
    var aid=a.slice(5), T=TG[CUR]; if(!T)return;
    var A=T.asg.find(x=>x.id===aid); if(!A)return;
@@ -1899,9 +2247,16 @@ document.addEventListener('click',function(e){
    var cid=a.slice(8); TCANCEL[cid]=1; TMENU=null;
    toast('Cancelled — its cost leaves the tree and the margin recomputes.',function(){delete TCANCEL[cid];renderThread(1)});
    renderThread(1);return}
-  if(a==='tedit'||a==='tallo'||a==='tdup'){
+  if(a==='tedit'){
+   var nid2=TMENU; TMENU=null;
+   var N2=findNode('n-'+nid2)||findNode('x-'+nid2);
+   EDITF=N2?{kind:N2.kind,id:nid2}:null;
+   renderThread(1);
+   if(!EDITF)toast('Nothing to edit here.');
+   return}
+  if(a==='tallo'||a==='tdup'){
    TMENU=null;renderThread(1);
-   toast('In the real build this opens the '+(a==='tedit'?'edit':a==='tallo'?'re-allocation':'duplicate')+' form inline on the node.');return}
+   toast('In the real build this opens the '+(a==='tallo'?'re-allocation':'duplicate')+' flow on the node.');return}
   if(a==='vall'){
    var r=vReady(), tot=r.reduce(function(t,l){return t+l.amt},0), had=Object.assign({},VST);
    r.forEach(function(l){VST[l.id]=1});
