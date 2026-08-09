@@ -43,6 +43,10 @@
 
 **Roles are product primitives; their names are config.** (EZ maps owner/performer/reviewer/verifier onto SWAT/QA/SME/pool — a relabel, not new behaviour.)
 
+**Roles attach per node, and one person can hold several.** A role is a grant on a node of the work graph (the `WRUA` access record — `02-config-and-model` §Roles), not a job title on a user — so the same person can be the performer on one activity and the owner of the assignment above it. This is the normal EZ case, not an edge case: an **expert who owns an assignment** performs their own activities *and* sees the request the assignment hangs off, sees sibling activities their teammates performed (state only — never another performer's line or rate), and gives the boundary sign-off on that assignment before it reaches the verifier. Owning changes what they **see and sign**; it never changes how they are **paid** — payout still accrues per activity they personally performed (E11).
+
+Two consequences for the surfaces (§3): the performer surface cannot be assumed to be channel-only — an expert who owns anything needs the request lens too; and access must be computed per node from the role grants, never from a single global role on the user.
+
 ---
 
 ## 3. What the product looks like (surfaces / IA)
@@ -52,7 +56,7 @@ Role-scoped surfaces over **one work graph**. Each shows only what the actor's r
 1. **Operator Console (L0)** — workspace list, provisioning wizard, tier/module toggles, oversight. No tenant content.
 2. **Setup / Admin Console (L1)** — the **readiness dashboard** ("you can deliver once these are set"), config editors, archetype picker, people directory, relationships.
 3. **Work Console (L2)** — request inbox, the **plan-ratification screen** (AI draft, editable inline), the live work tree (parallel branches + status roll-up), the **verify screen** (pre-computed reconciliation, one-tap), delivery view.
-4. **Performer surface** — mostly **channel-native**: a chat/WhatsApp/SMS message with one-tap Accept + output upload. App optional.
+4. **Performer surface** — for a performer who holds nothing else, **channel-native** is enough: a chat/WhatsApp/SMS message with one-tap Accept + output upload, app optional. A performer who **also owns an assignment** (§2 — the normal EZ case for an expert lead) needs the request lens as well: their activities, the assignment they own, and its sign-off.
 5. **Requester surface** — submit (or auto-created from email/tool), status roll-up, the deliverable, approve-if-required.
 6. **Money surfaces** — invoicing / wallet / payout, each appearing **only when its capability is on**.
 
