@@ -435,52 +435,6 @@ body.tableview .tin>*{animation:none}
 .vfoot b{font-size:15px;font-weight:680;color:var(--ink);font-variant-numeric:tabular-nums;margin-right:5px}
 .vfoot .vf2{color:var(--muted);font-weight:600}
 .vfoot .vf3{margin-left:auto;text-align:right;max-width:46%}
-/* ---- the tree: a structure you can read down and act on ---- */
-.thead2,.tnode{display:grid;grid-template-columns:22px 10px 1fr 104px 116px 74px 92px 22px;align-items:center;gap:9px}
-.thead2{padding:9px 13px 6px;font-size:8.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);font-weight:700;
- border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);background:var(--sunk)}
-.thead2 .tn,.thead2 .tw,.thead2 .tm,.thead2 .td,.thead2 .tp{overflow:hidden}
-.ttree{padding:3px 0 2px}
-.tnode{position:relative;padding:7px 13px;transition:background .13s}
-.tnode:hover{background:var(--sunk)}
-.tnode.dim{opacity:.42}
-.tnode.dim .tn b{text-decoration:line-through}
-.tnode.l1{background:linear-gradient(90deg,rgba(17,41,73,.028),transparent 55%)}
-.tnode.l1 .tn b{font-size:12.5px;font-weight:680}
-.tnode.l2 .tn b{font-size:12px;font-weight:560}
-.tgut{position:relative;height:100%;justify-self:center;width:22px}
-.tnode.l2 .tgut .tl{position:absolute;left:11px;top:-11px;bottom:50%;width:1.5px;background:var(--line)}
-.tnode.l2 .tgut .tl::after{content:'';position:absolute;left:0;bottom:0;width:8px;height:1.5px;background:var(--line)}
-.tnode .d{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface)}
-.tnode .d.done{background:var(--good-mid);border-color:var(--good-mid)}
-.tnode .d.now{background:var(--ai);border-color:var(--ai)}
-.tnode .d.warn{background:var(--warn);border-color:var(--warn)}
-.tnode .d.risk{background:var(--crit);border-color:var(--crit)}
-.tnode .d.dim{background:var(--soft)}
-.tnode .tn{min-width:0}
-.tnode .tn b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tnode .tn small{display:block;font-size:10px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tnode .tw{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tnode .tp{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--faint);font-family:var(--mono)}
-.tnode .tp .pbar2{flex:1;height:5px;border-radius:99px;background:var(--soft);overflow:hidden}
-.tnode .tp .pbar2 i{display:block;height:100%;border-radius:99px;background:var(--ai)}
-.tnode .tp .pbar2 i.done{background:var(--good-mid)}
-.tnode .tp .pbar2 i.idle{background:var(--line)}
-.tnode .tm{font-size:11px;font-family:var(--mono);text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
-.tnode .td{font-size:10.5px;color:var(--faint);text-align:right;white-space:nowrap}
-.tdots{opacity:0;color:var(--faint);font-size:15px;line-height:1;cursor:pointer;transition:opacity .14s,color .14s;text-align:center}
-.tnode:hover .tdots{opacity:1}
-.tdots:hover{color:var(--ink)}
-.tmenu{position:absolute;right:26px;top:26px;z-index:20;background:var(--surface);border:1px solid var(--line);
- border-radius:11px;box-shadow:0 16px 40px -18px rgba(17,41,73,.5);padding:4px;min-width:198px;display:flex;flex-direction:column}
-.tmenu button{text-align:left;font-size:11.5px;font-weight:560;padding:7px 10px;border-radius:7px;color:var(--muted);cursor:pointer}
-.tmenu button:hover{background:var(--sunk);color:var(--ink)}
-.tmenu button.dang{color:var(--crit)}
-.tmenu button.dang:hover{background:var(--crit-soft)}
-.tadd{display:block;font-size:11px;font-weight:600;color:var(--faint);padding:6px 13px 6px 0;cursor:pointer;transition:color .14s}
-.tadd:hover{color:var(--ai-ink)}
-.tadd.l2{margin-left:53px}
-.tadd.l1{margin-left:22px;border-top:1px dashed var(--line2);margin-top:2px;padding-top:9px}
 /* file progress */
 .pcell{width:130px}
 .pbar2{display:inline-block;width:76px;height:5px;border-radius:99px;background:var(--soft);overflow:hidden;vertical-align:middle}
@@ -490,6 +444,56 @@ body.tableview .tin>*{animation:none}
 .fcell{width:46px}
 .fext{font-size:8.5px;font-weight:700;padding:2px 5px;border-radius:4px;background:var(--sunk);border:1px solid var(--line2);color:var(--muted)}
 .fext.done{background:var(--good-soft);border-color:#C6DFCE;color:var(--good-mid)}
+/* ---- the tree card: two levels, four columns, room to breathe ---- */
+.ttree2{padding:2px 0}
+.tn2{position:relative;display:grid;grid-template-columns:10px 1fr 92px 76px 20px;align-items:center;gap:11px;
+ padding:9px 14px;transition:background .13s}
+.tn2:hover{background:var(--sunk)}
+.tn2.dim{opacity:.4}
+.tn2.dim .t2n b{text-decoration:line-through}
+.tn2.asg{background:var(--sunk);border-top:1px solid var(--line2)}
+.tn2.asg:first-child{border-top:0}
+.tn2.asg .t2n b{font-size:12.5px;font-weight:680}
+.tn2.act{padding-left:40px;grid-template-columns:10px 1fr 92px 76px 20px}
+.tn2.act::before{content:'';position:absolute;left:22px;top:0;bottom:0;width:1.5px;background:var(--line2)}
+.tn2.act:last-child::before{bottom:50%}
+.tn2.act .t2n b{font-size:12px;font-weight:560}
+.tn2 .d{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface)}
+.tn2 .d.done{background:var(--good-mid);border-color:var(--good-mid)}
+.tn2 .d.now{background:var(--ai);border-color:var(--ai)}
+.tn2 .d.warn{background:var(--warn);border-color:var(--warn)}
+.tn2 .d.dim{background:var(--soft)}
+.t2n{min-width:0}
+.t2n b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2n small{display:block;font-size:10.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.t2r{font-size:10.5px;color:var(--faint);font-family:var(--mono);text-align:right}
+.t2m{font-size:11.5px;font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.tn2.act .t2m{color:var(--muted)}
+.tdots{opacity:0;color:var(--faint);font-size:15px;line-height:1;cursor:pointer;transition:opacity .14s,color .14s}
+.tn2:hover .tdots{opacity:1}
+.tdots:hover{color:var(--ink)}
+.tmenu{position:absolute;right:24px;top:30px;z-index:20;background:var(--surface);border:1px solid var(--line);
+ border-radius:11px;box-shadow:0 16px 40px -18px rgba(17,41,73,.5);padding:4px;min-width:200px;display:flex;flex-direction:column}
+.tmenu button{text-align:left;font-size:11.5px;font-weight:560;padding:7px 10px;border-radius:7px;color:var(--muted);cursor:pointer}
+.tmenu button:hover{background:var(--sunk);color:var(--ink)}
+.tmenu button.dang{color:var(--crit)}
+.tmenu button.dang:hover{background:var(--crit-soft)}
+.tadd{display:block;width:100%;text-align:left;font-size:11px;font-weight:600;color:var(--faint);padding:9px 14px;cursor:pointer;
+ border-top:1px dashed var(--line2);transition:color .14s}
+.tadd:hover{color:var(--ai-ink)}
+/* ---- the list, as a tree ---- */
+.ci.hask{padding-left:4px}
+.kcar{width:16px;flex:none;color:var(--faint);font-size:9px;transition:transform .18s var(--ease),color .14s;cursor:pointer;align-self:center}
+.kcar.o{transform:rotate(90deg);color:var(--ink)}
+.kcar:hover{color:var(--ink)}
+.kcar.sp{cursor:default}
+.ci.kid{padding:7px 8px 7px 6px;border-radius:0 10px 10px 0}
+.ci.kid.l1{margin-left:20px;border-left:1.5px solid var(--line2)}
+.ci.kid.l2{margin-left:38px;border-left:1.5px solid var(--line2)}
+.ci.kid .cn b{font-size:12px;font-weight:600}
+.ci.kid.l2 .cn b{font-weight:520;color:var(--muted)}
+.ci.kid .cs{font-size:10.5px}
+.ci.kid.on{background:var(--soft)}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -685,7 +689,13 @@ function threads(){
    sub:'9 people + 2 agents · glossary v4 pinned'}
  ];
 }
-function th(id){return threads().find(t=>t.id===id)}
+function th(id){
+ var t=threads().find(t=>t.id===id); if(t) return t;
+ var N=findNode(id);
+ if(N) return {id:id,tab:'req',name:N.kind==='asg'?N.a.n:N.t.n,ini:'·',av:AV.req,time:'',
+   sub:N.kind==='asg'?'assignment':'activity',node:N.kind};
+ return null;
+}
 
 /* ---------------- right-rail — the ops drawer ---------------- */
 var REF={
@@ -837,10 +847,10 @@ var TG={
   {id:'g1',n:'Copywriting',off:'Copywriting · Long-form',own:'Sana R.',acts:[
    {id:'g1a',n:'Narrative pass',u:'12 slides',own:'Sana R.',st:'now',p:60,c:700,due:'today 17:00'}]},
   {id:'g2',n:'Design',off:'Presentation design · High-end',own:'Priya N.',acts:[
-   {id:'g2a',n:'Slides 1–15',u:'15 slides',own:'Priya N.',st:'idle',p:0,c:700,due:'Thu'},
-   {id:'g2b',n:'Slides 16–30',u:'15 slides',own:'Priya N.',st:'idle',p:0,c:700,due:'Fri'}]},
+   {id:'g2a',n:'Slides 1–15',u:'15 slides',own:'Priya N.',st:'idle',p:0,c:900,due:'Thu'},
+   {id:'g2b',n:'Slides 16–30',u:'15 slides',own:'Priya N.',st:'idle',p:0,c:900,due:'Fri'}]},
   {id:'g3',n:'Review & delivery',off:'Review · Standard',own:'Omar K.',acts:[
-   {id:'g3a',n:'Review pass',u:'30 slides',own:'Omar K.',st:'idle',p:0,c:600,due:'Mon'},
+   {id:'g3a',n:'Review pass',u:'30 slides',own:'Omar K.',st:'idle',p:0,c:700,due:'Mon'},
    {id:'g3b',n:'Deliver',u:'1 handover',own:'Omar K.',st:'idle',p:0,c:0,due:'Tue',must:1}]}
  ]},
  q3:{req:'Q3 report translation',cli:'Acme',price:9000,asg:[
@@ -854,7 +864,30 @@ var TG={
    {id:'q3y',n:'Deliver',u:'1 handover',own:'Omar K.',st:'idle',p:0,c:0,due:'Fri',must:1}]}
  ]}
 };
-var TPAUSE={}, TCANCEL={}, TMENU=null, TADDN=0;
+var TPAUSE={}, TCANCEL={}, TMENU=null, TADDN=0, SX={};
+/* the tree lives in the list, two taps deep — a request opens to its
+   assignments, an assignment opens to its activities. Nothing is shown
+   until it is asked for, so the list stays a list. */
+function nodeKids(id){
+ var T=TG[id];
+ if(T) return T.asg.map(a=>({id:'n-'+a.id,kind:'asg',lvl:1,name:a.n,sub:a.off+' · '+a.own,
+   bdg:[a.acts.some(x=>x.st==='warn')?'warn':a.acts.every(x=>x.st==='done')?'done':'dim',
+        a.acts.filter(x=>x.st==='done').length+'/'+a.acts.length],ref:a,root:id}));
+ var m=/^n-(.+)$/.exec(id||'');
+ if(m){
+  var A=null,rt=null;
+  Object.keys(TG).forEach(function(r){TG[r].asg.forEach(function(a){if(a.id===m[1]){A=a;rt=r}})});
+  if(A) return A.acts.map(x=>({id:'x-'+x.id,kind:'act',lvl:2,name:x.n,sub:x.u+' · '+x.own,
+    bdg:[TCANCEL[x.id]?'dim':x.st==='done'?'done':x.st==='warn'?'warn':x.st==='now'?'prog':'dim',
+         TCANCEL[x.id]?'cancelled':x.st==='done'?'done':x.p+'%'],ref:x,root:rt}));
+ }
+ return [];
+}
+function findNode(id){
+ var m=/^n-(.+)$/.exec(id||''); if(m){var o=null;Object.keys(TG).forEach(r=>TG[r].asg.forEach(a=>{if(a.id===m[1])o={kind:'asg',a:a,root:r}}));return o}
+ var x=/^x-(.+)$/.exec(id||''); if(x){var q=null;Object.keys(TG).forEach(r=>TG[r].asg.forEach(a=>a.acts.forEach(t=>{if(t.id===x[1])q={kind:'act',t:t,a:a,root:r}})));return q}
+ return null;
+}
 function tCost(t){var c=0;t.asg.forEach(a=>a.acts.forEach(x=>{if(!TCANCEL[x.id])c+=x.c}));return c}
 function tState(x){ return TCANCEL[x.id]?['dim','cancelled']:TPAUSE[x.id]?['warn','paused']:null }
 function trow(o){
@@ -870,36 +903,73 @@ function trow(o){
   (TMENU===o.id?'<div class="tmenu">'+o.menu.map(m=>'<button data-do="'+m[1]+'"'+(m[2]?' class="'+m[2]+'"':'')+'>'+m[0]+'</button>').join('')+'</div>':'')+
  '</div>';
 }
+function nodeRoom(id){
+ var N=findNode(id); if(!N) return '';
+ var out=[], T=TG[N.root];
+ out.push(day('Wed 22 Jul'));
+ if(N.kind==='asg'){
+  var A=N.a, cost=A.acts.filter(x=>!TCANCEL[x.id]).reduce((s,x)=>s+x.c,0);
+  out.push(card({dot:'',who:A.n,sub:'assignment · under '+T.req,time:'live',
+   body:'<b>'+A.off+'</b> · owned by '+A.own+'.<br><small>The client sees this level and nothing under it. '+A.acts.length+' activities, ¤'+cost.toLocaleString('en-US')+' of expert cost.</small>',
+   extra:A.acts.map(function(x){
+    var st=TCANCEL[x.id]?'dim':x.st;
+    return '<div class="actr"><span class="d '+st+'"></span><span class="an">'+x.n+'</span><span class="aw">'+x.own+' · '+(x.c?'¤'+x.c.toLocaleString('en-US'):'—')+'</span></div>';
+   }).join(''),
+   acts:[['Open the tree','','tree'],['Add an activity','','tadd:'+A.id]]}));
+  out.push(card({dot:'',who:'Workspace',sub:'for your awareness',time:'now',
+   body:'This room is the assignment. Talk here about scope and dates that affect the whole of it; talk in an activity when it is about one person’s piece.'}));
+ }else{
+  var x=N.t;
+  out.push(card({dot:'',who:x.n,sub:'activity · under '+N.a.n,time:'live',
+   body:'<b>'+x.u+'</b> · '+x.own+(x.must?' · mandatory — the graph requires it':'')+'<br><small>Due '+x.due+'. Cost ¤'+x.c.toLocaleString('en-US')+', which releases to '+x.own+' on verify.</small>',
+   extra:'<div class="statrow"><div class="stat"><b>'+x.p+'%</b><small>PROGRESS</small></div>'+
+     '<div class="stat"><b>¤'+x.c.toLocaleString('en-US')+'</b><small>EXPERT COST</small></div>'+
+     '<div class="stat"><b>'+(TCANCEL[x.id]?'cancelled':TPAUSE[x.id]?'paused':x.st==='done'?'done':x.st==='warn'?'at risk':x.st==='now'?'running':'not started')+'</b><small>STATE</small></div></div>',
+   acts:[['Re-allocate','','tallo'],[TPAUSE[x.id]?'Resume':'Pause','tpause:'+x.id],['Open the tree','','tree']]}));
+ }
+ (EXTRA[id]||[]).forEach(h=>out.push(typeof h==='function'?h():h));
+ return out.join('');
+}
 function treeFor(id){
  var t=TG[id]; if(!t) return '';
  var cost=tCost(t), marg=Math.round((t.price-cost)/t.price*100);
  var h='';
  t.asg.forEach(function(a){
-  var done=a.acts.filter(x=>x.st==='done').length, live=a.acts.filter(x=>!TCANCEL[x.id]).length;
-  var asum=a.acts.filter(x=>!TCANCEL[x.id]).reduce((s,x)=>s+x.c,0);
-  var ast=TCANCEL[a.id]?'dim':TPAUSE[a.id]?'warn':a.acts.some(x=>x.st==='warn')?'warn':a.acts.some(x=>x.st==='now')?'now':done===live?'done':'idle';
-  h+=trow({id:a.id,lvl:1,st:ast,n:a.n,sub:a.off,own:a.own,roll:done+'/'+live,money:'¤'+asum.toLocaleString('en-US'),
-   dim:!!TCANCEL[a.id],
-   menu:[['Edit assignment','tedit'],['Add an activity','tadd:'+a.id],['Add a sibling assignment','tasg'],
-         ['Add a nested assignment','tnest'],[TPAUSE[a.id]?'Resume':'Pause','tpause:'+a.id],
-         ['Duplicate','tdup'],['Cancel','tcancel:'+a.id,'dang']]});
+  var live=a.acts.filter(x=>!TCANCEL[x.id]);
+  var done=live.filter(x=>x.st==='done').length;
+  var asum=live.reduce((s,x)=>s+x.c,0);
+  var ast=TCANCEL[a.id]?'dim':TPAUSE[a.id]?'warn':a.acts.some(x=>x.st==='warn')?'warn':a.acts.some(x=>x.st==='now')?'now':(live.length&&done===live.length)?'done':'idle';
+  h+='<div class="tn2 asg'+(TCANCEL[a.id]?' dim':'')+'" data-tn="'+a.id+'">'+
+    '<span class="d '+ast+'"></span>'+
+    '<span class="t2n"><b>'+a.n+'</b><small>'+a.off+' · '+a.own+'</small></span>'+
+    '<span class="t2r">'+done+' of '+live.length+'</span>'+
+    '<span class="t2m">¤'+asum.toLocaleString('en-US')+'</span>'+
+    '<button class="tdots" data-tmenu="'+a.id+'">⋯</button>'+
+    (TMENU===a.id?'<div class="tmenu">'+[['Edit assignment','tedit'],['Add an activity','tadd:'+a.id],
+      ['Add a sibling assignment','tasg'],['Add a nested assignment','tnest'],
+      [TPAUSE[a.id]?'Resume':'Pause','tpause:'+a.id],['Duplicate','tdup'],['Cancel','tcancel:'+a.id,'dang']]
+      .map(m=>'<button data-do="'+m[1]+'"'+(m[2]?' class="'+m[2]+'"':'')+'>'+m[0]+'</button>').join('')+'</div>':'')+
+   '</div>';
   a.acts.forEach(function(x){
    var xs=TCANCEL[x.id]?'dim':TPAUSE[x.id]?'warn':x.st;
-   h+=trow({id:x.id,lvl:2,st:xs,n:x.n,sub:x.u+(x.must?' · mandatory':''),own:x.own,p:x.p,
-    money:x.c?'¤'+x.c.toLocaleString('en-US'):'—',due:x.due,dim:!!TCANCEL[x.id],
-    menu:[['Edit activity','tedit'],['Re-allocate','tallo'],[TPAUSE[x.id]?'Resume':'Pause','tpause:'+x.id],
-          ['Duplicate','tdup'],['Cancel','tcancel:'+x.id,'dang']]});
+   h+='<div class="tn2 act'+(TCANCEL[x.id]?' dim':'')+'" data-tn="'+x.id+'">'+
+     '<span class="d '+xs+'"></span>'+
+     '<span class="t2n"><b>'+x.n+'</b><small>'+x.u+' · '+x.own+' · '+x.due+(x.must?' · mandatory':'')+'</small></span>'+
+     '<span class="t2r"><span class="pbar2"><i class="'+(x.p>=100?'done':x.p>0?'prog':'idle')+'" style="width:'+x.p+'%"></i></span></span>'+
+     '<span class="t2m">'+(x.c?'¤'+x.c.toLocaleString('en-US'):'—')+'</span>'+
+     '<button class="tdots" data-tmenu="'+x.id+'">⋯</button>'+
+     (TMENU===x.id?'<div class="tmenu">'+[['Edit activity','tedit'],['Re-allocate','tallo'],
+       [TPAUSE[x.id]?'Resume':'Pause','tpause:'+x.id],['Duplicate','tdup'],['Cancel','tcancel:'+x.id,'dang']]
+       .map(m=>'<button data-do="'+m[1]+'"'+(m[2]?' class="'+m[2]+'"':'')+'>'+m[0]+'</button>').join('')+'</div>':'')+
+    '</div>';
   });
-  h+='<button class="tadd l2" data-do="tadd:'+a.id+'">+ activity in '+a.n+'</button>';
  });
- h+='<button class="tadd l1" data-do="tasg">+ assignment</button>';
- return card({id:'card-tree',wide:1,dot:'',who:'The tree',sub:t.req+' · '+t.cli+' · yours to shape',time:'live',
-  body:'<b>Request → assignment → activity.</b> The client is quoted per request and sees assignments only; each performer is paid per activity and sees her own. You are the only one who sees both ends — which is why the margin is only visible here.',
-  extra:'<div class="thead2"><span class="tgut"></span><span class="d" style="visibility:hidden"></span>'+
-    '<span class="tn">Node</span><span class="tw">Who</span><span class="tp">Progress</span><span class="tm">Cost</span><span class="td">Due</span><span style="width:22px"></span></div>'+
-   '<div class="ttree">'+h+'</div>'+
-   '<div class="statrow" style="padding-top:10px"><div class="stat"><b>¤'+t.price.toLocaleString('en-US')+'</b><small>CLIENT PRICE · PER REQUEST</small></div>'+
-   '<div class="stat"><b>¤'+cost.toLocaleString('en-US')+'</b><small>EXPERT COST · SUM OF ACTIVITIES</small></div>'+
+ return card({id:'card-tree',wide:1,dot:'',who:'The tree',sub:t.req+' · '+t.cli,time:'live',
+  body:'<b>Quoted per request, paid per activity.</b> The client sees assignments only; each performer sees her own activity. You are the only one who sees both ends — which is why the margin exists here and nowhere else.',
+  extra:'<div class="ttree2">'+h+'</div>'+
+   '<button class="tadd l1" data-do="tasg">+ assignment</button>'+
+   '<div class="statrow" style="padding-top:8px"><div class="stat"><b>¤'+t.price.toLocaleString('en-US')+'</b><small>CLIENT PRICE</small></div>'+
+   '<div class="stat"><b>¤'+cost.toLocaleString('en-US')+'</b><small>EXPERT COST</small></div>'+
    '<div class="stat"><b class="'+(marg<25?'c':'g')+'">'+marg+'%</b><small>MARGIN</small></div></div>'});
 }
 var TFILES={
@@ -1141,6 +1211,7 @@ function msgs(id){
   out.push(chips(['Who’s overloaded?','What breaches next?','Draft the Friday update for Acme']));
  }
   if(id==='verify') return verifyView();
+  if(findNode(id)) return nodeRoom(id);
  if(id==='money'){
   out.push(day('Wed 22 Jul'));
   out.push(card({dot:'',who:'Money',sub:'both books, one glance',time:'09:00',
@@ -1437,9 +1508,21 @@ function renderMoneyPane(){
  }
  $('clist').innerHTML=h;
 }
+function kidRows(pid,lvl){
+ if(!SX[pid]) return '';
+ return nodeKids(pid).map(function(k){
+  var open=!!SX[k.id], more=(k.kind==='asg');
+  return '<div class="ci kid l'+k.lvl+(CUR===k.id?' on':'')+'" data-open="'+k.id+'">'+
+   (more?'<button class="kcar'+(open?' o':'')+'" data-sx="'+k.id+'">▸</button>':'<span class="kcar sp"></span>')+
+   '<div class="cmid"><div class="cn"><b>'+k.name+'</b></div><div class="cs">'+k.sub+'</div></div>'+
+   '<div class="cend"><span class="bdg '+k.bdg[0]+'">'+k.bdg[1]+'</span></div></div>'+
+   kidRows(k.id,k.lvl+1);
+ }).join('');
+}
 function rowHtml(t,pinned){
- var un=UNREAD[t.id];
- var row='<div class="ci'+(CUR===t.id?' on':'')+'" data-open="'+t.id+'">'+
+ var un=UNREAD[t.id], hasKids=!!TG[t.id], open=!!SX[t.id];
+ var row='<div class="ci'+(CUR===t.id?' on':'')+(hasKids?' hask':'')+'" data-open="'+t.id+'">'+
+  (hasKids?'<button class="kcar top'+(open?' o':'')+'" data-sx="'+t.id+'">▸</button>':'')+
   '<span class="cav'+(t.round?' round':'')+'" style="background:'+t.av+'">'+t.ini+
   (t.p?'<span class="pdot '+t.p+'"></span>':'')+'</span>'+
   '<div class="cmid"><div class="cn"><b>'+t.name+'</b>'+(t.org?'<span class="org" style="font-size:10px;color:var(--faint)">· '+t.org+'</span>':'')+
@@ -1447,7 +1530,7 @@ function rowHtml(t,pinned){
   '<span class="ct">'+t.time+'</span></div>'+
   '<div class="cs">'+((DRAFT[t.id]||'').trim()&&CUR!==t.id?'<span style="color:var(--warn-ink);font-weight:640">Draft:</span> '+esc(DRAFT[t.id]):t.sub)+'</div></div>'+
   '<div class="cend">'+(un?'<span class="unread">'+un+'</span>':'')+(t.bdg?'<span class="bdg '+t.bdg[0]+'">'+t.bdg[1]+'</span>':'')+'</div></div>';
- return row;
+ return row+kidRows(t.id,1);
 }
 function renderList(){
  if(CUR==='money'&&!SQ){renderMoneyPane();return}
@@ -1628,6 +1711,8 @@ function aiReply(q){
 
 document.addEventListener('click',function(e){
  if(MENT!==null&&!e.target.closest('.mentpop,#ci')){MENT=null;renderMent()}
+ var sx=e.target.closest('[data-sx]');
+ if(sx){SX[sx.dataset.sx]=!SX[sx.dataset.sx];renderList();return}
  var mrow=e.target.closest('[data-ment]');
  if(mrow){selectMention(mrow.dataset.ment);return}
  var tm=e.target.closest('[data-tmenu]');
