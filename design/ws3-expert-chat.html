@@ -672,7 +672,21 @@ function notifs(){
    open:['omar',null]}
  ]);
 }
-function pendingN(){return notifs().filter(n=>!n.done&&!n.info)}
+/* a notification belongs to the node it happened on — so it shows there, not globally.
+   Home is the only place that sees everything. (Your 7 Aug note, same as the client.) */
+var NODEIDS=['r2','r4','r5','a1','a2','a3','a4'];
+function nodeOf(n){ return (n.open&&NODEIDS.indexOf(n.open[0])>-1)?n.open[0]:null }
+function nodeNotifs(){ return notifs().filter(nodeOf) }
+function stripScope(){
+ if(CUR==='ws') return {list:nodeNotifs(), where:'all'};
+ if(NODEIDS.indexOf(CUR)>-1){
+  /* an activity's alerts show on the activity AND on the request above it */
+  var t=th(CUR), kids=(t&&t.node==='req')?myActs().filter(a=>a.req===CUR).map(a=>a.id).concat([CUR]):[CUR];
+  return {list:notifs().filter(n=>kids.indexOf(nodeOf(n))>-1), where:'this'};
+ }
+ return null;
+}
+function pendingN(){return nodeNotifs().filter(n=>!n.done&&!n.info)}
 var SEVC={crit:'var(--crit)',warn:'var(--warn)',ai:'var(--ai)',cli:'var(--brand)'};
 
 /* ---------------- threads: the tree, each node a room ---------------- */
@@ -1317,16 +1331,30 @@ function renderRails(){
   '<div class="rme">'+ME.ini+'</div>';
 }
 function renderStrip(){
- var p=pendingN(), el=$('strip');
- if(!p.length){el.innerHTML='<svg class="ic" style="width:13px;color:var(--good-mid)"><use href="#i-check"/></svg><span style="color:var(--good-mid);font-weight:620">Nothing waits on you.</span>'+
-  '<span style="margin-left:auto;color:var(--faint);font-size:11px">'+ME.name+' · '+ME.role+'</span>';el.className='strip ok';return}
- var n=p[0];
- el.className='strip'+(n.sev==='crit'?' crit':'');
- el.innerHTML='<svg class="ic" style="width:13px;color:'+SEVC[n.sev]+'"><use href="#i-warn"/></svg>'+
-  '<b style="font-weight:640">'+n.t+'</b><span style="color:var(--faint)">· '+n.s+'</span>'+
+ var el=$('strip'), sc=stripScope();
+ if(!sc){el.style.display='none';return}
+ var p=sc.list.filter(n=>!n.done&&!n.info);
+ if(!p.length){
+  if(sc.where!=='all'){el.style.display='none';return}
+  el.style.display='';el.className='strip ok';
+  el.innerHTML='<svg class="ic" style="width:13px;color:var(--good-mid)"><use href="#i-check"/></svg>'+
+   '<span style="color:var(--good-mid);font-weight:620">Nothing waits on you.</span>'+
+   '<span style="margin-left:auto;color:var(--faint);font-size:11px">'+ME.name+' · '+ME.role+'</span>';
+  return}
+ el.style.display='';
+ var top=p.slice().sort((a,b)=>({crit:0,warn:1,ai:2,cli:3}[a.sev]-{crit:0,warn:1,ai:2,cli:3}[b.sev]))[0];
+ var act=(sc.where==='this'&&top.act)?top.act:null;
+ var wn=(sc.where==='all'&&nodeOf(top))?th(nodeOf(top)).name:'';
+ var det=top.s;
+ if(wn&&det.indexOf(wn)===0) det=det.slice(wn.length).replace(/^\s*·\s*/,'');
+ var where=wn?wn+' · ':'';
+ el.className='strip'+(top.sev==='crit'?' crit':'');
+ el.innerHTML='<svg class="ic" style="width:13px;color:'+SEVC[top.sev]+'"><use href="#i-warn"/></svg>'+
+  '<b style="font-weight:640">'+top.t+'</b><span style="color:var(--faint)">· '+where+det+'</span>'+
   '<span style="margin-left:auto;display:flex;gap:8px;align-items:center">'+
   (p.length>1?'<span class="scount">'+p.length+' waiting</span>':'')+
-  '<span class="sopen">Open</span></span>';
+  (act?'<span class="sopen" data-do="'+act[1]+'">'+act[0]+'</span>':'<span class="sopen">'+(NOV?'Close':'Open')+'</span>')+
+  '</span>';
 }
 function renderNov(){
  var el=$('nov'); el.className='nov'+(NOV?' on':'');
@@ -1703,7 +1731,7 @@ document.addEventListener('click',function(e){
   if(n2==='profile'){SP='skills';renderRails();renderPanel();return}
   if(n2==='help'){SP='sop';renderRails();renderPanel();return}
  }
- if(el.id==='strip'){NOV=!NOV;NSEL=null;renderRails();renderStrip();renderNov();return}
+ if(el.id==='strip'&&!e.target.closest('[data-do]')){NOV=!NOV;NSEL=null;renderRails();renderStrip();renderNov();return}
  if(el.dataset&&el.dataset.tool2){SP=el.dataset.tool2;renderPanel();return}
  if(el.dataset&&el.dataset.tool){SP=(SP===el.dataset.tool)?null:el.dataset.tool;renderRails();renderPanel();return}
  if(el.dataset&&el.dataset.notif){NSEL=(NSEL===el.dataset.notif)?null:el.dataset.notif;renderNov();return}
