@@ -435,6 +435,61 @@ body.tableview .tin>*{animation:none}
 .vfoot b{font-size:15px;font-weight:680;color:var(--ink);font-variant-numeric:tabular-nums;margin-right:5px}
 .vfoot .vf2{color:var(--muted);font-weight:600}
 .vfoot .vf3{margin-left:auto;text-align:right;max-width:46%}
+/* ---- the tree: a structure you can read down and act on ---- */
+.thead2,.tnode{display:grid;grid-template-columns:22px 10px 1fr 104px 116px 74px 92px 22px;align-items:center;gap:9px}
+.thead2{padding:9px 13px 6px;font-size:8.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);font-weight:700;
+ border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);background:var(--sunk)}
+.thead2 .tn,.thead2 .tw,.thead2 .tm,.thead2 .td,.thead2 .tp{overflow:hidden}
+.ttree{padding:3px 0 2px}
+.tnode{position:relative;padding:7px 13px;transition:background .13s}
+.tnode:hover{background:var(--sunk)}
+.tnode.dim{opacity:.42}
+.tnode.dim .tn b{text-decoration:line-through}
+.tnode.l1{background:linear-gradient(90deg,rgba(17,41,73,.028),transparent 55%)}
+.tnode.l1 .tn b{font-size:12.5px;font-weight:680}
+.tnode.l2 .tn b{font-size:12px;font-weight:560}
+.tgut{position:relative;height:100%;justify-self:center;width:22px}
+.tnode.l2 .tgut .tl{position:absolute;left:11px;top:-11px;bottom:50%;width:1.5px;background:var(--line)}
+.tnode.l2 .tgut .tl::after{content:'';position:absolute;left:0;bottom:0;width:8px;height:1.5px;background:var(--line)}
+.tnode .d{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface)}
+.tnode .d.done{background:var(--good-mid);border-color:var(--good-mid)}
+.tnode .d.now{background:var(--ai);border-color:var(--ai)}
+.tnode .d.warn{background:var(--warn);border-color:var(--warn)}
+.tnode .d.risk{background:var(--crit);border-color:var(--crit)}
+.tnode .d.dim{background:var(--soft)}
+.tnode .tn{min-width:0}
+.tnode .tn b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnode .tn small{display:block;font-size:10px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnode .tw{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnode .tp{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--faint);font-family:var(--mono)}
+.tnode .tp .pbar2{flex:1;height:5px;border-radius:99px;background:var(--soft);overflow:hidden}
+.tnode .tp .pbar2 i{display:block;height:100%;border-radius:99px;background:var(--ai)}
+.tnode .tp .pbar2 i.done{background:var(--good-mid)}
+.tnode .tp .pbar2 i.idle{background:var(--line)}
+.tnode .tm{font-size:11px;font-family:var(--mono);text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.tnode .td{font-size:10.5px;color:var(--faint);text-align:right;white-space:nowrap}
+.tdots{opacity:0;color:var(--faint);font-size:15px;line-height:1;cursor:pointer;transition:opacity .14s,color .14s;text-align:center}
+.tnode:hover .tdots{opacity:1}
+.tdots:hover{color:var(--ink)}
+.tmenu{position:absolute;right:26px;top:26px;z-index:20;background:var(--surface);border:1px solid var(--line);
+ border-radius:11px;box-shadow:0 16px 40px -18px rgba(17,41,73,.5);padding:4px;min-width:198px;display:flex;flex-direction:column}
+.tmenu button{text-align:left;font-size:11.5px;font-weight:560;padding:7px 10px;border-radius:7px;color:var(--muted);cursor:pointer}
+.tmenu button:hover{background:var(--sunk);color:var(--ink)}
+.tmenu button.dang{color:var(--crit)}
+.tmenu button.dang:hover{background:var(--crit-soft)}
+.tadd{display:block;font-size:11px;font-weight:600;color:var(--faint);padding:6px 13px 6px 0;cursor:pointer;transition:color .14s}
+.tadd:hover{color:var(--ai-ink)}
+.tadd.l2{margin-left:53px}
+.tadd.l1{margin-left:22px;border-top:1px dashed var(--line2);margin-top:2px;padding-top:9px}
+/* file progress */
+.pcell{width:130px}
+.pbar2{display:inline-block;width:76px;height:5px;border-radius:99px;background:var(--soft);overflow:hidden;vertical-align:middle}
+.pbar2 i{display:block;height:100%;border-radius:99px;background:var(--ai)}
+.pbar2 i.done{background:var(--good-mid)}.pbar2 i.idle{background:var(--line)}
+.pnum{font-size:10px;color:var(--faint);font-family:var(--mono);margin-left:7px}
+.fcell{width:46px}
+.fext{font-size:8.5px;font-weight:700;padding:2px 5px;border-radius:4px;background:var(--sunk);border:1px solid var(--line2);color:var(--muted)}
+.fext.done{background:var(--good-soft);border-color:#C6DFCE;color:var(--good-mid)}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -770,20 +825,110 @@ var TREES={
   ['Client verify','warn','day 2 of 5'],
   ['Settlement','idle','on the verify']]}
 };
-function treeFor(id){
- var t=TREES[id]; if(!t) return '';
- return card({id:'card-tree',dot:'',who:'The tree',sub:'request → assignment → activity · both books',time:'live',
-  body:'You see everything — <b>cost per activity, price per request.</b> The client sees assignments only; each performer sees her own slice.',
-  extra:t.rows.map(r=>'<div class="asgr"'+(r[0].indexOf('—')===0?' style="padding-left:34px"':'')+'><span class="d '+r[1]+'"></span><span class="an"><b>'+r[0]+'</b></span><span class="aw">'+r[2]+'</span></div>').join('')+
-  '<div class="statrow" style="padding-top:8px"><div class="stat"><b>'+t.p[0]+'</b><small>CLIENT PRICE</small></div><div class="stat"><b>'+t.p[1]+'</b><small>EXPERT COST</small></div><div class="stat"><b class="g">'+t.p[2]+'</b><small>MARGIN</small></div></div>'});
+/* ============================================================
+   THE TREE — request → assignment → activity, as a real structure
+   SWAT can work on. This is the object EZ actually manages: the
+   client is quoted per request, the performer is paid per activity,
+   and the margin only exists in the gap between them. So it has to
+   be readable AND editable in one place.
+   ============================================================ */
+var TG={
+ deck:{req:'Investor deck',cli:'Globex',price:5400,asg:[
+  {id:'g1',n:'Copywriting',off:'Copywriting · Long-form',own:'Sana R.',acts:[
+   {id:'g1a',n:'Narrative pass',u:'12 slides',own:'Sana R.',st:'now',p:60,c:700,due:'today 17:00'}]},
+  {id:'g2',n:'Design',off:'Presentation design · High-end',own:'Priya N.',acts:[
+   {id:'g2a',n:'Slides 1–15',u:'15 slides',own:'Priya N.',st:'idle',p:0,c:700,due:'Thu'},
+   {id:'g2b',n:'Slides 16–30',u:'15 slides',own:'Priya N.',st:'idle',p:0,c:700,due:'Fri'}]},
+  {id:'g3',n:'Review & delivery',off:'Review · Standard',own:'Omar K.',acts:[
+   {id:'g3a',n:'Review pass',u:'30 slides',own:'Omar K.',st:'idle',p:0,c:600,due:'Mon'},
+   {id:'g3b',n:'Deliver',u:'1 handover',own:'Omar K.',st:'idle',p:0,c:0,due:'Tue',must:1}]}
+ ]},
+ q3:{req:'Q3 report translation',cli:'Acme',price:9000,asg:[
+  {id:'q1',n:'Financial translation',off:'Translation · EZ Assured',own:'Omar K.',acts:[
+   {id:'q1a',n:'Glossary apply',u:'320 terms',own:'Mara L.',st:'done',p:100,c:600,due:'Tue'},
+   {id:'q1b',n:'Translate 40pp',u:'40 pages',own:'Omar K.',st:'warn',p:52,c:1800,due:'today 18:00'}]},
+  {id:'q2',n:'Localization QA',off:'QA · Human',own:'Dev P.',acts:[
+   {id:'q2a',n:'QA pass',u:'40 pages',own:'Dev P.',st:'idle',p:0,c:800,due:'tonight'}]},
+  {id:'q3a2',n:'RTL reflow',off:'Layout · RTL',own:'Sana R.',acts:[
+   {id:'q3x',n:'Reflow 12 pages',u:'12 pages',own:'Sana R.',st:'idle',p:0,c:900,due:'Thu'},
+   {id:'q3y',n:'Deliver',u:'1 handover',own:'Omar K.',st:'idle',p:0,c:0,due:'Fri',must:1}]}
+ ]}
+};
+var TPAUSE={}, TCANCEL={}, TMENU=null, TADDN=0;
+function tCost(t){var c=0;t.asg.forEach(a=>a.acts.forEach(x=>{if(!TCANCEL[x.id])c+=x.c}));return c}
+function tState(x){ return TCANCEL[x.id]?['dim','cancelled']:TPAUSE[x.id]?['warn','paused']:null }
+function trow(o){
+ return '<div class="tnode l'+o.lvl+(o.dim?' dim':'')+'" data-tn="'+o.id+'">'+
+  '<span class="tgut">'+(o.lvl>1?'<i class="tl"></i>':'')+'</span>'+
+  '<span class="d '+o.st+'"></span>'+
+  '<span class="tn"><b>'+o.n+'</b>'+(o.sub?'<small>'+o.sub+'</small>':'')+'</span>'+
+  '<span class="tw">'+(o.own||'')+'</span>'+
+  '<span class="tp">'+(o.p!=null?'<span class="pbar2"><i class="'+(o.p>=100?'done':o.p>0?'prog':'idle')+'" style="width:'+o.p+'%"></i></span><span class="pnum">'+o.p+'%</span>':(o.roll||''))+'</span>'+
+  '<span class="tm">'+(o.money||'')+'</span>'+
+  '<span class="td">'+(o.due||'')+'</span>'+
+  '<button class="tdots" data-tmenu="'+o.id+'" aria-label="Actions">⋯</button>'+
+  (TMENU===o.id?'<div class="tmenu">'+o.menu.map(m=>'<button data-do="'+m[1]+'"'+(m[2]?' class="'+m[2]+'"':'')+'>'+m[0]+'</button>').join('')+'</div>':'')+
+ '</div>';
 }
-/* the plan of each, as a Gantt */
-function gantt(title,rows){
- return '<div class="msg" style="max-width:640px"><div class="card" id="card-gantt"><div class="ch"><span class="cdot"></span><span class="cl">'+title+' <span class="sub">· today marked</span></span><span class="ctime">live</span></div><div class="plan">'+
-  rows.map(r=>'<div class="prow"><span class="pn">'+r[0]+'</span><div class="ptrack"><span class="ptoday"></span><span class="pbar '+r[1]+'" style="left:'+r[2]+'%;width:'+r[3]+'%">'+r[4]+'</span></div></div>').join('')+
-  '</div><div class="plegend"><span><i style="background:var(--good-soft);border:1px solid #C6DFCE"></i>Done</span>'+
-  '<span><i style="background:#E08A3C"></i>At risk</span><span><i style="background:var(--good-mid)"></i>Running</span>'+
-  '<span><i style="background:var(--soft);border:1px solid var(--line)"></i>Planned</span><span><i style="background:var(--warn);width:3px"></i>Now</span></div></div></div>';
+function treeFor(id){
+ var t=TG[id]; if(!t) return '';
+ var cost=tCost(t), marg=Math.round((t.price-cost)/t.price*100);
+ var h='';
+ t.asg.forEach(function(a){
+  var done=a.acts.filter(x=>x.st==='done').length, live=a.acts.filter(x=>!TCANCEL[x.id]).length;
+  var asum=a.acts.filter(x=>!TCANCEL[x.id]).reduce((s,x)=>s+x.c,0);
+  var ast=TCANCEL[a.id]?'dim':TPAUSE[a.id]?'warn':a.acts.some(x=>x.st==='warn')?'warn':a.acts.some(x=>x.st==='now')?'now':done===live?'done':'idle';
+  h+=trow({id:a.id,lvl:1,st:ast,n:a.n,sub:a.off,own:a.own,roll:done+'/'+live,money:'¤'+asum.toLocaleString('en-US'),
+   dim:!!TCANCEL[a.id],
+   menu:[['Edit assignment','tedit'],['Add an activity','tadd:'+a.id],['Add a sibling assignment','tasg'],
+         ['Add a nested assignment','tnest'],[TPAUSE[a.id]?'Resume':'Pause','tpause:'+a.id],
+         ['Duplicate','tdup'],['Cancel','tcancel:'+a.id,'dang']]});
+  a.acts.forEach(function(x){
+   var xs=TCANCEL[x.id]?'dim':TPAUSE[x.id]?'warn':x.st;
+   h+=trow({id:x.id,lvl:2,st:xs,n:x.n,sub:x.u+(x.must?' · mandatory':''),own:x.own,p:x.p,
+    money:x.c?'¤'+x.c.toLocaleString('en-US'):'—',due:x.due,dim:!!TCANCEL[x.id],
+    menu:[['Edit activity','tedit'],['Re-allocate','tallo'],[TPAUSE[x.id]?'Resume':'Pause','tpause:'+x.id],
+          ['Duplicate','tdup'],['Cancel','tcancel:'+x.id,'dang']]});
+  });
+  h+='<button class="tadd l2" data-do="tadd:'+a.id+'">+ activity in '+a.n+'</button>';
+ });
+ h+='<button class="tadd l1" data-do="tasg">+ assignment</button>';
+ return card({id:'card-tree',wide:1,dot:'',who:'The tree',sub:t.req+' · '+t.cli+' · yours to shape',time:'live',
+  body:'<b>Request → assignment → activity.</b> The client is quoted per request and sees assignments only; each performer is paid per activity and sees her own. You are the only one who sees both ends — which is why the margin is only visible here.',
+  extra:'<div class="thead2"><span class="tgut"></span><span class="d" style="visibility:hidden"></span>'+
+    '<span class="tn">Node</span><span class="tw">Who</span><span class="tp">Progress</span><span class="tm">Cost</span><span class="td">Due</span><span style="width:22px"></span></div>'+
+   '<div class="ttree">'+h+'</div>'+
+   '<div class="statrow" style="padding-top:10px"><div class="stat"><b>¤'+t.price.toLocaleString('en-US')+'</b><small>CLIENT PRICE · PER REQUEST</small></div>'+
+   '<div class="stat"><b>¤'+cost.toLocaleString('en-US')+'</b><small>EXPERT COST · SUM OF ACTIVITIES</small></div>'+
+   '<div class="stat"><b class="'+(marg<25?'c':'g')+'">'+marg+'%</b><small>MARGIN</small></div></div>'});
+}
+var TFILES={
+ deck:[['brief-globex-q3.pdf','PDF','src','from Globex · 2 Jul',null,'—'],
+       ['narrative-v2.docx','DOCX','work','Sana R. · edited 11:40',60,'today'],
+       ['deck-shell.fig','FIG','work','Priya N. · not started',0,'Thu'],
+       ['Investor-deck-v1.pptx','PPTX','del','assembles when design closes',0,'Tue']],
+ q3:[['Q3-report-source.docx','DOCX','src','from Acme · 20 Jul',null,'—'],
+     ['acme-glossary-v4.tbx','TBX','src','reference · v4',null,'—'],
+     ['Q3-report-AR-working.docx','DOCX','work','Omar K. · edited 12:31',52,'today 18:00'],
+     ['Q3-report-AR-rtl.indd','INDD','work','Sana R. · waits on the AR',0,'Thu'],
+     ['Q3-report-AR-v1.docx','DOCX','del','held at the boundary until Omar signs',0,'Fri']]
+};
+function filesFor2(id){
+ var F=TFILES[id]; if(!F) return '';
+ var K={src:['','Source'],work:['prod','Working'],del:['done','Deliverable']};
+ var rows=F.map(function(f){
+  var k=K[f[2]];
+  return '<tr><td class="fcell"><span class="fext '+(f[2]==='del'?'done':'')+'">'+f[1]+'</span></td>'+
+   '<td><span class="wk">'+f[0]+'</span><span class="sc">'+f[3]+'</span></td>'+
+   '<td class="pcell">'+(f[4]==null?'<span class="sc" style="margin:0">—</span>'
+     :'<span class="pbar2"><i class="'+(f[4]>=100?'done':f[4]>0?'prog':'idle')+'" style="width:'+f[4]+'%"></i></span><span class="pnum">'+f[4]+'%</span>')+'</td>'+
+   '<td><span class="bdg '+(f[2]==='del'?'done':f[2]==='work'?'prog':'dim')+'">'+k[1]+'</span></td>'+
+   '<td class="r dt">'+f[5]+'</td>'+
+   '<td class="r"><button class="fdl" data-do="dl">Open</button></td></tr>';
+ }).join('');
+ return card({id:'card-files',wide:1,dot:'',who:'Files',sub:'progress per file · both sides of the boundary',time:'live',
+  body:'<b>Source comes in, working stays yours, deliverables cross only on sign-off.</b> Progress is per file, so you can see which one is actually holding the request up.',
+  extra:'<div class="tw"><table class="wtbl"><thead><tr><th></th><th>File</th><th>Progress</th><th>Shelf</th><th class="r">Due</th><th class="r"></th></tr></thead><tbody>'+rows+'</tbody></table></div>'});
 }
 function ganttFor(id){
  if(id==='q3')return gantt('Q3 · the plan',[['Glossary apply','done',2,16,'done'],['Translate 40pp','warn',20,36,'Omar · 52%'],['QA pass · Dev','idle',56,22,'tonight'],['RTL reflow · Sana','idle',66,18,'Thu'],['Deliver','idle',88,10,'Fri']]);
@@ -1131,7 +1276,7 @@ function msgs(id){
   out.push(human('Sana R.','','08:45','SR',AV.sana,'Glossary v4 pinned — financial work uses it from today.'));
   out.push(me('Reminder: escalations at T-4h, never after. If it smells late at lunch, it is.','08:50',0,1,'the floor · 11'));
  }
- (EXTRA[id]||[]).forEach(h=>out.push(h));
+ (EXTRA[id]||[]).forEach(h=>out.push(typeof h==='function'?h():h));
  if(TYPING===id) out.push(typingHtml(id));
  return out.join('');
 }
@@ -1485,6 +1630,9 @@ document.addEventListener('click',function(e){
  if(MENT!==null&&!e.target.closest('.mentpop,#ci')){MENT=null;renderMent()}
  var mrow=e.target.closest('[data-ment]');
  if(mrow){selectMention(mrow.dataset.ment);return}
+ var tm=e.target.closest('[data-tmenu]');
+ if(tm){TMENU=(TMENU===tm.dataset.tmenu)?null:tm.dataset.tmenu;renderThread(1);return}
+ if(TMENU&&!e.target.closest('.tmenu')){TMENU=null;renderThread(1)}
  var rem=e.target.closest('[data-remoji]');
  if(rem){
   var hu2=rem.closest('.human'); if(!hu2||!hu2.dataset.rk)return;
@@ -1546,7 +1694,8 @@ document.addEventListener('click',function(e){
    var tid={gantt:'card-gantt',tree:'card-tree',files:'card-files'}[k], ex=$(tid);
    if(ex){ex.scrollIntoView({block:'center'});ex.classList.add('flash');setTimeout(()=>ex.classList.remove('flash'),1400);return}
    EXTRA[CUR]=EXTRA[CUR]||[];
-   EXTRA[CUR].push(k==='gantt'?ganttFor(CUR):k==='tree'?treeFor(CUR):filesCard(CUR));
+   var rid=CUR;
+   EXTRA[CUR].push(k==='gantt'?function(){return ganttFor(rid)}:k==='tree'?function(){return treeFor(rid)}:function(){return filesFor2(rid)||filesCard(rid)});
    renderThread();return}
   SP=(SP===k)?null:k; renderRails(); renderPanel(); return}
  if(el.dataset&&el.dataset.tool){SP=(SP===el.dataset.tool)?null:el.dataset.tool;renderRails();renderPanel();return}
@@ -1583,8 +1732,43 @@ document.addEventListener('click',function(e){
    toast('In the real build this runs the '+(a==='exp'?'export':'follow-up')+' flow.');return}
   if(a==='tlv')return resolve('tlv','Verified — invoice #2066 raised, Dev’s ¤300 released.');
   if(a==='sendback'){toast('Sent back — the exception routes to the performer before money moves.');return}
-  if(a==='tree'){EXTRA[CUR]=EXTRA[CUR]||[];EXTRA[CUR].push(treeFor(CUR)||card({dot:'',who:'The tree',sub:'this room',time:'now',body:'No tree here — this room isn’t a request.'}));renderThread();return}
-  if(a==='gantt'){EXTRA[CUR]=EXTRA[CUR]||[];EXTRA[CUR].push(ganttFor(CUR)||'');renderThread();return}
+  if(a==='tree'){var tr=CUR;
+   if($('card-tree')){var xt=$('card-tree');xt.scrollIntoView({block:'center'});xt.classList.add('flash');setTimeout(()=>xt.classList.remove('flash'),1400);return}
+   EXTRA[tr]=EXTRA[tr]||[];
+   EXTRA[tr].push(function(){return treeFor(tr)||card({dot:'',who:'The tree',sub:'this room',time:'now',body:'No tree here — this room isn’t a request.'})});
+   renderThread();return}
+  if(a==='gantt'){var gr=CUR;
+   if($('card-gantt')){var xg=$('card-gantt');xg.scrollIntoView({block:'center'});xg.classList.add('flash');setTimeout(()=>xg.classList.remove('flash'),1400);return}
+   EXTRA[gr]=EXTRA[gr]||[];EXTRA[gr].push(function(){return ganttFor(gr)||''});renderThread();return}
+  if(a.indexOf('tadd:')===0){
+   var aid=a.slice(5), T=TG[CUR]; if(!T)return;
+   var A=T.asg.find(x=>x.id===aid); if(!A)return;
+   var nid='new'+(++TADDN);
+   A.acts.splice(A.acts.length-(A.acts.some(x=>x.must)?1:0),0,
+     {id:nid,n:'New activity',u:'set the units',own:'unallocated',st:'idle',p:0,c:0,due:'set a date'});
+   TMENU=null;
+   toast('Activity added to '+A.n+' — set its skill, units and performer.',function(){A.acts=A.acts.filter(x=>x.id!==nid);renderThread(1)});
+   renderThread(1);return}
+  if(a==='tasg'||a==='tnest'){
+   var T2=TG[CUR]; if(!T2)return;
+   var gid='asg'+(++TADDN);
+   T2.asg.push({id:gid,n:a==='tnest'?'Nested assignment':'New assignment',off:'pick an offering',own:'unallocated',
+     acts:[{id:gid+'d',n:'Deliver',u:'1 handover',own:'—',st:'idle',p:0,c:0,due:'set a date',must:1}]});
+   TMENU=null;
+   toast('Assignment added — its Deliver activity was created for you.',function(){T2.asg=T2.asg.filter(x=>x.id!==gid);renderThread(1)});
+   renderThread(1);return}
+  if(a.indexOf('tpause:')===0){
+   var pid=a.slice(7); TPAUSE[pid]=!TPAUSE[pid]; TMENU=null;
+   toast(TPAUSE[pid]?'Paused — it stops counting and nothing bills while it is down.':'Resumed.',
+     function(){TPAUSE[pid]=!TPAUSE[pid];renderThread(1)});
+   renderThread(1);return}
+  if(a.indexOf('tcancel:')===0){
+   var cid=a.slice(8); TCANCEL[cid]=1; TMENU=null;
+   toast('Cancelled — its cost leaves the tree and the margin recomputes.',function(){delete TCANCEL[cid];renderThread(1)});
+   renderThread(1);return}
+  if(a==='tedit'||a==='tallo'||a==='tdup'){
+   TMENU=null;renderThread(1);
+   toast('In the real build this opens the '+(a==='tedit'?'edit':a==='tallo'?'re-allocation':'duplicate')+' form inline on the node.');return}
   if(a==='vall'){
    var r=vReady(), tot=r.reduce(function(t,l){return t+l.amt},0), had=Object.assign({},VST);
    r.forEach(function(l){VST[l.id]=1});
@@ -1595,8 +1779,11 @@ document.addEventListener('click',function(e){
    toast('Sent to invoicing — grouped one invoice per entity per period.',function(){VINV=0;renderAll()});
    renderAll();return}
   if(a==='vrec'){toast('In the real build this opens the pre-computed reconciliation — splits, fees, unit counts, exceptions.');return}
-  if(a==='files'){EXTRA[CUR]=EXTRA[CUR]||[];EXTRA[CUR].push(card({dot:'',who:'Files',sub:'this room',time:'now',
-   body:'<b>working files</b> · your side only<br><b>deliverables</b> · cross on boundary sign-off<br><b>source</b> · client uploads'}));renderThread();return}
+  if(a==='files'){
+   var fc=filesFor2(CUR)||card({dot:'',who:'Files',sub:'this room',time:'now',body:'No files on this request yet.'});
+   var ex=$('card-files');
+   if(ex){ex.scrollIntoView({block:'center'});ex.classList.add('flash');setTimeout(()=>ex.classList.remove('flash'),1400);return}
+   var fr=CUR;EXTRA[fr]=EXTRA[fr]||[];EXTRA[fr].push(function(){return filesFor2(fr)||fc});renderThread();return}
   if(a==='attach'){toast('In the real build this opens the attach flow.');return}
   if(a==='pcol'){COL=!COL;$('pane').classList.toggle('col',COL);renderHead();return}
   if(a==='send'){
