@@ -494,6 +494,26 @@ body.tableview .tin>*{animation:none}
 .ci.kid.l2 .cn b{font-weight:520;color:var(--muted)}
 .ci.kid .cs{font-size:10.5px}
 .ci.kid.on{background:var(--soft)}
+/* the three levels have to read at a glance, and stay quiet when closed */
+.kcar{width:18px;height:18px;flex:none;display:grid;place-items:center;color:var(--faint);font-size:9px;border-radius:5px;
+ transition:transform .2s var(--ease),color .14s,background .14s;cursor:pointer;align-self:center}
+.kcar:hover{background:var(--soft);color:var(--ink)}
+.kcar.o{transform:rotate(90deg);color:var(--ink)}
+.ci.hask{padding-left:2px;gap:6px}
+.ci.kid{position:relative;padding:6px 8px 6px 8px;border-radius:0 10px 10px 0;border-left:0}
+.ci.kid::before{content:'';position:absolute;top:0;bottom:0;width:1.5px;background:var(--line2)}
+.ci.kid.l1{margin-left:26px}
+.ci.kid.l1::before{left:-10px}
+.ci.kid.l2{margin-left:48px}
+.ci.kid.l2::before{left:-10px}
+.ci.kid.l2::after{content:'';position:absolute;left:-10px;top:50%;width:7px;height:1.5px;background:var(--line2)}
+.ci.kid .cn b{font-size:12px;font-weight:620;color:var(--ink)}
+.ci.kid.l2 .cn b{font-weight:520;color:var(--muted)}
+.ci.kid .cs{font-size:10px;color:var(--faint)}
+.ci.kid.on{background:var(--soft)}
+.ci.kid.on .cn b{color:var(--ink)}
+.lvtag{font-size:8px;letter-spacing:.6px;text-transform:uppercase;font-weight:700;color:var(--faint);
+ background:var(--sunk);border:1px solid var(--line2);border-radius:4px;padding:1px 4px;margin-right:6px;vertical-align:1px}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -852,6 +872,32 @@ var TG={
   {id:'g3',n:'Review & delivery',off:'Review · Standard',own:'Omar K.',acts:[
    {id:'g3a',n:'Review pass',u:'30 slides',own:'Omar K.',st:'idle',p:0,c:700,due:'Mon'},
    {id:'g3b',n:'Deliver',u:'1 handover',own:'Omar K.',st:'idle',p:0,c:0,due:'Tue',must:1}]}
+ ]},
+ sub:{req:'Subtitle & sync pack',cli:'Acme',price:3200,asg:[
+  {id:'s1',n:'Subtitle production',off:'Subtitling · 4 languages',own:'Priya N.',acts:[
+   {id:'s1a',n:'Subtitle & sync',u:'48 minutes',own:'Priya N.',st:'done',p:100,c:1200,due:'Mon'},
+   {id:'s1b',n:'Final review',u:'48 minutes',own:'Mara L.',st:'done',p:100,c:600,due:'Tue'}]},
+  {id:'s2',n:'QA close-out',off:'QA · Human',own:'Dev P.',acts:[
+   {id:'s2a',n:'Close 2 notes',u:'2 notes',own:'Dev P.',st:'done',p:100,c:200,due:'Tue'},
+   {id:'s2b',n:'Deliver',u:'1 handover',own:'Omar K.',st:'done',p:100,c:0,due:'Tue 16:12',must:1}]}
+ ]},
+ jd:{req:'JD rewrite · 6 roles',cli:'Nimbus',price:1800,asg:[
+  {id:'j1',n:'Copy rewrite',off:'Copywriting · Standard',own:'Rahul S.',acts:[
+   {id:'j1a',n:'Rewrite 1–6',u:'6 JDs',own:'Tariq M.',st:'warn',p:40,c:1080,due:'Wed 17:00'}]},
+  {id:'j2',n:'Review & delivery',off:'Review · Standard',own:'Omar K.',acts:[
+   {id:'j2a',n:'Review pass',u:'6 JDs',own:'Omar K.',st:'idle',p:0,c:180,due:'Thu'},
+   {id:'j2b',n:'Deliver',u:'1 handover',own:'Omar K.',st:'idle',p:0,c:0,due:'Wed',must:1}]}
+ ]},
+ ocr:{req:'Bank statements OCR',cli:'Globex',price:1400,asg:[
+  {id:'o1',n:'Extraction',off:'OCR · Agent-first',own:'Rahul S.',acts:[
+   {id:'o1a',n:'Agent run',u:'1,240 pages',own:'Flip · MT agent',st:'done',p:100,c:434,due:'done · 41 min'},
+   {id:'o1b',n:'Human QA',u:'7 pages',own:'Dev P.',st:'now',p:60,c:300,due:'tonight'},
+   {id:'o1c',n:'Deliver',u:'1 handover',own:'Rahul S.',st:'idle',p:0,c:0,due:'Thu',must:1}]}
+ ]},
+ ret:{req:'Nimbus helpdesk',cli:'Nimbus',price:6000,asg:[
+  {id:'r1',n:'July service period',off:'Helpdesk · Retainer',own:'Rahul S.',acts:[
+   {id:'r1a',n:'Committed hours',u:'128 of 160h',own:'committed team',st:'now',p:80,c:3600,due:'closes 31 Jul'},
+   {id:'r1b',n:'Period close & verify',u:'1 period',own:'Rahul S.',st:'idle',p:0,c:0,due:'31 Jul',must:1}]}
  ]},
  q3:{req:'Q3 report translation',cli:'Acme',price:9000,asg:[
   {id:'q1',n:'Financial translation',off:'Translation · EZ Assured',own:'Omar K.',acts:[
@@ -1387,7 +1433,9 @@ var REQIDS=['q3','sub','deck','jd','ocr','ret'];
 var CLIIDS=['acme','globex','nimbus'];
 function spacesFor(id){
  var own=[];
+ var N=findNode(id);
  if(REQIDS.indexOf(id)>-1)      own=['gantt','tree','files'];
+ else if(N)                     own=['tree','files'];
  else if(CLIIDS.indexOf(id)>-1) own=['instr'];
  else if(id==='ws')             own=['upcoming','cap'];
  else if(id==='intake')         own=['upcoming'];
@@ -1514,7 +1562,7 @@ function kidRows(pid,lvl){
   var open=!!SX[k.id], more=(k.kind==='asg');
   return '<div class="ci kid l'+k.lvl+(CUR===k.id?' on':'')+'" data-open="'+k.id+'">'+
    (more?'<button class="kcar'+(open?' o':'')+'" data-sx="'+k.id+'">▸</button>':'<span class="kcar sp"></span>')+
-   '<div class="cmid"><div class="cn"><b>'+k.name+'</b></div><div class="cs">'+k.sub+'</div></div>'+
+   '<div class="cmid"><div class="cn"><b>'+(k.kind==='asg'?'<span class="lvtag">ASG</span>':'<span class="lvtag">ACT</span>')+k.name+'</b></div><div class="cs">'+k.sub+'</div></div>'+
    '<div class="cend"><span class="bdg '+k.bdg[0]+'">'+k.bdg[1]+'</span></div></div>'+
    kidRows(k.id,k.lvl+1);
  }).join('');
@@ -1562,7 +1610,7 @@ function renderHead(){
  $('thead').innerHTML=(COL?'<button class="colbtn" data-do="pcol" title="Show the list  ·  [" aria-label="Show the list" style="margin-right:2px"><svg class="ic" style="width:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
   '<span class="cav'+(t.round?' round':'')+'" style="background:'+t.av+'">'+t.ini+'</span>'+
   '<div class="tht"><b>'+t.name+(t.bdg?'<span class="bdg '+t.bdg[0]+'">'+t.bdg[1]+'</span>':'')+'</b><small>'+(subs[CUR]||'')+'</small></div>'+
-  '<div class="thr">'+(t.tab==='req'&&CUR!=='intake'&&CUR!=='vs'?'<button class="hbtn" data-do="tree">The tree</button><button class="hbtn" data-do="gantt">Gantt</button><button class="hbtn" data-do="files">Files</button>':'')+'</div>';
+  '<div class="thr"></div>';
 }
 var DOTS={room:'#77849A',team:'var(--ink)',ai:'var(--ai-ink)',cli:'var(--brand)',int:'#77849A'};
 function aimChip(cur,label,opts){
