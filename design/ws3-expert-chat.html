@@ -548,6 +548,86 @@ button.aimc:hover{border-color:#B9C2CE;background:var(--surface)}
 .ubar i{display:block;position:relative}
 .uleg{display:flex;gap:12px;flex-wrap:wrap;padding:0 13px 11px;font-size:10.5px;color:var(--faint)}
 .uleg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+/* ============ polish pass ============
+   The problem was flatness: every card read at one weight, so nothing
+   said "this one needs you". Hierarchy now comes from a coloured spine
+   and a tinted header on the cards that carry a decision — everything
+   else stays quiet. ================================================= */
+:root{
+  --bg:#F2F4F7;--sunk:#F6F8FA;--line:#E0E4EA;--line2:#EBEEF3;
+  --sc:0 1px 1px rgba(17,41,73,.03),0 3px 8px -3px rgba(17,41,73,.06),0 12px 28px -16px rgba(17,41,73,.10);
+  --sc2:0 1px 2px rgba(17,41,73,.05),0 8px 20px -8px rgba(17,41,73,.13),0 24px 48px -24px rgba(17,41,73,.16);
+}
+body{background:var(--bg)}
+/* cards: quiet by default, spined and tinted when they want something */
+.card{border-radius:13px;box-shadow:var(--sc);transition:box-shadow .22s var(--ease),transform .22s var(--ease)}
+.msg:hover>.card{box-shadow:var(--sc2)}
+.card.decide,.card.crit,.card.okc{position:relative;padding-left:3px}
+.card.decide::before,.card.crit::before,.card.okc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.card.decide::before{background:linear-gradient(180deg,var(--warn),#E0A50E)}
+.card.crit::before{background:linear-gradient(180deg,#B22423,var(--crit))}
+.card.okc::before{background:linear-gradient(180deg,#1B7F4E,var(--good-mid))}
+.card.decide .ch,.card.crit .ch,.card.okc .ch{padding-top:11px;padding-bottom:2px}
+.card.decide{background:linear-gradient(180deg,#FFFDF7,#fff 46px)}
+.card.crit{background:linear-gradient(180deg,#FFFAFA,#fff 46px)}
+.card.okc{background:linear-gradient(180deg,#FAFDFB,#fff 46px)}
+.cl{font-size:12.5px;letter-spacing:-.01em}
+.cl .sub{font-weight:480}
+.cb{font-size:12.5px;line-height:1.52}
+.cb b{color:var(--ink)}
+/* the action row reads as a row of choices, with one obvious one */
+.acts{gap:7px}
+.btn{border-radius:9px;font-weight:620}
+/* badges: readable at a glance instead of decorative */
+.bdg{padding:2.5px 8px;font-size:9.5px;font-weight:680;letter-spacing:.25px}
+.bdg.dim{background:var(--sunk);color:var(--faint);box-shadow:inset 0 0 0 1px var(--line2)}
+.bdg.done{background:var(--good-soft);color:#0E5732;box-shadow:inset 0 0 0 1px #C6DFCE}
+.bdg.warn{background:var(--warn-soft);color:var(--warn-ink);box-shadow:inset 0 0 0 1px #EDD9A4}
+.bdg.risk{background:var(--crit-soft);color:var(--crit);box-shadow:inset 0 0 0 1px #E5BDBC}
+.bdg.prog{background:var(--ai-soft);color:var(--ai-ink);box-shadow:inset 0 0 0 1px var(--ai-line)}
+/* room header: give the room some presence */
+.thead{flex:0 0 58px;box-shadow:0 1px 0 var(--line),0 6px 16px -14px rgba(17,41,73,.5);z-index:5}
+.tht b{font-size:14.5px;letter-spacing:-.015em}
+.tht small{font-size:11px;color:var(--faint)}
+/* the list: quieter rows, a clearer selected state */
+.lgroup{font-size:9.5px;letter-spacing:.6px;color:var(--faint);font-weight:680;text-transform:uppercase}
+.ci{border-radius:11px}
+.ci.on{background:#fff;box-shadow:inset 3px 0 0 var(--ink),0 1px 2px rgba(17,41,73,.04),0 6px 16px -10px rgba(17,41,73,.2)}
+.ci:hover:not(.on){background:var(--sunk)}
+.cn b{font-size:12.5px;letter-spacing:-.005em}
+.tab{border-radius:9px}
+.tab.on{box-shadow:0 4px 12px -6px rgba(17,41,73,.5)}
+/* the right rail: a tool tray, not a stripe of glyphs */
+.rrail{gap:2px;padding:10px 0;background:linear-gradient(180deg,var(--surface),var(--sunk))}
+.rr{border-radius:10px}
+.rr:hover{background:#fff;box-shadow:0 2px 8px -4px rgba(17,41,73,.3);color:var(--ink)}
+.rrsep{width:20px;margin:7px 0}
+/* alert bar: urgent without shouting */
+.strip{padding:9px 18px;font-size:11.5px;border-bottom:1px solid var(--line)}
+.strip.crit{background:linear-gradient(180deg,#FDF3F3,#FBEDED);border-bottom-color:#E9CDCC;color:var(--crit)}
+.strip.crit .go{border-color:#E0BEBD;background:#fff;color:var(--crit)}
+.strip.ok{background:var(--surface)}
+.strip .go{border-radius:8px;font-size:11px;padding:5px 11px;transition:transform .16s var(--ease),box-shadow .16s}
+.strip:hover .go{transform:translateY(-1px);box-shadow:0 4px 12px -8px rgba(17,41,73,.4)}
+.strip .scount{background:var(--crit);min-width:19px;text-align:center;padding:2.5px 6px}
+/* tables + briefs: give the data room to breathe */
+.wtbl th{font-size:9px;letter-spacing:.6px;padding:7px 9px;background:var(--sunk)}
+.wtbl td{padding:9px 9px}
+.wtbl tbody tr{transition:background .13s}
+.wtbl tbody tr:hover{background:var(--sunk)}
+.bgrid{padding:4px 13px 10px}
+.bf .bl{font-size:8.5px;letter-spacing:.6px}
+.bf .bv{font-size:12.5px;margin-top:3px}
+/* forms feel like forms */
+.dopt{border-radius:9px;transition:transform .15s var(--ease),border-color .14s,background .14s}
+.dopt:hover{transform:translateY(-1px);border-color:#B9C2CE}
+.dopt.on{box-shadow:0 4px 12px -6px rgba(17,41,73,.45)}
+.dnote{border-radius:9px;font-size:12.5px}
+.dform{background:linear-gradient(180deg,var(--sunk),transparent 60%)}
+/* money rows in the pane */
+.mrow{border-radius:11px}
+.mrow .mvv small{display:block;margin-top:3px}
+.lempty{padding:14px 10px;font-size:11.5px;color:var(--faint)}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -595,7 +675,6 @@ button.aimc:hover{border-color:#B9C2CE;background:var(--surface)}
       <div class="nov" id="nov"></div>
       <button class="jlat" id="jlat" aria-label="Jump to latest"><svg class="ic" style="width:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
     </div>
-    <div class="spanel" id="spanel"></div>
     <div class="rrail" id="rrail"></div>
   </div>
 </div>
@@ -617,7 +696,7 @@ var esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 var ME={name:'Mara L.',ini:'ML',role:'financial translation · EZ expert pool'};
 
 /* ---------------- state ---------------- */
-var TAB='ai', CUR='ws', SQ='', AUD={}, POP=0, NOV=0, NSEL=null, SP=null;
+var TAB='ai', CUR='ws', SQ='', AUD={}, POP=0, NOV=0, NSEL=null, SP=null, MFILT='all';
 var TYPING=null, DRAFT={}, FOCUSC=0, MENT=null, MIDX=0, REPLY=null, COL=0, TREE={r2:1,r4:1,r5:1};
 var DYN=[], DYNN=0, EXTRA={}, PENDING_FLASH=null, REACT={}, PINS={}, PINOPEN=0;
 var UNREAD={a2:2,swat:1,a3:1};
@@ -1437,16 +1516,15 @@ var SPACE={
  util  :{t:'Utilisation',  ic:'i-chart'},
  rate  :{t:'Rate card',    ic:'i-money'},
  sop   :{t:'SOP Library',  ic:'i-book'},
- tools :{t:'Tools & licences',ic:'i-grid2'},
- skills:{t:'Your skills',  ic:'i-file'}
+ tools :{t:'Tools & licences',ic:'i-grid2'}
 };
 function spacesFor(id){
  var own=[];
  if(act(id))           own=['brief','plan','files','deliv','log'];
  else if(th(id)&&th(id).tab==='req') own=['plan','mywork','files'];
- else if(id==='ws')    own=['plan','mywork','util'];
- else if(id==='money') own=['rate','mywork'];
- return {own:own, ref:['sop','tools','skills']};
+ else if(id==='ws')    own=['plan','mywork'];
+ else if(id==='money') own=['rate'];
+ return {own:own, ref:['sop','tools']};
 }
 function spaceCard(k,ctx){
  if(k==='files')  return filesCard(ctx||'a2');
@@ -1470,7 +1548,6 @@ function renderRails(){
   '<button class="rb'+(CUR==='ws'?' on':'')+'" data-nav="home"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-home"/></svg></span><span>Home</span>'+
    (p?'<span class="rbadge">'+p+'</span>':'')+'</button>'+
   '<button class="rb'+(CUR==='money'?' on':'')+'" data-nav="money"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-money"/></svg></span><span>Money</span></button>'+
-  '<button class="rb" data-space="sop"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-book"/></svg></span><span>Library</span></button>'+
   '<div style="flex:1"></div>'+
   '<button class="rb'+(NOV?' on':'')+'" data-nav="alerts"><span class="sq" style="position:relative"><svg class="ic" style="width:14px"><use href="#i-bell"/></svg>'+(p?'<span class="rdot"></span>':'')+'</span><span>Alerts</span></button>'+
   '<button class="rb" data-nav="profile"><span class="sq"><svg class="ic" style="width:14px"><use href="#i-cog"/></svg></span><span>Profile</span></button>'+
@@ -1528,28 +1605,52 @@ function renderRRail(){
  var S=spacesFor(CUR), el=$('rrail');
  var btn=function(k){
   var d=SPACE[k];
-  return '<button class="rr'+(SP===k?' on':'')+'" data-space="'+k+'"><svg class="ic"><use href="#'+d.ic+'"/></svg>'+
+  return '<button class="rr" data-space="'+k+'"><svg class="ic"><use href="#'+d.ic+'"/></svg>'+
    '<span class="rrtip">'+d.t+'</span></button>';
  };
  el.innerHTML=S.own.map(btn).join('')+(S.own.length?'<div class="rrsep"></div>':'')+S.ref.map(btn).join('');
 }
-function renderPanel(){
- var el=$('spanel');
- el.className='spanel'+(SP?' on':'');
- if(!SP){el.innerHTML='';renderScrim();return}
- var d=SPACE[SP]||{t:'Space'};
- el.innerHTML='<div class="spgrip" id="spgrip"></div>'+
-  '<div class="sph"><h4>'+d.t+'</h4><button class="ox spx" data-space="'+SP+'"><svg class="ic" style="width:13px"><use href="#i-x"/></svg></button></div>'+
-  '<div class="spb">'+spaceCard(SP,act(CUR)?CUR:null)+'</div>';
- renderScrim();
-}
+function renderPanel(){ renderScrim(); }
 function renderScrim(){ $('scrim').className='scrim'+(NOV?' on':'') }
+var MTABS=[['all','Everything'],['pending','On verify'],['released','Released']];
 function renderTabs(){
+ if(CUR==='money'){
+  $('tabs').innerHTML=MTABS.map(t=>'<button class="tab'+(MFILT===t[0]?' on':'')+'" data-mfilt="'+t[0]+'">'+t[1]+'</button>').join('');
+  $('tabnote').textContent='Your money only — what you have earned, what is owed, what it is worth.';
+  return;
+ }
  var pend={};
  MOVES.filter(m=>!DONE[m.id]).forEach(m=>{var t=th(m.th);if(t)pend[t.tab]=(pend[t.tab]||0)+1});
  $('tabs').innerHTML=TABS.map(t=>'<button class="tab'+(TAB===t[0]?' on':'')+'" data-tab="'+t[0]+'">'+t[1]+
   (pend[t[0]]?'<span class="tb">'+pend[t[0]]+'</span>':'')+'</button>').join('');
  $('tabnote').textContent=TABNOTE[TAB];
+}
+function moneyList(){
+ var e=earn(), h='';
+ var row=function(go,ic,name,sub,val,valSub,cls){
+  return '<button class="mrow" data-mgo="'+go+'"><span class="mt2"><svg class="ic" style="width:15px"><use href="#'+ic+'"/></svg></span>'+
+   '<span class="mn2"><b>'+name+'</b><small>'+sub+'</small></span>'+
+   '<span class="mvv'+(cls?' '+cls:'')+'">'+val+(valSub?'<small>'+valSub+'</small>':'')+'</span></button>';
+ };
+ h+='<div class="lgroup">This period · July</div>';
+ h+=row('card-lines','i-chart','Earnings','3 activities · line by line','¤'+(e.released+e.pending).toLocaleString('en-US'),'accruing');
+ h+=row('card-payout','i-money','Payouts','paid on the 5th, for the period that closed','5 Aug','next');
+ h+=row('card-rate','i-file','Rate card','coins per unit, by skill','5','skills');
+ var lines=myActs().filter(function(a){
+  if(a.state==='offered') return 0;
+  if(MFILT==='released') return a.paid;
+  if(MFILT==='pending')  return !a.paid;
+  return 1;
+ });
+ h+='<div class="lgroup">'+(MFILT==='all'?'Every line':MFILT==='pending'?'Waiting on a verify':'Released to you')+'</div>';
+ if(!lines.length) h+='<div class="lempty">Nothing here yet.</div>';
+ lines.forEach(function(a){
+  var st=a.paid?['done','Released']:a.state==='qa_failed'?['warn','Held']:['dim','On verify'];
+  h+='<button class="mrow" data-mgo="card-lines"><span class="mt2" style="font-size:9px;font-weight:700">'+
+   a.ut.slice(0,2).toUpperCase()+'</span><span class="mn2"><b>'+a.name+'</b><small>'+a.uc+' × ¤'+a.rate+' · '+REQS[a.req].org+'</small></span>'+
+   '<span class="mvv">¤'+a.line.toLocaleString('en-US')+'<small><span class="bdg '+st[0]+'">'+st[1]+'</span></small></span></button>';
+ });
+ return h;
 }
 function rowHtml(t,pinned){
  var un=UNREAD[t.id], kid=(t.node==='act');
@@ -1564,6 +1665,7 @@ function rowHtml(t,pinned){
   '<div class="cend">'+(un?'<span class="unread">'+un+'</span>':'')+(t.bdg?'<span class="bdg '+t.bdg[0]+'">'+t.bdg[1]+'</span>':'')+'</div></div>';
 }
 function renderList(){
+ if(CUR==='money'&&!SQ){$('clist').innerHTML=moneyList();return}
  var items=threads().filter(t=>t.tab===TAB&&!t.pin);
  if(SQ){var q=SQ.toLowerCase();items=threads().filter(t=>(t.name+' '+(t.org||'')+' '+t.sub).toLowerCase().includes(q))}
  var groups={ai:'Talk to the workspace',req:'Your tree',ppl:'Direct & shared'};
@@ -1747,7 +1849,6 @@ function open(id,cardId){
  if(t&&t.tab!==TAB&&!SQ&&['ai','req','ppl'].indexOf(t.tab)>-1) TAB=t.tab;
  if(t&&t.parent) TREE[t.parent]=1;
  if(cardId) PENDING_FLASH=cardId;
- if(SP){var S=spacesFor(id); if(S.own.indexOf(SP)<0&&S.ref.indexOf(SP)<0) SP=null}
  NOV=0;NSEL=null;POP=0;FOCUSC=1;REPLY=null;
  renderAll();
 }
@@ -1756,7 +1857,16 @@ function resolve(id,msg,fn,undofn){
  toast(msg,function(){DONE[id]=0; if(undofn)undofn(); renderAll()});
  renderAll();
 }
-function pushSpace(k){ SP=(SP===k)?null:k; renderRRail(); renderPanel(); }
+var SPID={plan:'card-plan',files:'card-files',log:'card-log',deliv:'card-deliv',brief:'card-brief',
+ mywork:'card-mywork',util:'card-util',rate:'card-rate',sop:'card-sop',tools:'card-tools'};
+function pushSpace(k){
+ /* summoned into the room itself — already there means scroll to it, not stack it again */
+ var ex=$(SPID[k]);
+ if(ex){ex.scrollIntoView({block:'center'});ex.classList.add('flash');setTimeout(()=>ex.classList.remove('flash'),1400);return}
+ EXTRA[CUR]=EXTRA[CUR]||[]; EXTRA[CUR].push(spaceCard(k,act(CUR)?CUR:null));
+ renderThread();
+ var el=$(SPID[k]); if(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1400)}
+}
 var REPLIES={
  'What changed on my 40pp?':'Your unit count went <b>40 → 46 pages</b> at 12:44, raised by Rahul after he re-split the source. <b>Your committed hours did not move</b> — that is the part worth pushing on. The full log is on the activity.',
  'Am I over-committed?':'Not yet — <b>16 of 40 hours</b> committed this week, 24 free. Accepting the website copy takes you to 21. You have room, which is exactly why the allocator offered it to you.',
@@ -1915,7 +2025,7 @@ document.addEventListener('click',function(e){
  if(POP&&!e.target.closest('.aimpop,[data-aimtoggle]')){
   var kp=$('ci')?$('ci').value:'';POP=0;renderComp();if($('ci'))$('ci').value=kp;
  }
- var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-space],[data-notif],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
+ var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-space],[data-mfilt],[data-mgo],[data-notif],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
  if(!el)return;
  if(el.dataset&&el.dataset.aimtoggle!==undefined){
   var kv=$('ci')?$('ci').value:'';POP=POP?0:1;renderComp();if($('ci'))$('ci').value=kv;return}
@@ -1926,11 +2036,16 @@ document.addEventListener('click',function(e){
   if(n2==='home'){open('ws');return}
   if(n2==='money'){open('money');return}
   if(n2==='alerts'){NOV=!NOV;NSEL=null;renderRails();renderStrip();renderNov();return}
-  if(n2==='profile'){pushSpace('skills');return}
+  if(n2==='profile'){toast('In the real build this opens your profile, skills and availability.');return}
   if(n2==='help'){pushSpace('sop');return}
  }
  if(el.id==='strip'&&!e.target.closest('[data-do]')){NOV=!NOV;NSEL=null;renderRails();renderStrip();renderNov();return}
  if(el.dataset&&el.dataset.space){pushSpace(el.dataset.space);return}
+ if(el.dataset&&el.dataset.mfilt){MFILT=el.dataset.mfilt;renderTabs();renderList();return}
+ if(el.dataset&&el.dataset.mgo){
+  var tg=$(el.dataset.mgo);
+  if(tg){tg.scrollIntoView({block:'center'});tg.classList.add('flash');setTimeout(()=>tg.classList.remove('flash'),1500)}
+  return}
  if(el.dataset&&el.dataset.notif){NSEL=(NSEL===el.dataset.notif)?null:el.dataset.notif;renderNov();return}
  if(el.dataset&&el.dataset.aud){AUD[CUR]=el.dataset.aud;POP=0;renderComp();$('ci').focus();return}
  if(el.dataset&&el.dataset.tab){
@@ -1990,30 +2105,8 @@ document.addEventListener('keydown',function(e){
  if(e.key==='Escape'){
   if(FORM){FORM=null;renderThread();return}
   if(NOV){NOV=0;NSEL=null;renderRails();renderStrip();renderNov()}
-  else if(SP){SP=null;renderRails();renderPanel()}
  }
 });
-
-/* the drawer is resizable — the width you need depends on what you opened in it */
-var SPW=340;
-document.addEventListener('pointerdown',function(e){
- var g=e.target.closest('#spgrip'); if(!g)return;
- e.preventDefault();
- var el=$('spanel'), x0=e.clientX, w0=el.getBoundingClientRect().width;
- el.classList.add('rz'); g.classList.add('drag');
- document.body.style.cursor='col-resize'; document.body.style.userSelect='none';
- var mv=function(ev){
-  SPW=Math.max(260,Math.min(760,Math.round(w0+(x0-ev.clientX))));
-  el.style.setProperty('--spw',SPW+'px');
- };
- var up=function(){
-  el.classList.remove('rz'); g.classList.remove('drag');
-  document.body.style.cursor=''; document.body.style.userSelect='';
-  window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up);
- };
- window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up);
-});
-$('spanel').style.setProperty('--spw','340px');
 
 renderAll();
 </script>
