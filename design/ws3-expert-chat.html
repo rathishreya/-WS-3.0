@@ -41,6 +41,7 @@ b{font-weight:620}
  font-size:10.5px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;
  transition:opacity .15s,transform .15s;z-index:40}
 .rr:hover .rrtip{opacity:1;transform:translateY(-50%)}
+.rr.on .rrtip{display:none}
 /* the drawer: sits beside the chat, never over it, so the room stays live while it is open */
 .spgrip{position:absolute;left:-3px;top:0;bottom:0;width:7px;cursor:col-resize;z-index:12}
 .spgrip:hover::after,.spgrip.drag::after{content:'';position:absolute;left:2px;top:0;bottom:0;width:2px;background:var(--ai)}
@@ -628,6 +629,73 @@ body{background:var(--bg)}
 .mrow{border-radius:11px}
 .mrow .mvv small{display:block;margin-top:3px}
 .lempty{padding:14px 10px;font-size:11.5px;color:var(--faint)}
+/* ---- alerts sheet: the one place that shows everything waiting ---- */
+.nov{z-index:38;border-radius:0 0 16px 16px;box-shadow:0 30px 60px -30px rgba(17,41,73,.45),0 2px 8px -4px rgba(17,41,73,.2)}
+.nov.on{max-height:80%}
+.novh{padding:15px 18px 10px;position:sticky;top:0;background:var(--surface);z-index:2;border-bottom:1px solid var(--line2)}
+.novh b{font-size:14px;font-weight:700;letter-spacing:-.015em}
+.novh>span{font-size:11px;font-weight:620;color:var(--crit);background:var(--crit-soft);padding:2.5px 9px;border-radius:99px}
+.ngrp{padding:13px 18px 5px}
+.nr{border-top:1px solid var(--line2)}
+.nr:first-of-type{border-top:0}
+.nrh{padding:12px 18px;gap:12px;align-items:flex-start;transition:background .14s}
+.nd{width:8px;height:8px;border-radius:99px;flex:none;margin-top:5px;box-shadow:0 0 0 3px rgba(17,41,73,.05)}
+.nt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.nt b{font-size:12.5px;font-weight:660;color:var(--ink);line-height:1.35}
+.nt small{font-size:11px;color:var(--faint);line-height:1.4}
+.ntm{flex:none;font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:2px}
+.nb{padding:0 18px 14px 40px;animation:rise .26s var(--ease) both}
+.nb p{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:11px}
+.nb p b{color:var(--ink)}
+.nacts{display:flex;gap:7px;flex-wrap:wrap}
+.na{font-size:11.5px;font-weight:620;padding:7px 13px;border-radius:9px;border:1px solid var(--line);
+ background:var(--surface);color:var(--muted);cursor:pointer;transition:transform .16s var(--ease),box-shadow .16s,border-color .14s}
+.na:hover{transform:translateY(-1px);border-color:#B9C2CE;color:var(--ink);box-shadow:0 5px 14px -8px rgba(17,41,73,.35)}
+.na.pri{background:linear-gradient(180deg,#20416E,var(--ink));border-color:var(--ink);color:#fff;
+ box-shadow:0 5px 14px -6px rgba(17,41,73,.45),inset 0 1px 0 rgba(255,255,255,.12)}
+.na.pri:hover{background:linear-gradient(180deg,#26497A,#16325A);color:#fff}
+.nr.dn .nt b{color:var(--faint);font-weight:560}
+.nr.dn .nd{opacity:.5}
+/* ---- money: the period total, stated once ---- */
+.mtot{margin:2px 8px 6px;padding:13px 14px;border-radius:12px;background:linear-gradient(160deg,#16325A,var(--ink));color:#fff;
+ box-shadow:0 8px 22px -12px rgba(17,41,73,.7)}
+.mtot b{display:block;font-size:23px;font-weight:680;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mtot small{display:block;font-size:10.5px;color:#A9BBD2;margin-top:3px;line-height:1.4}
+/* ---- reference drawer: work opens in the room, reference opens beside it ----
+   It never covers the conversation, so you can read an SOP and answer at once. */
+.drw{flex:0 0 0px;width:0;background:var(--surface);border-left:0 solid var(--line);position:relative;
+ display:flex;flex-direction:column;overflow:hidden;transition:flex-basis .38s var(--ease),width .38s var(--ease)}
+.drw.on{flex:0 0 var(--dw,360px);width:var(--dw,360px);border-left:1px solid var(--line);
+ box-shadow:-24px 0 48px -34px rgba(17,41,73,.45)}
+.drw.rz{transition:none}
+.drw>*{min-width:260px}
+.dgrip{position:absolute;left:0;top:0;bottom:0;width:9px;cursor:col-resize;z-index:14}
+.dgrip::after{content:'';position:absolute;left:3px;top:0;bottom:0;width:2px;background:transparent;transition:background .15s}
+.dgrip:hover::after,.dgrip.drag::after{background:var(--ai)}
+.dwh{flex:0 0 auto;padding:16px 18px 12px;border-bottom:1px solid var(--line2);
+ background:linear-gradient(180deg,var(--sunk),var(--surface))}
+.dwh .dwt{display:flex;align-items:center;gap:9px}
+.dwh h4{font-size:14px;font-weight:700;letter-spacing:-.015em;flex:1}
+.dwh .dwi{width:26px;height:26px;border-radius:8px;background:var(--ink);color:#fff;display:grid;place-items:center;flex:none}
+.dwh .dwi .ic{width:13px}
+.dwh .dws{display:block;font-size:11px;color:var(--faint);margin-top:6px;line-height:1.45}
+.dwseg{display:flex;gap:4px;padding:10px 12px 0}
+.dwseg button{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:620;padding:6px 8px;border-radius:8px;border:1px solid transparent;
+ color:var(--muted);cursor:pointer;transition:background .14s,color .14s}
+.dwseg button:hover{background:var(--sunk)}
+.dwseg button.on{background:var(--ink);color:#fff}
+.dwb{flex:1;overflow-y:auto;padding:10px 12px 16px}
+.dwr{display:flex;align-items:flex-start;gap:11px;padding:11px 11px;border-radius:11px;cursor:pointer;
+ transition:background .14s,transform .18s var(--ease)}
+.dwr:hover{background:var(--sunk);transform:translateX(-2px)}
+.dwr .si{width:30px;height:30px;border-radius:9px;background:var(--sunk);border:1px solid var(--line2);
+ display:grid;place-items:center;color:var(--muted);flex:none}
+.dwr:hover .si{background:#fff;border-color:var(--line)}
+.dwr .st{flex:1;min-width:0}
+.dwr .st b{display:block;font-size:12.5px;font-weight:640;letter-spacing:-.005em}
+.dwr .st small{display:block;font-size:11px;color:var(--faint);margin-top:2px;line-height:1.45}
+.dwr .sptag{flex:none;font-size:9px;font-weight:660;padding:3px 8px;border-radius:99px;background:var(--sunk);
+ border:1px solid var(--line2);color:var(--faint);white-space:nowrap;margin-top:2px}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -675,6 +743,7 @@ body{background:var(--bg)}
       <div class="nov" id="nov"></div>
       <button class="jlat" id="jlat" aria-label="Jump to latest"><svg class="ic" style="width:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
     </div>
+    <div class="drw" id="drw"></div>
     <div class="rrail" id="rrail"></div>
   </div>
 </div>
@@ -1586,7 +1655,7 @@ function renderNov(){
  var N=notifs(), pend=N.filter(n=>!n.done&&!n.info), info=N.filter(n=>n.info&&!n.done), done=N.filter(n=>n.done);
  var row=function(n){
   var open=(NSEL===n.id);
-  return '<div class="nr'+(open?' open':'')+'"><button class="nrh" data-notif="'+n.id+'">'+
+  return '<div class="nr'+(open?' on':'')+(n.done?' dn':'')+'"><button class="nrh" data-notif="'+n.id+'">'+
    '<span class="nd" style="background:'+(n.done?'var(--good-mid)':SEVC[n.sev])+'"></span>'+
    '<span class="nt"><b>'+n.t+'</b><small>'+n.s+'</small></span><span class="ntm">'+n.time+'</span></button>'+
    (open?'<div class="nb"><p>'+n.body+'</p><div class="nacts">'+
@@ -1605,10 +1674,31 @@ function renderRRail(){
  var S=spacesFor(CUR), el=$('rrail');
  var btn=function(k){
   var d=SPACE[k];
-  return '<button class="rr" data-space="'+k+'"><svg class="ic"><use href="#'+d.ic+'"/></svg>'+
+  return '<button class="rr'+(SP===k?' on':'')+'" data-space="'+k+'"><svg class="ic"><use href="#'+d.ic+'"/></svg>'+
    '<span class="rrtip">'+d.t+'</span></button>';
  };
  el.innerHTML=S.own.map(btn).join('')+(S.own.length?'<div class="rrsep"></div>':'')+S.ref.map(btn).join('');
+}
+var DREF={sop:'SOP Library',tools:'Tools & licences'};
+var DSEG={sop:'SOPs',tools:'Tools'};
+var DSUB={sop:'The rules that decide what you do when something goes wrong.',
+          tools:'What you work in, and who holds the seat right now.'};
+function renderDrawer(){
+ var el=$('drw');
+ el.className='drw'+(SP?' on':'');
+ if(!SP){el.innerHTML='';return}
+ var d=REF[SP];
+ el.innerHTML='<div class="dgrip" id="dgrip"></div>'+
+  '<div class="dwh"><div class="dwt"><span class="dwi"><svg class="ic"><use href="#'+d.ic+'"/></svg></span>'+
+   '<h4>'+DREF[SP]+'</h4>'+
+   '<button class="ox" data-space="'+SP+'" aria-label="Close"><svg class="ic" style="width:13px"><use href="#i-x"/></svg></button></div>'+
+   '<small class="dws">'+DSUB[SP]+'</small></div>'+
+  '<div class="dwseg">'+Object.keys(DREF).map(function(k){
+    return '<button class="'+(SP===k?'on':'')+'" data-space="'+k+'">'+DSEG[k]+'</button>'}).join('')+'</div>'+
+  '<div class="dwb">'+d.rows.map(function(r){
+    return '<div class="dwr"><span class="si"><svg class="ic" style="width:14px"><use href="#'+d.ic+'"/></svg></span>'+
+     '<span class="st"><b>'+r[0]+'</b><small>'+r[1]+'</small></span>'+(r[2]?'<span class="sptag">'+r[2]+'</span>':'')+'</div>';
+   }).join('')+'</div>';
 }
 function renderPanel(){ renderScrim(); }
 function renderScrim(){ $('scrim').className='scrim'+(NOV?' on':'') }
@@ -1642,14 +1732,10 @@ function moneyList(){
   if(MFILT==='pending')  return !a.paid;
   return 1;
  });
- h+='<div class="lgroup">'+(MFILT==='all'?'Every line':MFILT==='pending'?'Waiting on a verify':'Released to you')+'</div>';
- if(!lines.length) h+='<div class="lempty">Nothing here yet.</div>';
- lines.forEach(function(a){
-  var st=a.paid?['done','Released']:a.state==='qa_failed'?['warn','Held']:['dim','On verify'];
-  h+='<button class="mrow" data-mgo="card-lines"><span class="mt2" style="font-size:9px;font-weight:700">'+
-   a.ut.slice(0,2).toUpperCase()+'</span><span class="mn2"><b>'+a.name+'</b><small>'+a.uc+' × ¤'+a.rate+' · '+REQS[a.req].org+'</small></span>'+
-   '<span class="mvv">¤'+a.line.toLocaleString('en-US')+'<small><span class="bdg '+st[0]+'">'+st[1]+'</span></small></span></button>';
- });
+ var tot=lines.reduce(function(t,a){return t+a.line},0);
+ h+='<div class="lgroup">'+(MFILT==='all'?'All of it':MFILT==='pending'?'Waiting on a verify':'Released to you')+'</div>';
+ h+='<div class="mtot"><b>¤'+tot.toLocaleString('en-US')+'</b><small>'+lines.length+' activit'+(lines.length===1?'y':'ies')+
+    (MFILT==='pending'?' · nothing bills until a verifier signs':MFILT==='released'?' · already yours':' · this period')+'</small></div>';
  return h;
 }
 function rowHtml(t,pinned){
@@ -1835,7 +1921,7 @@ function renderThread(keepScroll){
   PENDING_FLASH=null;
  }
 }
-function renderAll(){renderRails();renderStrip();renderNov();renderRRail();renderPanel();renderTabs();renderList();renderThread()}
+function renderAll(){renderRails();renderStrip();renderNov();renderRRail();renderDrawer();renderPanel();renderTabs();renderList();renderThread()}
 
 var TT=null, UNDOFN=null;
 function toast(t,undo){
@@ -1860,6 +1946,7 @@ function resolve(id,msg,fn,undofn){
 var SPID={plan:'card-plan',files:'card-files',log:'card-log',deliv:'card-deliv',brief:'card-brief',
  mywork:'card-mywork',util:'card-util',rate:'card-rate',sop:'card-sop',tools:'card-tools'};
 function pushSpace(k){
+ if(REF[k]){ SP=(SP===k&&$('drw').classList.contains('on'))?null:k; renderRRail(); renderDrawer(); return }
  /* summoned into the room itself — already there means scroll to it, not stack it again */
  var ex=$(SPID[k]);
  if(ex){ex.scrollIntoView({block:'center'});ex.classList.add('flash');setTimeout(()=>ex.classList.remove('flash'),1400);return}
@@ -2104,8 +2191,26 @@ document.addEventListener('keydown',function(e){
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('q').focus()}
  if(e.key==='Escape'){
   if(FORM){FORM=null;renderThread();return}
+  if(SP){SP=null;renderRRail();renderDrawer();return}
   if(NOV){NOV=0;NSEL=null;renderRails();renderStrip();renderNov()}
  }
+});
+
+/* the drawer sizes to the job — an SOP wants narrow, a licence table wants wide */
+var DW=360;
+document.addEventListener('pointerdown',function(e){
+ var g=e.target.closest('#dgrip'); if(!g)return;
+ e.preventDefault();
+ var el=$('drw'), x0=e.clientX, w0=el.getBoundingClientRect().width;
+ el.classList.add('rz'); g.classList.add('drag');
+ document.body.style.cursor='col-resize'; document.body.style.userSelect='none';
+ var mv=function(ev){ DW=Math.max(280,Math.min(720,Math.round(w0+(x0-ev.clientX)))); el.style.setProperty('--dw',DW+'px') };
+ var up=function(){
+  el.classList.remove('rz'); g.classList.remove('drag');
+  document.body.style.cursor=''; document.body.style.userSelect='';
+  window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up);
+ };
+ window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up);
 });
 
 renderAll();
