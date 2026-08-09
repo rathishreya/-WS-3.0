@@ -435,6 +435,41 @@ body.tableview .tin>*{animation:none}
 .vfoot b{font-size:15px;font-weight:680;color:var(--ink);font-variant-numeric:tabular-nums;margin-right:5px}
 .vfoot .vf2{color:var(--muted);font-weight:600}
 .vfoot .vf3{margin-left:auto;text-align:right;max-width:46%}
+/* ---- the floor board ---- */
+.gby{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);font-weight:660;align-self:center;margin-right:2px}
+.gbtn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;border:1px solid transparent;color:var(--muted);cursor:pointer;transition:background .14s,color .14s,border-color .14s}
+.gbtn:hover{background:var(--sunk);color:var(--ink)}
+.gbtn.on{border-color:var(--line);background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(17,41,73,.06)}
+.ftbl td{padding:12px 18px}
+.ftbl .fd{width:26px;padding-right:0}
+.ftbl .fd .d{width:9px;height:9px;border-radius:99px;display:block}
+.ftbl .fd .d.risk{background:var(--crit);box-shadow:0 0 0 3px rgba(144,25,24,.13)}
+.ftbl .fd .d.warn{background:var(--warn);box-shadow:0 0 0 3px rgba(241,183,21,.18)}
+.ftbl .fd .d.now{background:var(--good-mid)}
+.ftbl .fd .d.idle{background:var(--soft);border:1px solid var(--line)}
+.ftbl tr.frow{cursor:pointer}
+.ftbl tr.frow:hover{background:var(--sunk)}
+.ftbl tr.frow.mine td:first-child{box-shadow:inset 3px 0 0 var(--crit)}
+.ftbl tr.grp td{background:var(--sunk);padding:7px 18px;font-size:9px;letter-spacing:.7px;text-transform:uppercase;
+ color:var(--faint);font-weight:700;border-bottom:1px solid var(--line2)}
+.ftbl tr.fsub td{background:var(--sunk);padding:0 18px 12px 0}
+.fsubw{border-left:2px solid var(--line);padding:8px 0 4px 12px}
+.fsubw .actr{padding:4px 0}
+.ball{font-size:10px;font-weight:660;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.ball-you{background:var(--crit-soft);color:var(--crit);box-shadow:inset 0 0 0 1px #E5BDBC}
+.ball-ez{background:var(--ai-soft);color:var(--ai-ink);box-shadow:inset 0 0 0 1px var(--ai-line)}
+.ball-cli{background:var(--brand-soft);color:var(--brand-ink);box-shadow:inset 0 0 0 1px var(--brand-line)}
+.ball-none{background:var(--sunk);color:var(--faint);box-shadow:inset 0 0 0 1px var(--line2)}
+.due{display:block;font-family:var(--mono);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.due.u1{color:var(--crit)}.due.u2{color:var(--warn-ink)}.due.u3{color:var(--muted)}.due.u4{color:var(--faint);font-weight:600}
+.fsubw .actr{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:12px;color:var(--muted)}
+.fsubw .actr .d{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);flex:none}
+.fsubw .actr .d.done{background:var(--good-mid);border-color:var(--good-mid)}
+.fsubw .actr .d.now{background:var(--ai);border-color:var(--ai)}
+.fsubw .actr .d.risk{background:var(--crit);border-color:var(--crit)}
+.fsubw .actr .d.warn{background:var(--warn);border-color:var(--warn)}
+.fsubw .actr .an{flex:0 0 190px;color:var(--ink);font-weight:560}
+.fsubw .actr .aw{flex:1;min-width:0;font-size:11px;color:var(--faint)}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -584,6 +619,8 @@ function threads(){
   {id:'ws', tab:'ai', name:'Workspace', ini:'WS', av:AV.ws, round:1, p:'onl', time:'now',
    sub: pendingN().length? pendingN().length+' need your hand — they’re in the bar above':'Floor is clear. I’m watching.',
    bdg: pendingN().length? ['risk',pendingN().length+' open']:['done','Clear']},
+  {id:'floor', tab:'rail', name:'The floor', ini:'FL', av:AV.intake, round:1, time:'live',
+   sub:'every live request · at-risk first'},
   {id:'verify', tab:'rail', name:'Verify', ini:'✓', av:AV.intake, round:1, time:'12:15',
    sub:vReady().length+' lines waiting on your tap · ¤'+vReady().reduce((t,l)=>t+l.amt,0).toLocaleString('en-US')},
   {id:'money', tab:'rail', name:'Money', ini:'¤', av:AV.money, round:1, time:'09:15',
@@ -799,7 +836,101 @@ function ganttFor(id){
    invoicing and payout. Nothing bills before the tap. So this is the
    table SWAT works down, and the invoice is raised from here.
    ============================================================ */
-var VFILT='ready', MFILT='all';
+var VFILT='ready', MFILT='all', FFILT='need', FGRP='risk', FOPEN={};
+/* ============================================================
+   THE FLOOR — SWAT's list is a triage board, not an inbox.
+   The question is never "which room shall I open", it is "what
+   breaks first and is it mine to move". So the two columns that
+   matter are TIME LEFT and WHO THE BALL IS WITH.
+   ============================================================ */
+function FLOOR(){return [
+ {id:'q3', req:'Q3 report translation', cli:'Acme', bdg:['warn','Recovering'], risk:2,
+  act:'Translate 40pp', who:'Omar K.', note:'took it over at 12:41 — 52%',
+  ball:'ez', owner:'Omar K.', due:'18:00 today', left:'T-5h', urg:2,
+  acts:[['Glossary apply','done','Mara L. · verified'],['Translate 40pp','warn','Omar K. · 52% · was Mara'],
+        ['QA pass','idle','Dev P. · tonight'],['RTL reflow','idle','Sana R. · Thu'],['Deliver','idle','Fri']]},
+ {id:'jd', req:'JD rewrite · 6 roles', cli:'Nimbus', bdg:DONE.requiet?['prog','Moving']:['risk','Stalled'], risk:DONE.requiet?4:1,
+  act:'Rewrite 1–6', who:DONE.requiet?'Priya R.':'Tariq M.', note:DONE.requiet?'accepted in 14s — from 40%':'silent 4h · SOP-15 says offer onward',
+  ball:DONE.requiet?'ez':'you', owner:'Rahul S.', due:'Wed 17:00', left:'T-6h', urg:1,
+  acts:[['Rewrite 1–6',DONE.requiet?'now':'risk',(DONE.requiet?'Priya R. · running':'Tariq M. · silent 4h')],
+        ['Review','idle','Omar K. · Thu'],['Deliver','idle','Wed']]},
+ {id:'deck', req:'Investor deck', cli:'Globex', bdg:DONE.ratify?['prog','Live']:['warn','Ratify'], risk:DONE.ratify?4:3,
+  act:DONE.ratify?'Copy · Sana R.':'AI plan — not published', who:DONE.ratify?'Sana R.':'—',
+  note:DONE.ratify?'offers out, kickoff holds':'nothing starts until you ratify',
+  ball:DONE.ratify?'ez':'you', owner:'Rahul S.', due:'kickoff Thu', left:'T-2d', urg:3,
+  acts:[['Copy',DONE.ratify?'now':'idle','Sana R.'],['Design ×2','idle','Priya N. · Thu–Fri'],['Review','idle','Mon'],['Deliver','idle','Tue']]},
+ {id:'sub', req:'Subtitle & sync pack', cli:'Acme', bdg:['warn','Verify D+2'], risk:3,
+  act:'Client verify', who:'Dana W.', note:DONE.vnudge?'nudged — she usually replies within the hour':'delivered Tue · day 2 of 5',
+  ball:'client', owner:'Omar K.', due:'auto-close D+5', left:'D+2', urg:3,
+  acts:[['Production','done','Priya N. · delivered Tue'],['Client verify','warn','Dana W. · day 2 of 5']]},
+ {id:'ocr', req:'Bank statements OCR', cli:'Globex', bdg:['prog','Agent'], risk:4,
+  act:'Human QA', who:'Dev P.', note:'agent cleared 233/240 · 7pp to a human',
+  ball:'ez', owner:'Rahul S.', due:'tonight', left:'T-9h', urg:2,
+  acts:[['Agent run','done','Flip · 41 min · 97%'],['Human QA','now','Dev P. · tonight'],['Verify & settle',DONE.tlv?'done':'idle',DONE.tlv?'done':'next'],['Deliver','idle','Thu']]},
+ {id:'ret', req:'Nimbus helpdesk', cli:'Nimbus', bdg:['dim','Retainer'], risk:5,
+  act:'July period', who:'committed team', note:'128 of 160h used',
+  ball:'none', owner:'Rahul S.', due:'closes 31 Jul', left:'9d', urg:4,
+  acts:[['July period','now','128/160h · closes 31 Jul']]}
+]}
+var BALL={you:['You','ball-you'],ez:['An expert','ball-ez'],client:['The client','ball-cli'],agent:['An agent','ball-ez'],none:['Nobody','ball-none']};
+function floorRows(){
+ var L=FLOOR().filter(function(r){
+  if(FFILT==='need')  return r.ball==='you';
+  if(FFILT==='risk')  return r.risk<=2;
+  if(FFILT==='cli')   return r.ball==='client';
+  return 1;
+ });
+ var k=FGRP;
+ return L.sort(function(a,b){
+  if(k==='due')  return a.urg-b.urg;
+  if(k==='cli')  return a.cli.localeCompare(b.cli)||a.risk-b.risk;
+  if(k==='ball') return (a.ball==='you'?0:a.ball==='ez'?1:2)-(b.ball==='you'?0:b.ball==='ez'?1:2)||a.risk-b.risk;
+  if(k==='own')  return a.owner.localeCompare(b.owner)||a.risk-b.risk;
+  return a.risk-b.risk;
+ });
+}
+function grpKey(r){ return FGRP==='cli'?r.cli:FGRP==='own'?r.owner:FGRP==='ball'?BALL[r.ball][0]:FGRP==='due'?({1:'Breaching today',2:'Today',3:'This week',4:'Later'}[r.urg]):({1:'Broken',2:'At risk',3:'Watch',4:'Running',5:'Steady'}[r.risk]); }
+function floorView(){
+ var L=floorRows(), all=FLOOR();
+ var seg=[['need','Needs you',all.filter(r=>r.ball==='you').length],
+          ['risk','At risk',all.filter(r=>r.risk<=2).length],
+          ['cli','On the client',all.filter(r=>r.ball==='client').length],
+          ['all','Everything',all.length]];
+ var grp=[['risk','Risk'],['due','Due'],['ball','Waiting on'],['cli','Client'],['own','Owner']];
+ var body='', last=null;
+ L.forEach(function(r){
+  var g=grpKey(r);
+  if(g!==last){ body+='<tr class="grp"><td colspan="8">'+g+'</td></tr>'; last=g; }
+  var op=FOPEN[r.id];
+  body+='<tr class="frow'+(r.ball==='you'?' mine':'')+'" data-fopen="'+r.id+'">'+
+   '<td class="fd"><span class="d '+(r.risk<=1?'risk':r.risk<=2?'warn':r.risk<=3?'idle':'now')+'"></span></td>'+
+   '<td><span class="wk">'+r.req+'</span><span class="sc">'+r.cli+'</span></td>'+
+   '<td><span class="wk" style="font-weight:560">'+r.act+'</span><span class="sc">'+r.who+' · '+r.note+'</span></td>'+
+   '<td><span class="ball '+BALL[r.ball][1]+'">'+BALL[r.ball][0]+'</span></td>'+
+   '<td class="dt">'+r.owner+'</td>'+
+   '<td class="r"><span class="due u'+r.urg+'">'+r.left+'</span><span class="sc" style="text-align:right">'+r.due+'</span></td>'+
+   '<td class="r"><span class="bdg '+r.bdg[0]+'">'+r.bdg[1]+'</span></td>'+
+   '<td class="r"><button class="vbtn on" data-open="'+r.id+'">Open</button></td></tr>';
+  if(op) body+='<tr class="fsub"><td></td><td colspan="7"><div class="fsubw">'+
+    r.acts.map(a=>'<div class="actr"><span class="d '+a[1]+'"></span><span class="an">'+a[0]+'</span><span class="aw">'+a[2]+'</span></div>').join('')+
+    '</div></td></tr>';
+ });
+ return '<div class="vview">'+
+  '<div class="vbar">'+
+   '<div class="vseg">'+seg.map(x=>'<button class="'+(FFILT===x[0]?'on':'')+'" data-ffilt="'+x[0]+'">'+x[1]+(x[2]?'<i>'+x[2]+'</i>':'')+'</button>').join('')+'</div>'+
+   '<div class="vact"><span class="gby">Group by</span>'+
+    grp.map(x=>'<button class="gbtn'+(FGRP===x[0]?' on':'')+'" data-fgrp="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'+
+  '</div>'+
+  '<div class="vscroll"><table class="wtbl vtbl ftbl"><thead><tr>'+
+   '<th></th><th>Request</th><th>What is happening now</th><th>Waiting on</th><th>Owner</th>'+
+   '<th class="r">Time left</th><th class="r">State</th><th class="r"></th></tr></thead><tbody>'+
+   (body||'<tr><td colspan="8" class="vempty">Nothing in this filter — the floor is clear.</td></tr>')+
+   '</tbody></table></div>'+
+  '<div class="vfoot"><span><b>'+all.filter(r=>r.ball==='you').length+'</b> need you</span>'+
+   '<span class="vf2">'+all.length+' live · next breach '+all.slice().sort((a,b)=>a.urg-b.urg)[0].left+'</span>'+
+   '<span class="vf3">Click a row to see its activities without leaving the floor. Open takes you into the room.</span></div>'+
+ '</div>';
+}
 var VST={};                       /* line id → 'verified' */
 var VINV=0;                       /* verified lines pushed to invoicing */
 function VLINES(){return [
@@ -996,6 +1127,7 @@ function msgs(id){
   out.push(chips(['Who’s overloaded?','What breaches next?','Draft the Friday update for Acme']));
  }
   if(id==='verify') return verifyView();
+  if(id==='floor') return floorView();
  if(id==='money'){
   out.push(day('Wed 22 Jul'));
   out.push(card({dot:'',who:'Money',sub:'both books, one glance',time:'09:00',
@@ -1319,6 +1451,7 @@ function renderList(){
  h+=items.map(t=>rowHtml(t,0)).join('');
  $('clist').innerHTML=h;
 }
+function backFloor(){return '<button class="hbtn" data-open="floor">← The floor</button>'}
 function renderHead(){
  var t=th(CUR);
  var subs={ws:'sees every request, both books, every client',money:'billing agent · all clients',
@@ -1334,7 +1467,7 @@ function renderHead(){
  $('thead').innerHTML=(COL?'<button class="colbtn" data-do="pcol" title="Show the list  ·  [" aria-label="Show the list" style="margin-right:2px"><svg class="ic" style="width:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
   '<span class="cav'+(t.round?' round':'')+'" style="background:'+t.av+'">'+t.ini+'</span>'+
   '<div class="tht"><b>'+t.name+(t.bdg?'<span class="bdg '+t.bdg[0]+'">'+t.bdg[1]+'</span>':'')+'</b><small>'+(subs[CUR]||'')+'</small></div>'+
-  '<div class="thr">'+(t.tab==='req'&&CUR!=='intake'&&CUR!=='vs'?'<button class="hbtn" data-do="tree">The tree</button><button class="hbtn" data-do="gantt">Gantt</button><button class="hbtn" data-do="files">Files</button>':'')+'</div>';
+  '<div class="thr">'+(FLOOR().some(r=>r.id===CUR)?backFloor():'')+'</div>';
 }
 var DOTS={room:'#77849A',team:'var(--ink)',ai:'var(--ai-ink)',cli:'var(--brand)',int:'#77849A'};
 function aimChip(cur,label,opts){
@@ -1432,7 +1565,7 @@ function renderThread(keepScroll){
   PENDING_FLASH=null}
 }
 function renderAll(){
- document.body.classList.toggle('tableview',CUR==='verify');
+ document.body.classList.toggle('tableview',CUR==='verify'||CUR==='floor');
  renderRails();renderStrip();renderNov();renderPanel();renderTabs();renderList();renderThread();
 }
 
@@ -1514,7 +1647,9 @@ document.addEventListener('click',function(e){
  if(POP&&!e.target.closest('.aimpop,[data-aimtoggle]')){
   var kp=$('ci')?$('ci').value:'';POP=0;renderComp();if($('ci'))$('ci').value=kp;
  }
- var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-space],[data-vfilt],[data-mfilt],[data-vrow],[data-tool],[data-notif],[data-mgo],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],#strip,#scrim');
+ var fo=e.target.closest('[data-fopen]');
+ if(fo&&!e.target.closest('[data-open]')){var fid=fo.dataset.fopen;FOPEN[fid]=!FOPEN[fid];renderThread(1);return}
+ var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-space],[data-vfilt],[data-ffilt],[data-fgrp],[data-mfilt],[data-vrow],[data-tool],[data-notif],[data-mgo],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],#strip,#scrim');
  if(!el)return;
  if(el.dataset&&el.dataset.aimtoggle!==undefined){
   var kv=$('ci')?$('ci').value:'';POP=POP?0:1;renderComp();if($('ci'))$('ci').value=kv;
@@ -1531,6 +1666,8 @@ document.addEventListener('click',function(e){
   if(n==='help'){toast('In the real build this opens the ops runbook.');return}
  }
  if(el.id==='strip'&&!e.target.closest('[data-do]')){NOV=!NOV;NSEL=null;renderRails();renderStrip();renderNov();return}
+ if(el.dataset&&el.dataset.ffilt){FFILT=el.dataset.ffilt;renderThread(1);return}
+ if(el.dataset&&el.dataset.fgrp){FGRP=el.dataset.fgrp;renderThread(1);return}
  if(el.dataset&&el.dataset.vfilt){VFILT=el.dataset.vfilt;renderTabs();renderList();renderThread(1);return}
  if(el.dataset&&el.dataset.mfilt){MFILT=el.dataset.mfilt;renderTabs();renderList();return}
  var vr=e.target.closest('[data-vrow]');
@@ -1559,6 +1696,7 @@ document.addEventListener('click',function(e){
   return}
  if(el.dataset&&el.dataset.aud){AUD[CUR]=el.dataset.aud;POP=0;renderComp();$('ci').focus();return}
  if(el.dataset&&el.dataset.tab){
+  if(el.dataset.tab==='req'){TAB='req';SQ='';$('q').value='';open('floor');return}
   TAB=el.dataset.tab;MPANE=0;SQ='';$('q').value='';
   if(CUR==='money'){CUR='ws';delete UNREAD.ws;renderAll();return}
   renderTabs();renderList();return}
