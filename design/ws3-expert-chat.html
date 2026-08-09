@@ -696,6 +696,38 @@ body{background:var(--bg)}
 .dwr .st small{display:block;font-size:11px;color:var(--faint);margin-top:2px;line-height:1.45}
 .dwr .sptag{flex:none;font-size:9px;font-weight:660;padding:3px 8px;border-radius:99px;background:var(--sunk);
  border:1px solid var(--line2);color:var(--faint);white-space:nowrap;margin-top:2px}
+/* ---- the private strand: visibly off the record ---- */
+.privw{max-width:640px}
+.privh{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:11px 11px 0 0;
+ background:linear-gradient(180deg,#F3EFFA,#EFEAF7);border:1px solid #DED4EE;border-bottom:0;color:#5B4483}
+.privh .ic{flex:none;color:#7A5AA8}
+.privh b{font-size:11.5px;font-weight:680}
+.privh span{flex:1;min-width:0;font-size:10.5px;color:#7E6BA3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.privb{flex:none;font-size:10px;font-weight:660;padding:4px 9px;border-radius:99px;border:1px solid #D3C6E8;
+ background:#fff;color:#5B4483;cursor:pointer;white-space:nowrap;transition:transform .16s var(--ease),box-shadow .16s}
+.privb:hover{transform:translateY(-1px);box-shadow:0 4px 12px -7px rgba(90,60,150,.6)}
+.privw>.pmsg:last-child{border-radius:0 0 11px 11px;padding-bottom:11px}
+.pmsg{display:flex;gap:8px;align-items:flex-end;padding:7px 12px 0;background:#FBFAFE;
+ border-left:1px solid #DED4EE;border-right:1px solid #DED4EE}
+.pmsg:last-child{border-bottom:1px solid #DED4EE}
+.pmsg.me{justify-content:flex-end}
+.pav{width:22px;height:22px;border-radius:99px;background:#7A5AA8;color:#fff;font-size:9px;font-weight:700;
+ display:grid;place-items:center;flex:none}
+.pb{max-width:76%;background:#fff;border:1px solid #E6DEF3;border-radius:12px;padding:8px 11px;font-size:12.5px;
+ line-height:1.5;color:var(--ink)}
+.pmsg.me .pb{background:#EFEAF7;border-color:#DED4EE}
+/* choosing who ---- */
+.pkrow{display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap}
+.pk{display:flex;align-items:center;gap:8px;padding:7px 11px 7px 8px;border-radius:11px;border:1px solid var(--line);
+ background:var(--surface);cursor:pointer;transition:transform .16s var(--ease),border-color .14s,box-shadow .16s}
+.pk:hover{transform:translateY(-1px);border-color:#C9BCE4;box-shadow:0 5px 14px -8px rgba(90,60,150,.4)}
+.pk.on{border-color:#7A5AA8;background:#F7F4FC;box-shadow:0 0 0 2px rgba(122,90,168,.12)}
+.pkav{width:22px;height:22px;border-radius:99px;background:#7A5AA8;color:#fff;font-size:9px;font-weight:700;
+ display:grid;place-items:center;flex:none}
+.pk b{font-size:12px;font-weight:640}
+.pk small{font-size:10px;color:var(--faint)}
+.cbox2.priv{border-color:#C9BCE4}
+.cbox2.priv:focus-within{border-color:#7A5AA8;box-shadow:0 0 0 3px rgba(122,90,168,.14),0 12px 34px -14px rgba(17,41,73,.2)}
 </style>
 
 <svg width="0" height="0" style="position:absolute"><defs>
@@ -717,6 +749,7 @@ body{background:var(--bg)}
 <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V18a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></symbol>
 <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 13h5l1.5 2.5h5L16 13h5"/><path d="M5.5 5h13l2.5 8v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5z"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.4 2"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/></symbol>
 <symbol id="i-warn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></symbol>
 </defs></svg>
 
@@ -765,9 +798,10 @@ var esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 var ME={name:'Mara L.',ini:'ML',role:'financial translation · EZ expert pool'};
 
 /* ---------------- state ---------------- */
+var PICK=0;
 var TAB='ai', CUR='ws', SQ='', AUD={}, POP=0, NOV=0, NSEL=null, SP=null, MFILT='all';
 var TYPING=null, DRAFT={}, FOCUSC=0, MENT=null, MIDX=0, REPLY=null, COL=0, TREE={r2:1,r4:1,r5:1};
-var DYN=[], DYNN=0, EXTRA={}, PENDING_FLASH=null, REACT={}, PINS={}, PINOPEN=0;
+var PEER={}, PRIV={}, DYN=[], DYNN=0, EXTRA={}, PENDING_FLASH=null, REACT={}, PINS={}, PINOPEN=0;
 var UNREAD={a2:2,swat:1,a3:1};
 /* every decision this app can resolve */
 var DONE={offer:0,units:0,risk:0,qafail:0,license:0,rec:0,hb:0};
@@ -946,6 +980,20 @@ function threads(){
  ]);
 }
 function th(id){return threads().find(t=>t.id===id)}
+
+/* ---------------- peers: the side-channel every real team has ----------------
+   An expert has to be able to ask "am I mad, or is this source wrong?" without it
+   becoming an escalation. Deny it and the conversation happens on WhatsApp, off
+   the platform, where EZ can neither help nor learn from it. So: private by
+   content, never secret in existence, and promotable into the room the moment it
+   turns into a decision. */
+var PEERS={
+ sana :{n:'Sana R.',  ini:'SR', r:'RTL specialist · downstream of you'},
+ dev  :{n:'Dev P.',   ini:'DP', r:'localization QA · reviews your output'},
+ priya:{n:'Priya N.', ini:'PN', r:'subtitling · same pool'}
+};
+function peerOf(id){ return PEERS[PEER[id]||'sana'] }
+function privOf(id){ return PRIV[id]||[] }
 
 /* ---------------- money: hers, not the client's ---------------- */
 function earn(){
@@ -1546,6 +1594,15 @@ function threadHtml(id){
   out.push(human('Priya N.','subtitling','08:50','PN',AV.grp,'Anyone got a clean AR financial glossary? Mine is missing half the IFRS terms.'));
   out.push(me('Acme’s v4 is good — it’s on the Q3 activity as a reference file.','08:56',0,1));
  }
+ var P=privOf(id);
+ if(P.length){
+  var pr=peerOf(id);
+  out.push('<div class="msg privw" style="max-width:640px"><div class="privh">'+
+   '<svg class="ic" style="width:12px"><use href="#i-lock"/></svg>'+
+   '<b>Just you and '+pr.n+'</b><span>Omar and SWAT cannot see this strand — it is not on the activity record</span>'+
+   '<button class="privb" data-do="promote">Bring it into the room</button></div>'+
+   P.join('')+'</div>');
+ }
  (EXTRA[id]||[]).forEach(h=>out.push(h));
  if(TYPING===id) out.push(typingHtml(id));
  return out.join('');
@@ -1779,7 +1836,7 @@ function renderHead(){
   '<div class="thr">'+btns+'</div>';
  $('mbar').style.display='none';
 }
-var DOTS={team:'#77849A',swat:'var(--ink)',ai:'var(--ai-ink)',own:'#77849A'};
+var DOTS={team:'#77849A',swat:'var(--ink)',ai:'var(--ai-ink)',own:'#77849A',peer:'#7A5AA8'};
 
 function aimChip(cur,label,opts){
  /* opts null → context chip that switches conversations; else audience popover */
@@ -1838,15 +1895,20 @@ function selectMention(id){
 }
 
 function renderComp(){
- var t=th(CUR), a=act(CUR), chip='', ph;
+ var t=th(CUR), a=act(CUR), chip='', ph, pk='';
  if(a||t.tab==='req'){
   /* B5: the prompt carries its scope. She can reach her owner, the desk, or the AI.
      There is no client option anywhere in this app — that boundary does not exist for her. */
-  var aud=AUD[CUR]||'own';
-  ph={own:'Message Omar — your assignment owner…',swat:'Message the SWAT desk…',ai:'Ask the workspace about this activity…'}[aud];
-  chip=aimChip(aud,{own:'Omar · owner',swat:'SWAT desk',ai:'AI only'}[aud],[
-   ['own','Owner — Omar','He owns the request and the client. You don’t.','aud'],
-   ['swat','SWAT desk','Dates, splits, licences — lands in Rahul’s queue.','aud'],
+  var aud=AUD[CUR]||'own', pr=peerOf(CUR);
+  ph={own:'Message Omar — your assignment owner…',swat:'Message the SWAT desk…',
+      peer:'Ask '+pr.n+' — private, off the record…',ai:'Ask the workspace about this activity…'}[aud];
+  if(aud==='peer') pk='<div class="pkrow">'+Object.keys(PEERS).map(function(k){
+    return '<button class="pk'+((PEER[CUR]||'sana')===k?' on':'')+'" data-peer="'+k+'">'+
+     '<span class="pkav">'+PEERS[k].ini+'</span><b>'+PEERS[k].n+'</b><small>'+PEERS[k].r+'</small></button>'}).join('')+'</div>';
+  chip=aimChip(aud,{own:'Omar · owner',swat:'SWAT desk',peer:pr.n+' · private',ai:'AI only'}[aud],[
+   ['own','Owner — Omar','He sees it. He owns the request and the client.','aud'],
+   ['swat','SWAT desk','Rahul’s queue — and your owner sees it too.','aud'],
+   ['peer','A peer — privately','Only you and them. Not your owner, not SWAT, not on the record.','aud'],
    ['ai','AI only','Just you and the workspace. Nobody else sees it.','aud']]);
  }else if(CUR==='ws'||CUR==='money'){
   ph={ws:'Ask about your work, or act — “I’m at 28 pages”…',money:'Ask about a line, a rate, or a payout…'}[CUR];
@@ -1857,7 +1919,7 @@ function renderComp(){
  }
  var qbar=REPLY?'<div class="qbar"><i></i><span class="qt"><b>Replying to '+REPLY.who+'</b>'+esc(REPLY.text)+'</span>'+
   '<button class="ox" data-qx aria-label="Cancel reply"><svg class="ic" style="width:12px"><use href="#i-x"/></svg></button></div>':'';
- $('comp').innerHTML='<div class="cwrap"><div class="cbox2" style="position:relative">'+qbar+
+ $('comp').innerHTML='<div class="cwrap">'+pk+'<div class="cbox2'+(( AUD[CUR]||'')==='peer'?' priv':'')+'" style="position:relative">'+qbar+
   '<div class="crow">'+chip+'<textarea id="ci" rows="1" placeholder="'+ph+'"></textarea>'+
   '<button class="clipb" data-do="attach" title="Attach"><svg class="ic" style="width:14px"><use href="#i-clip"/></svg></button>'+
   '<button class="send" data-do="send" aria-label="Send">'+
@@ -2056,6 +2118,13 @@ function doAct(a){
   if(!W.delivered){toast('Re-deliver the final review first — then you can sign the assignment off.');return 1}
   toast('Assignment signed off — it goes to SWAT for verify.');return 1}
  if(a==='pintog'){PINOPEN=!PINOPEN;renderPins();return 1}
+ if(a==='promote'){
+  var n=privOf(CUR).length; if(!n){toast('Nothing to bring in yet.');return 1}
+  var old=PRIV[CUR]; PRIV[CUR]=[];
+  EXTRA[CUR]=EXTRA[CUR]||[];
+  EXTRA[CUR].push(evt('int','Brought in','You moved '+n+' message'+(n>1?'s':'')+' from your side-channel with '+peerOf(CUR).n+' onto the activity — Omar and SWAT can see them now','now'));
+  toast('Moved onto the record — '+peerOf(CUR).n+' was told.',function(){PRIV[CUR]=old;EXTRA[CUR].pop();renderThread()});
+  renderThread();return 1}
  if(a==='dl'){toast('In the real build this downloads the file.');return 1}
  if(a==='attach'){toast('In the real build this attaches to this room’s Files.');return 1}
  if(a==='pcol'){COL=!COL;$('pane').classList.toggle('col',COL);renderHead();return 1}
@@ -2112,7 +2181,7 @@ document.addEventListener('click',function(e){
  if(POP&&!e.target.closest('.aimpop,[data-aimtoggle]')){
   var kp=$('ci')?$('ci').value:'';POP=0;renderComp();if($('ci'))$('ci').value=kp;
  }
- var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-space],[data-mfilt],[data-mgo],[data-notif],[data-aud],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
+ var el=e.target.closest('[data-open],[data-tab],[data-nav],[data-tool],[data-tool2],[data-space],[data-mfilt],[data-mgo],[data-notif],[data-aud],[data-peer],[data-aimtoggle],[data-do],[data-chip],[data-undo],[data-pingo],[data-punpin],#strip,#scrim');
  if(!el)return;
  if(el.dataset&&el.dataset.aimtoggle!==undefined){
   var kv=$('ci')?$('ci').value:'';POP=POP?0:1;renderComp();if($('ci'))$('ci').value=kv;return}
@@ -2134,7 +2203,11 @@ document.addEventListener('click',function(e){
   if(tg){tg.scrollIntoView({block:'center'});tg.classList.add('flash');setTimeout(()=>tg.classList.remove('flash'),1500)}
   return}
  if(el.dataset&&el.dataset.notif){NSEL=(NSEL===el.dataset.notif)?null:el.dataset.notif;renderNov();return}
- if(el.dataset&&el.dataset.aud){AUD[CUR]=el.dataset.aud;POP=0;renderComp();$('ci').focus();return}
+ if(el.dataset&&el.dataset.aud){
+  AUD[CUR]=el.dataset.aud;POP=0;
+  if(el.dataset.aud==='peer'&&!PEER[CUR]){PEER[CUR]='sana';PICK=1}
+  renderComp();renderThread(1);if($('ci'))$('ci').focus();return}
+ if(el.dataset&&el.dataset.peer){PEER[CUR]=el.dataset.peer;PICK=0;renderComp();renderThread(1);$('ci').focus();return}
  if(el.dataset&&el.dataset.tab){
   TAB=el.dataset.tab;SQ='';$('q').value='';
   if(CUR==='money'){CUR='ws';delete UNREAD.ws;renderAll();return}
@@ -2153,6 +2226,16 @@ document.addEventListener('click',function(e){
    var v=$('ci').value.trim();if(!v)return;
    DRAFT[CUR]='';
    var aud=AUD[CUR]||'own';
+   if(aud==='peer'){
+    var prr=peerOf(CUR); PRIV[CUR]=PRIV[CUR]||[];
+    PRIV[CUR].push('<div class="pmsg me"><span class="pb">'+fmtMsg(v)+'</span></div>');
+    renderThread();
+    setTimeout(function(){
+     PRIV[CUR].push('<div class="pmsg"><span class="pav">'+prr.ini+'</span><span class="pb">'+
+      (v.length>40?'Yeah — I’d push back on that. Want me to say it too, or keep it between us?':'Looking now — give me two minutes.')+'</span></div>');
+     renderThread();
+    },1400);
+    return}
    meMsg(CUR,CUR,fmtMsg(v),'now');
    EXTRA[CUR]=EXTRA[CUR]||[];
    var isRoom=(act(CUR)||th(CUR).tab==='req');
