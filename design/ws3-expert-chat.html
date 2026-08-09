@@ -237,6 +237,11 @@ b{font-weight:620}
 .pbar.warn{background:#E08A3C}
 .pbar.idle{background:var(--soft);border:1px solid var(--line);color:var(--muted)}
 .ptoday{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--warn);left:52%;border-radius:2px}
+.pdays{flex:1;display:flex;position:relative;margin-bottom:1px}
+.pd{flex:1;font-size:8.5px;color:var(--faint);text-align:center;letter-spacing:.2px;white-space:nowrap}
+.pd.on{color:var(--warn-ink);font-weight:700}
+.pn.nb{color:var(--faint);font-style:italic}
+.pn small{font-style:normal;font-size:9px}
 .plegend{display:flex;gap:12px;padding:6px 13px 12px;font-size:10px;color:var(--faint);align-items:center}
 .plegend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 
@@ -615,21 +620,30 @@ var AV={
    request → (her) assignment → (her) activities. Each node is a room. */
 function ACTS(){return {
   a1:{id:'a1',req:'r2',name:'Glossary apply',skill:'Terminology',lang:'EN→AR',ut:'Terms',uc:320,
-      done:1,state:'verified',start:'Mon 21 Jul 09:00',due:'Tue 22 Jul 12:00',est:6,com:6,
-      rate:1.875,line:600,paid:1},
+      done:1,state:'verified',start:'Mon 20 Jul 09:00',due:'Tue 21 Jul 12:00',est:6,com:6,
+      rate:1.875,line:600,paid:1,s:0,e:1},
   a2:{id:'a2',req:'r2',name:'Translate 40pp',skill:'Financial translation',lang:'EN→AR',ut:'Pages',uc:W.units,
-      state:'in_progress',start:'Tue 22 Jul 09:00',due:'Wed 23 Jul 18:00',est:14,com:12,
-      rate:45,line:W.units*45,tool:'TR42',risk:1},
+      state:'in_progress',start:'Tue 21 Jul 09:00',due:'Wed 22 Jul 18:00',est:14,com:12,
+      rate:45,line:W.units*45,tool:'TR42',risk:1,s:1,e:2},
   a3:{id:'a3',req:'r4',name:'Final review · subtitle pack',skill:'Linguistic QA',lang:'AR/FR/ES/DE',ut:'Minutes',uc:48,
       state:W.delivered?'delivered':'qa_failed',start:'Mon 20 Jul',due:'Tue 21 Jul 16:00',est:4,com:4,
-      rate:25,line:1200,tool:'TR42'},
+      rate:25,line:1200,tool:'TR42',s:0,e:1},
   a4:{id:'a4',req:'r5',name:'Copy translation · 6 pages',skill:'Marketing translation',lang:'EN→AR',ut:'Pages',uc:6,
       state:DONE.offer?'accepted':'offered',start:'Mon 27 Jul 09:00',due:'Wed 29 Jul 17:00',est:5,com:5,
-      rate:45,line:270,offer:1}
+      rate:45,line:270,offer:1,s:5,e:7}
 }}
 function act(id){return ACTS()[id]}
 function myActs(){var A=ACTS();return Object.keys(A).map(k=>A[k])}
 
+/* the fortnight her work sits in. Today is Wed 22 Jul — index 2. */
+var DAYS=['Mon 20','Tue 21','Wed 22','Thu 23','Fri 24','Mon 27','Tue 28','Wed 29','Thu 30','Fri 31'];
+var TODAY=2;
+/* not her activities — shown so she can see who she is waiting on and who is waiting on her */
+var NEIGHBOURS=[
+ {req:'r4',n:'QA pass',who:'Dev P.',s:2,e:2,after:'a3'},
+ {req:'r2',n:'RTL reflow',who:'Sana R.',s:3,e:4,after:'a2'},
+ {req:'r2',n:'Deliver to Acme',who:'Omar K.',s:4,e:4,after:'a2'}
+];
 var REQS={
   r2:{name:'Q3 report translation',org:'Acme',asg:'Financial translation',owner:'Omar K.'},
   r4:{name:'Subtitle & sync pack',org:'Acme',asg:'Localization QA',owner:'Omar K.'},
@@ -1039,6 +1053,62 @@ function licenseCard(){
   acts:[['Hold my seat','pri','license'],['Work outside the tool','','notool']]});
 }
 
+
+/* ---- the plan · a Space (vision B3). Scoped like everything else:
+        an activity shows its own window, a request shows the assignment,
+        Home shows her fortnight. Rows that are not hers are greyed — she
+        sees who she waits on and who waits on her, never their money. ---- */
+function planRows(scope){
+ var mine=myActs(), nb=NEIGHBOURS, rows=[];
+ if(scope==='all'){ rows=mine.map(a=>['me',a]); nb.forEach(n=>rows.push(['nb',n])) }
+ else if(act(scope)){
+  var a=act(scope); rows=[['me',a]];
+  nb.filter(n=>n.after===scope).forEach(n=>rows.push(['nb',n]));
+  mine.filter(x=>x.req===a.req&&x.id!==a.id).forEach(x=>rows.push(['me',x]));
+ }else{
+  rows=mine.filter(a=>a.req===scope).map(a=>['me',a]);
+  nb.filter(n=>n.req===scope).forEach(n=>rows.push(['nb',n]));
+ }
+ return rows.sort((x,y)=>x[1].s-y[1].s);
+}
+function planTone(a){
+ if(a.state==='verified') return ['done','done'];
+ if(a.state==='qa_failed') return [W.delivered?'now':'warn', W.delivered?'v2 with QA':'back from QA'];
+ if(a.state==='delivered')  return ['now','delivered'];
+ if(a.state==='offered')    return ['idle','offered'];
+ if(a.state==='accepted')   return ['idle','starts Mon'];
+ if(W.blocked)              return ['warn','blocked'];
+ return DONE.risk ? ['warn',Math.round(W.prog*100)+'% · flagged']
+                  : ['risk',Math.round(W.prog*100)+'% · due 18:00'];
+}
+function planCard(scope){
+ var rows=planRows(scope), N=DAYS.length;
+ var head='<div class="prow"><span class="pn"></span><div class="pdays">'+
+   DAYS.map(function(d,i){return '<span class="pd'+(i===TODAY?' on':'')+'">'+d+'</span>'}).join('')+'</div></div>';
+ var body=rows.map(function(r){
+  var kind=r[0], a=r[1];
+  var left=(a.s/N*100), width=((a.e-a.s+1)/N*100);
+  var tone = kind==='me' ? planTone(a) : ['idle', a.who.split(' ')[0]+' · waits on you'];
+  var label= kind==='me' ? tone[1] : a.who;
+  return '<div class="prow"><span class="pn'+(kind==='nb'?' nb':'')+'">'+(kind==='me'?a.name:a.n)+
+   (kind==='nb'?'<small> · not yours</small>':'')+'</span>'+
+   '<div class="ptrack"><span class="ptoday" style="left:'+((TODAY+0.5)/N*100)+'%"></span>'+
+   '<span class="pbar '+tone[0]+'" style="left:'+left+'%;width:'+width+'%">'+label+'</span></div></div>';
+ }).join('');
+ var a2=act('a2');
+ return card({id:'card-plan',wide:1,dot:'',who:'The plan',
+  sub:(scope==='all'?'your fortnight':act(scope)?act(scope).name:REQS[scope].name)+' · today is Wed 22 Jul',time:'live',
+  body: scope==='all'
+   ? '<b>Everything you hold, on one axis.</b> Grey rows are other people’s — they are here because your file gates them.'
+   : '<b>Where this sits, and what it gates.</b> Grey rows are not yours; they start when your output lands.',
+  extra:'<div class="plan">'+head+body+'</div>'+
+   '<div class="plegend"><span><i style="background:var(--good-soft);border:1px solid #C6DFCE"></i>Done</span>'+
+   '<span><i style="background:'+(DONE.risk?'#E08A3C':'var(--crit)')+'"></i>'+(DONE.risk?'Flagged':'At risk')+'</span>'+
+   '<span><i style="background:var(--soft);border:1px solid var(--line)"></i>Not started</span>'+
+   '<span><i style="background:var(--warn);width:3px"></i>Now</span></div>'+
+   (scope!=='a1'&&scope!=='a3'&&scope!=='a4'?'<div class="dhint" style="padding:0 13px 12px">Sana cannot start the reflow until <b>'+a2.name+'</b> lands, and the Acme delivery is behind her. That is why the 18:00 today matters beyond your own line.</div>':'')});
+}
+
 /* recommend a timeline — she has read the files, SWAT accepts or rejects in one click */
 function recCard(){
  if(DONE.rec) return card({id:'c-rec',tone:'okc',dot:'ok',who:'Timeline recommended',sub:'with SWAT',subCls:'ok',time:'now',
@@ -1202,6 +1272,7 @@ function threadHtml(id){
     '<div class="stat"><b class="w">'+(DONE.offer?0:1)+'</b><small>OFFERED</small></div>'+
     '<div class="stat"><b class="c">'+movesLeft()+'</b><small>NEED YOU</small></div>'+
     '<div class="stat"><b class="g">'+util().free+'h</b><small>FREE THIS WEEK</small></div></div>'}));
+  out.push(planCard('all'));
   out.push(myWorkCard());
   out.push(utilCard());
   out.push(chips(['What changed on my 40pp?','Am I over-committed?','What am I owed?']));
@@ -1336,6 +1407,7 @@ function spaceCard(k,ctx){
  if(k==='mywork') return myWorkCard();
  if(k==='util')   return utilCard();
  if(k==='rate')   return rateCard();
+ if(k==='plan')   return planCard(act(CUR)?CUR:(CUR==='ws'?'all':CUR));
  return '';
 }
 
@@ -1453,10 +1525,11 @@ function renderHead(){
   dev:'localization QA · reviews your output',sana:'RTL · works after your file',grp:'6 people · your pool'};
  var sub = a ? (a.skill+' · '+a.uc+' '+a.ut.toLowerCase()+' · due '+a.due) : (subs[CUR]||'');
  var btns='';
- if(a) btns='<button class="hbtn" data-do="space:brief">Brief</button><button class="hbtn" data-do="space:files">Files</button>'+
+ if(a) btns='<button class="hbtn" data-do="space:brief">Brief</button><button class="hbtn" data-do="space:plan">Plan</button>'+
+   '<button class="hbtn" data-do="space:files">Files</button>'+
    '<button class="hbtn" data-do="space:deliv">Deliveries</button><button class="hbtn" data-do="space:log">Log</button>';
- else if(t.tab==='req') btns='<button class="hbtn" data-do="space:mywork">My work</button>';
- else if(CUR==='ws') btns='<button class="hbtn" data-do="space:mywork">My work</button><button class="hbtn" data-do="space:util">Utilisation</button>';
+ else if(t.tab==='req') btns='<button class="hbtn" data-do="space:plan">Plan</button><button class="hbtn" data-do="space:mywork">My work</button>';
+ else if(CUR==='ws') btns='<button class="hbtn" data-do="space:plan">Plan</button><button class="hbtn" data-do="space:mywork">My work</button><button class="hbtn" data-do="space:util">Utilisation</button>';
  else if(CUR==='money') btns='<button class="hbtn" data-do="space:rate">Rate card</button>';
  $('thead').innerHTML=(COL?'<button class="colbtn" data-do="pcol" title="Show the list · [" style="margin-right:2px"><svg class="ic" style="width:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>':'')+
   '<span class="cav'+(t.round?' round':'')+'" style="background:'+t.av+'">'+t.ini+'</span>'+
@@ -1628,7 +1701,7 @@ function resolve(id,msg,fn,undofn){
  toast(msg,function(){DONE[id]=0; if(undofn)undofn(); renderAll()});
  renderAll();
 }
-var SPID={files:'card-files',log:'card-log',deliv:'card-deliv',brief:'card-brief',mywork:'card-mywork',util:'card-util',rate:'card-rate'};
+var SPID={plan:'card-plan',files:'card-files',log:'card-log',deliv:'card-deliv',brief:'card-brief',mywork:'card-mywork',util:'card-util',rate:'card-rate'};
 function pushSpace(k){
  /* a space already on the ground is scrolled to, not stacked again */
  var ex=$(SPID[k]);
